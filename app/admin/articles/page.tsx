@@ -15,7 +15,10 @@ type Article = {
   title: string
   views: number
   shares: number
-  company?: Company
+  Company?: {
+    id: number
+    name: string
+  }
 }
 
 /* ================= PAGE ================= */
@@ -53,7 +56,7 @@ export default function AdminArticlesPage() {
       )
 
       const data = await res.json()
-      setArticles(data)
+      setArticles(Array.isArray(data) ? data : [])
       setSelectedCompanyId(null)
     } catch (err) {
       console.error("Fetch error:", err)
@@ -134,15 +137,15 @@ export default function AdminArticlesPage() {
     const map = new Map<number, { company: Company; count: number }>()
 
     articles.forEach(article => {
-      if (!article.company) return
+      if (!article.Company) return
 
-      if (!map.has(article.company.id)) {
-        map.set(article.company.id, {
-          company: article.company,
+      if (!map.has(article.Company.id)) {
+        map.set(article.Company.id, {
+          company: article.Company,
           count: 1,
         })
       } else {
-        map.get(article.company.id)!.count++
+        map.get(article.Company.id)!.count++
       }
     })
 
@@ -151,7 +154,7 @@ export default function AdminArticlesPage() {
 
   const filteredArticles = useMemo(() => {
     if (!selectedCompanyId) return []
-    return articles.filter(a => a.company?.id === selectedCompanyId)
+    return articles.filter(a => a.Company?.id === selectedCompanyId)
   }, [articles, selectedCompanyId])
 
   /* ================= UI ================= */
