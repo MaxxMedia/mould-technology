@@ -477,17 +477,18 @@ if (stored) {
         <aside className="col-span-12 xl:col-span-3 space-y-6">
           {/* PROFILE CARD */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
-            <div className="relative inline-block mb-4">
-             <Image
-  src={recruiter?.avatarUrl || "https://i.pravatar.cc/100"}
-  alt="Profile"
-  width={80}
-  height={80}
-  className="rounded-full mx-auto ring-4 ring-gray-100"
-/>
-
-              <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
+           <div className="relative inline-block mb-4">
+            <div className="w-20 h-20 rounded-full overflow-hidden mx-auto ring-4 ring-gray-100">
+              <Image
+                src={recruiter?.avatarUrl || "https://i.pravatar.cc/100"}
+                alt="Profile"
+                width={80}
+                height={80}
+                className="w-full h-full object-cover"
+              />
             </div>
+            <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
+          </div>
 
             <h3 className="font-semibold text-lg text-gray-900">
               {recruiter?.fullName || recruiter?.username}
