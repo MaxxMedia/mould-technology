@@ -17,7 +17,7 @@ type Event = {
   createdAt: string
   views: number
   _count: {
-   registrations: number
+   EventRegistration: number
   }
 }
 
@@ -33,7 +33,7 @@ export default function AdminEventsPage() {
   const totalEvents = events.length
   const totalViews = events.reduce((sum, e) => sum + (e.views ?? 0), 0)
   const totalRegistrations = events.reduce(
-  (sum, e) => sum + (e._count?.registrations ?? 0),
+  (sum, e) => sum + (e._count?.EventRegistration ?? 0),
   0
 )
 
@@ -207,7 +207,7 @@ setEvents(
                   </td>
 
                   <td className="px-6 py-4 text-center font-semibold">
-  {event._count?.registrations ?? 0}
+  {event._count?.EventRegistration ?? 0}
 </td>
 
                   <td className="px-6 py-4 text-center">
