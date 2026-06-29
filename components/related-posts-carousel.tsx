@@ -48,17 +48,19 @@ export default function RelatedPostsCarousel() {
 
   if (loading) {
     return (
-      <section className="bg-white border-b border-gray-200 py-16 px-6 md:px-10 lg:px-[80px]">
+      <section className="bg-white border-b border-gray-200">
+  <div className="max-w-[1320px] mx-auto px-4 py-16">
         <div className="text-center text-gray-500 text-[16px]">
           Loading related content...
         </div>
+      </div>
       </section>
     )
   }
 
   return (
-    <section className="bg-white border-b border-gray-200 py-16 px-6 md:px-10 lg:px-[80px] text-[16px]">
-      <div className="max-w-full mx-auto">
+    <section className="bg-white border-b border-gray-200">
+  <div className="max-w-[1320px] mx-auto px-4 py-16">
         <h2
           className="text-3xl md:text-4xl font-bold text-[#003049] mb-10 text-center"
           style={{ fontFamily: "Oswald, sans-serif" }}

@@ -32,7 +32,6 @@ type Company = {
 export default function CompanyProfilePage(props: {
   params: Promise<{ slug: string }>
 }) {
-  // ✅ REQUIRED (Next 15+)
   const { slug } = React.use(props.params)
 
   const [company, setCompany] = useState<Company | null>(null)
@@ -40,12 +39,40 @@ export default function CompanyProfilePage(props: {
   const [following, setFollowing] = useState(false)
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/companies/${slug}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setCompany(data)
-      })
-      .finally(() => setLoading(false))
+    const fetchCompanyAndFollowStatus = async () => {
+      try {
+        // Fetch company details
+        const companyRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/companies/${slug}`
+        )
+        const companyData = await companyRes.json()
+        setCompany(companyData)
+
+        // Check if user is following this company
+        const token = localStorage.getItem("token")
+        if (token && companyData.id) {
+          const followStatusRes = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/companies/${companyData.id}/follow-status`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          )
+          
+          if (followStatusRes.ok) {
+            const statusData = await followStatusRes.json()
+            setFollowing(statusData.isFollowing)
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching company data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCompanyAndFollowStatus()
   }, [slug])
 
   async function toggleFollow() {
@@ -57,28 +84,41 @@ export default function CompanyProfilePage(props: {
       return
     }
 
-    await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/companies/${company.id}/follow`,
-      {
-        method: following ? "DELETE" : "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/companies/${company.id}/follow`,
+        {
+          method: following ? "DELETE" : "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
 
-    // ✅ Optimistic UI update
-    setFollowing(!following)
-    setCompany((prev) =>
-      prev
-        ? {
-            ...prev,
-            followers: following
-              ? prev.followers - 1
-              : prev.followers + 1,
-          }
-        : prev
-    )
+      if (response.ok) {
+        // Toggle the following state
+        setFollowing(!following)
+        setCompany((prev) =>
+          prev
+            ? {
+                ...prev,
+                followers: following
+                  ? prev.followers - 1
+                  : prev.followers + 1,
+              }
+            : prev
+        )
+      } else if (response.status === 409) {
+        // Already following - just update the state
+        setFollowing(true)
+      } else {
+        const errorData = await response.json()
+        alert(errorData.error || "Action failed")
+      }
+    } catch (error) {
+      console.error("Follow toggle error:", error)
+      alert("An error occurred")
+    }
   }
 
   if (loading) return <div className="p-10">Loading…</div>

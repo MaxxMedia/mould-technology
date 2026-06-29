@@ -190,18 +190,7 @@
   display: none;
 }
 
-/* Hide scrollbars visually */
-html,
-body {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
 
-/* Hide scrollbars (WebKit) */
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  display: none;
-}
 
 /* 🔒 IMPORTANT: prevent horizontal overflow */
 html,
