@@ -128,8 +128,8 @@ export default function SuppliersPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-[1520.8px] mx-auto px-5 lg:pr-8 pt-0 pb-4 md:py-6">
+    <div className="min-h-screen w-full">
+      <div className="w-full max-w-full mx-auto px-4 lg:px-6 lg:pr-8 pt-0 pb-4 md:py-6">
 
         {/* MOBILE FILTER BUTTON resgg*/}
         <button
@@ -140,7 +140,7 @@ export default function SuppliersPage() {
           <span className="font-semibold">Filters</span>
         </button>
 
-        <div className="grid grid-cols-1 lg:[grid-template-columns:300px_840.8px_316px] gap-6 lg:gap-8 lg:justify-center">
+        <div className="w-full grid grid-cols-1 lg:[grid-template-columns:300px_minmax(0,1fr)_360px] gap-6 lg:gap-8">
 
           {/* LEFT FILTERS — DESKTOP */}
           <aside className="hidden lg:block">
@@ -310,5 +310,6 @@ export default function SuppliersPage() {
               {/* Banner after Stand Out */}
               <ClientBanner placement="SUPPLIER_AFTER_VIDEO" />
     </div>
+    
   )
 }

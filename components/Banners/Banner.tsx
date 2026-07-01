@@ -46,6 +46,7 @@ export default async function Banner({ placement }: BannerProps) {
               className="relative overflow-hidden w-full"
               style={{ maxWidth: "728px", aspectRatio: "728 / 90" }}
             >
+              
               <Link
                 href={banner.targetUrl || "#"}
                 target="_blank"
@@ -67,34 +68,34 @@ export default async function Banner({ placement }: BannerProps) {
       );
     }
 
-    // SIDEBAR: fixed 300x250, never changes
-    if (placement === "SIDEBAR") {
-      return (
-        <section className="py-6">
-          <div className="flex justify-center">
-            <Link
-              href={banner.targetUrl || "#"}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <div
-                className="relative overflow-hidden"
-                style={{ width: "300px", height: "250px" }}
-              >
-                <Image
-                  src={banner.imageUrl}
-                  alt={banner.title}
-                  fill
-                  priority
-                  sizes="300px"
-                  className="object-cover"
-                />
-              </div>
-            </Link>
-          </div>
-        </section>
-      );
-    }
+    // // SIDEBAR: fixed 300x250, never changes
+    // if (placement === "SIDEBAR") {
+    //   return (
+    //     <section className="py-6">
+    //       <div className="flex justify-center">
+    //         <Link
+    //           href={banner.targetUrl || "#"}
+    //           target="_blank"
+    //           rel="noopener noreferrer"
+    //         >
+    //           <div
+    //             className="relative overflow-hidden"
+    //             style={{ width: "300px", height: "250px" }}
+    //           >
+    //             <Image
+    //               src={banner.imageUrl}
+    //               alt={banner.title}
+    //               fill
+    //               priority
+    //               sizes="300px"
+    //               className="object-cover"
+    //             />
+    //           </div>
+    //         </Link>
+    //       </div>
+    //     </section>
+    //   );
+    // }
 
     // HOME_MIDDLE, HOME_BOTTOM, ARTICLE_MIDDLE, ARTICLE_BOTTOM: background block
     if (

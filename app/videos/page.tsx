@@ -96,8 +96,28 @@ export default async function VideosPage() {
 
                   {/* PLAY ICON */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-14 h-14 rounded-full bg-black/60 flex items-center justify-center">
-                      <span className="text-white text-xl">▶</span>
+                    <div
+                      className="
+                        group
+                        w-10 h-10
+                        rounded-full
+                        bg-white/15
+                        backdrop-blur-md
+                        border border-white/30
+                        shadow-[0_8px_30px_rgba(0,0,0,0.35)]
+                        flex items-center justify-center
+                        transition-all duration-300
+                        hover:bg-white/25
+                        hover:scale-110
+                      "
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        className="w-4 h-4 ml-[1px] fill-white group-hover:fill-red-600 transition-colors duration-300"
+                      >
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
                     </div>
                   </div>
                 </div>

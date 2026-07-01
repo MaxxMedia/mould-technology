@@ -15,6 +15,7 @@ export default function Footer() {
     <footer className="relative overflow-hidden 
 bg-[#e7eaec]
 text-black">
+  
 
 
       {/* 🔴 Radial Glow */}

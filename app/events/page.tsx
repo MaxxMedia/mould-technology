@@ -205,6 +205,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
         </aside>
       </div>
     </div>
+    
   )
 }
 
