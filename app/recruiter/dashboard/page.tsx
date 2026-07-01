@@ -59,6 +59,24 @@ type DashboardData = {
   recentJobs: RecentJob[]
   directories?: Directory[]
   articles?: Article[]
+  recentActivity?: RecentActivity[]
+}
+
+type RecentActivity = {
+  id: string
+  type: string
+  message: string
+  href?: string
+  color: "blue" | "orange" | "green" | "yellow" | "red"
+  createdAt: string
+}
+
+const ACTIVITY_DOT_COLORS: Record<RecentActivity["color"], string> = {
+  blue: "bg-blue-400",
+  orange: "bg-orange-400",
+  green: "bg-green-400",
+  yellow: "bg-yellow-400",
+  red: "bg-red-400",
 }
 
 /* ================= PAGE ================= */
@@ -72,6 +90,7 @@ export default function RecruiterDashboard() {
     applicationsCount: 0,
     shortlistedCount: 0,
     recentJobs: [],
+    recentActivity: [],
   })
 
   const [recruiter, setRecruiter] = useState<Recruiter | null>(null)
@@ -107,6 +126,7 @@ useEffect(() => {
         recentJobs: dashboardData.recentJobs ?? [],
         directories: dashboardData.directories ?? [],
         articles: dashboardData.articles ?? [],
+        recentActivity: dashboardData.recentActivity ?? [],
       })
 
       /* PROFILE */
@@ -531,25 +551,37 @@ if (stored) {
               <Bell size={18} className="text-blue-600" />
               Recent Activity
             </h3>
-            <ul className="text-sm space-y-3">
-              <li>
-                <Link
-                  href="/recruiter/jobs"
-                  className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors group"
-                >
-                  <Users size={14} className="group-hover:scale-110 transition-transform" />
-                  <span>View Applicants</span>
-                </Link>
-              </li>
-              <li className="text-gray-600">
-                <span className="inline-block w-2 h-2 bg-orange-400 rounded-full mr-2"></span>
-                Job post nearing expiry
-              </li>
-              <li className="text-gray-600">
-                <span className="inline-block w-2 h-2 bg-green-400 rounded-full mr-2"></span>
-                Candidates shortlisted
-              </li>
-            </ul>
+
+            {!dashboard.recentActivity || dashboard.recentActivity.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                No recent activity yet. Post a job or check back when candidates apply.
+              </p>
+            ) : (
+              <ul className="text-sm space-y-3">
+                {dashboard.recentActivity.map((activity) => (
+                  <li key={activity.id}>
+                    {activity.href ? (
+                      <Link
+                        href={activity.href}
+                        className="flex items-start gap-2 text-gray-600 hover:text-blue-600 transition-colors group"
+                      >
+                        <span
+                          className={`inline-block w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${ACTIVITY_DOT_COLORS[activity.color]}`}
+                        />
+                        <span className="group-hover:underline">{activity.message}</span>
+                      </Link>
+                    ) : (
+                      <span className="flex items-start gap-2 text-gray-600">
+                        <span
+                          className={`inline-block w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${ACTIVITY_DOT_COLORS[activity.color]}`}
+                        />
+                        {activity.message}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </aside>
       </div>

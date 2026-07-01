@@ -11,7 +11,6 @@ import {
   Eye,
   Building2,
   ChevronRight,
-  Share2,
   Bookmark,
   ArrowLeft,
 } from "lucide-react"
@@ -25,6 +24,7 @@ export default function JobDetailPage() {
   const [otherJobs, setOtherJobs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [saved, setSaved] = useState(false)
+  const [savingJob, setSavingJob] = useState(false)
   const [showApplyForm, setShowApplyForm] = useState(false)
   const [user, setUser] = useState<any>(null) // Added user state
 
@@ -75,6 +75,55 @@ useEffect(() => {
 
   loadJob();
 }, [slug]);
+
+  useEffect(() => {
+    if (!job?.id || user?.role !== "candidate") return;
+
+    async function checkSaveStatus() {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/jobs/${job.id}/save-status`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setSaved(data.isSaved);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    checkSaveStatus();
+  }, [job?.id, user?.role]);
+
+  async function toggleSave() {
+    if (!user?.id) {
+      router.push("/login");
+      return;
+    }
+    if (user?.role !== "candidate") return;
+
+    setSavingJob(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/jobs/${job.id}/save`,
+        {
+          method: saved ? "DELETE" : "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (res.ok) setSaved(!saved);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingJob(false);
+    }
+  }
 
   const handleApply = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}")
@@ -172,7 +221,21 @@ useEffect(() => {
                   </div>
                 </div>
 
-                <div className="w-14 h-14 rounded-xl overflow-hidden shadow-sm flex-shrink-0 bg-white border border-gray-100 flex items-center justify-center">
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {user?.role === "candidate" && (
+                    <button
+                      onClick={toggleSave}
+                      disabled={savingJob}
+                      title={saved ? "Remove from saved" : "Save job"}
+                      className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                    >
+                      <Bookmark
+                        size={20}
+                        className={saved ? "fill-blue-600 text-blue-600" : "text-gray-400"}
+                      />
+                    </button>
+                  )}
+                  <div className="w-14 h-14 rounded-xl overflow-hidden shadow-sm bg-white border border-gray-100 flex items-center justify-center">
   {job.company?.logoUrl ? (
     <Image
       src={job.company.logoUrl}
@@ -185,6 +248,7 @@ useEffect(() => {
     <Building2 size={22} className="text-gray-400" />
   )}
 </div>
+                </div>
               </div>
 
               {/* Tags */}

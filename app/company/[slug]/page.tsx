@@ -3,6 +3,7 @@ import Image from "next/image"
 import React, { useEffect, useState } from "react"
 import Link from "next/link"
 import { MapPin, Briefcase, CheckCircle } from "lucide-react"
+import CompanyTabs from "@/components/company/CompanyTabs"
 
 type Job = {
   id: number
@@ -197,24 +198,7 @@ export default function CompanyProfilePage(props: {
           </div>
         </div>
 
-        {/* ================= TABS ================= */}
-        <div className="bg-white rounded-lg shadow-sm px-6 py-3 flex gap-6 text-sm font-medium">
-          <Link
-            href={`/company/${company.slug}`}
-            className="text-blue-600 border-b-2 border-blue-600 pb-2"
-          >
-            Home
-          </Link>
-          <Link href={`/company/${company.slug}/about`} className="text-gray-600">
-            About
-          </Link>
-          <Link href={`/company/${company.slug}/jobs`} className="text-gray-600">
-            Jobs
-          </Link>
-          <Link href={`/company/${company.slug}/people`} className="text-gray-600">
-            People
-          </Link>
-        </div>
+        <CompanyTabs slug={company.slug} active="home" />
 
         {/* ================= JOBS ================= */}
         <div className="bg-white rounded-lg p-6 shadow-sm">

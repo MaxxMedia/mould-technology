@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import {
   Building2,
   Globe,
@@ -11,11 +12,18 @@ import {
   Target,
   Eye,
   Briefcase,
+  CheckCircle,
 } from "lucide-react";
+import Image from "next/image";
+import CompanyTabs from "@/components/company/CompanyTabs";
 
 type Company = {
   id: number;
   name: string;
+  slug: string;
+  tagline?: string;
+  logoUrl?: string;
+  isVerified?: boolean;
   description?: string;
   industry?: string;
   location?: string;
@@ -60,7 +68,34 @@ export default function AboutPage() {
     return <div className="p-10">Company not found.</div>;
 
   return (
-    <div className="max-w-5xl mx-auto py-8 px-4 space-y-6">
+    <div className="bg-[#f3f2ef] min-h-screen">
+      <div className="max-w-[1128px] mx-auto px-4 py-6 space-y-6">
+        <div className="bg-white rounded-lg shadow-sm p-6 flex items-center gap-4">
+          <div className="relative w-16 h-16 flex-shrink-0">
+            <Image
+              src={company.logoUrl || "https://ui-avatars.com/api/?name=Company"}
+              alt={company.name}
+              fill
+              className="rounded-lg bg-white border object-contain"
+              sizes="64px"
+            />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold flex items-center gap-2">
+              {company.name}
+              {company.isVerified && (
+                <CheckCircle size={16} className="text-blue-600" />
+              )}
+            </h1>
+            {company.tagline && (
+              <p className="text-sm text-gray-500">{company.tagline}</p>
+            )}
+          </div>
+        </div>
+
+        <CompanyTabs slug={company.slug} active="about" />
+
+    <div className="space-y-6">
 
       <section className="bg-white rounded-xl shadow-sm p-6">
         <h2 className="text-2xl font-bold mb-4">
@@ -142,6 +177,8 @@ export default function AboutPage() {
         </div>
       </section>
 
+    </div>
+      </div>
     </div>
   );
 }

@@ -1,12 +1,48 @@
 "use client"
 import Image from "next/image"
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import { useCandidateGuard } from "@/lib/useCandidateGuard"
 import JobFeed from "@/components/job/JobFeed"
 
+type CandidateProfile = {
+  fullName?: string
+  headline?: string
+  username?: string
+  avatarUrl?: string
+}
+
 export default function CandidateFeedPage() {
-  // 🔐 Candidate-only page
   useCandidateGuard()
+
+  const [profile, setProfile] = useState<CandidateProfile | null>(null)
+
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const token = localStorage.getItem("token")
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/candidates/me`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        if (res.ok) {
+          const data = await res.json()
+          setProfile(data)
+        }
+      } catch (err) {
+        console.error("Failed to load profile", err)
+      }
+    }
+
+    loadProfile()
+  }, [])
+
+  const displayName =
+    profile?.fullName || profile?.username || "Candidate"
+  const displayHeadline =
+    profile?.headline || "Aspiring Professional"
+  const avatarSrc =
+    profile?.avatarUrl || "https://i.pravatar.cc/100"
 
   return (
     <div className="bg-[#f3f2ef] min-h-screen lg:h-screen lg:overflow-hidden scrollbar-hide">
@@ -20,16 +56,16 @@ export default function CandidateFeedPage() {
             <div className="flex flex-col items-center -mt-8 pb-4">
               <div className="relative w-16 h-16">
   <Image
-    src="https://i.pravatar.cc/100"
-    alt="Profile"
+    src={avatarSrc}
+    alt={displayName}
     fill
     className="rounded-full border-2 border-white object-cover"
     sizes="64px"
   />
 </div>
-              <h3 className="font-semibold mt-2">Candidate</h3>
+              <h3 className="font-semibold mt-2">{displayName}</h3>
               <p className="text-xs text-gray-500">
-                Aspiring Professional
+                {displayHeadline}
               </p>
             </div>
 
@@ -47,14 +83,24 @@ export default function CandidateFeedPage() {
 
           <div className="bg-white rounded-lg shadow-sm p-4 text-sm space-y-2">
             <p className="font-medium">Quick links</p>
-            <p className="text-gray-600">Saved jobs</p>
+            <Link
+              href="/candidate/saved-jobs"
+              className="text-gray-600 hover:underline block"
+            >
+              Saved jobs
+            </Link>
             <Link
               href="/candidate/applications"
               className="text-gray-600 hover:underline block"
             >
               My applications
             </Link>
-            <p className="text-gray-600">Job alerts</p>
+            <Link
+              href="/candidate/job-alerts"
+              className="text-gray-600 hover:underline block"
+            >
+              Job alerts
+            </Link>
           </div>
         </aside>
 
@@ -66,8 +112,8 @@ export default function CandidateFeedPage() {
             <div className="flex items-center gap-3">
              <div className="relative w-10 h-10">
   <Image
-    src="https://i.pravatar.cc/40"
-    alt="User"
+    src={avatarSrc}
+    alt={displayName}
     fill
     className="rounded-full object-cover"
     sizes="40px"
