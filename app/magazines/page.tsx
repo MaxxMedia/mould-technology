@@ -36,6 +36,7 @@ export default async function MagazinesPage() {
       {/* Archive Section */}
       <MagazineArchive />
     </>
+
   )
 }
 

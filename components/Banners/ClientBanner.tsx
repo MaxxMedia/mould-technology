@@ -79,33 +79,33 @@ export default function ClientBanner({ placement }: BannerProps) {
       </section>
     );
   }
-  // SIDEBAR: fixed 300x250, never changes
-  if (placement === "SIDEBAR") {
-    return (
-      <section className="py-6">
-        <div className="flex justify-center">
-          <Link
-            href={banner.targetUrl || "#"}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <div
-              className="relative overflow-hidden"
-              style={{ width: "300px", height: "250px" }}
-            >
-              <Image
-                src={banner.imageUrl}
-                alt={banner.title}
-                fill
-                sizes="300px"
-                className="object-cover"
-              />
-            </div>
-          </Link>
-        </div>
-      </section>
-    );
-  }
+  // // SIDEBAR: fixed 300x250, never changes
+  // if (placement === "SIDEBAR") {
+  //   return (
+  //     <section className="py-6">
+  //       <div className="flex justify-center">
+  //         <Link
+  //           href={banner.targetUrl || "#"}
+  //           target="_blank"
+  //           rel="noopener noreferrer"
+  //         >
+  //           <div
+  //             className="relative overflow-hidden"
+  //             style={{ width: "300px", height: "250px" }}
+  //           >
+  //             <Image
+  //               src={banner.imageUrl}
+  //               alt={banner.title}
+  //               fill
+  //               sizes="300px"
+  //               className="object-cover"
+  //             />
+  //           </div>
+  //         </Link>
+  //       </div>
+  //     </section>
+  //   );
+  // }
 
   // Everything else: 970x250 leaderboard
   // HOME_MIDDLE, HOME_BOTTOM, ARTICLE_MIDDLE, ARTICLE_BOTTOM: background block

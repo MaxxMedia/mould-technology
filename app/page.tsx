@@ -290,6 +290,7 @@ export default async function Home() {
   return (
     <>
        {/* ================= HOME TOP BANNER ================= */}
+       <br />
       <Banner placement="HOME_TOP" />
 
       {/* 🏢 Company Articles */}
