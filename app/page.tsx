@@ -224,6 +224,8 @@ import type { Post } from "../types/Post"
 import TrendingSection from "@/components/TrendingSection"
 import CompanyArticles from "@/components/company/CompanyArticles"
 import HomeCompanyArticles from "@/components/HomeCompanyArticles"
+import Banner from "@/components/Banners/Banner";
+
 
 export default async function Home() {
   /* ================= FETCH POSTS ================= */
@@ -240,29 +242,29 @@ export default async function Home() {
     return <div className="text-center p-10">No posts available</div>
   }
 
-  /* ================= FETCH BANNER ================= */
+//   /* ================= FETCH BANNER ================= */
 
-  const bannerRes = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/banners?placement=HOME_MIDDLE`,
-    { cache: "no-store" }
-  )
+//   const bannerRes = await fetch(
+//     `${process.env.NEXT_PUBLIC_API_URL}/api/banners?placement=HOME_MIDDLE`,
+//     { cache: "no-store" }
+//   )
 
- const bannerText = await bannerRes.text()
+//  const bannerText = await bannerRes.text()
 
-console.log("Banner Response:", bannerText)
+// console.log("Banner Response:", bannerText)
 
-let bannerData = null
+// let bannerData = null
 
-try {
-  bannerData = JSON.parse(bannerText)
-} catch (err) {
-  console.error("Invalid JSON:", bannerText)
-}
+// try {
+//   bannerData = JSON.parse(bannerText)
+// } catch (err) {
+//   console.error("Invalid JSON:", bannerText)
+// }
 
-  const banner =
-    Array.isArray(bannerData) && bannerData.length > 0
-      ? bannerData[0]
-      : null
+//   const banner =
+//     Array.isArray(bannerData) && bannerData.length > 0
+//       ? bannerData[0]
+//       : null
 
   /* ================= CATEGORY HELPER ================= */
 
@@ -287,6 +289,9 @@ try {
 
   return (
     <>
+       {/* ================= HOME TOP BANNER ================= */}
+      <Banner placement="HOME_TOP" />
+
       {/* 🏢 Company Articles */}
       <CompanyArticles  />
 
@@ -295,8 +300,8 @@ try {
         <LatestHero post={latestPost} posts={posts} />
       )}
 
-      {/* 🔥 Advertisement */}
-      {banner && <TrendingAd banner={banner} />}
+      {/* 🔥 Advertisement
+      {banner && <TrendingAd banner={banner} />} */}
 
       {/* 📈 Trending */}
       <TrendingSection posts={posts} />
@@ -304,8 +309,8 @@ try {
       {/* 📘 Basics */}
       <BasicsSection posts={posts} />
 
-      {/* 🔥 Advertisement */}
-      {banner && <TrendingAd banner={banner} />}
+         {/* ================= HOME MIDDLE BANNER ================= */}
+      <Banner placement="HOME_MIDDLE" />
 
       {/* 🎥 Videos */}
       <VideosSection posts={posts} />
@@ -317,6 +322,9 @@ try {
 
 
       <HomeCompanyArticles />
+
+        {/* ================= HOME BOTTOM BANNER ================= */}
+      <Banner placement="HOME_BOTTOM" />
     </>
   )
 }

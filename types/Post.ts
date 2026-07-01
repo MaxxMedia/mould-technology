@@ -15,15 +15,18 @@ export type Post = {
   id: number
   title: string
   slug: string
-  excerpt?: string | null     // ✅ correct
+  excerpt?: string | null
   badge?: string | null
   content: string
+
   imageUrl?: string | null
-   createdAt?: string      // ✅ ADD THIS
-   updatedAt?: string      // ✅ ADD THIS
-   publishedAt?: string | null
+  youtubeUrl?: string | null   
+  createdAt?: string
+  updatedAt?: string
+  publishedAt?: string | null
+
   views?: number | null
-  
+
   author?: Author
-  category?: Category 
+  category?: Category
 }

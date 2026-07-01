@@ -20,7 +20,7 @@ export default function EditDirectoryPage() {
 
   useEffect(() => {
     async function fetchIndustries() {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/industries`)
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/industries`)
       const data = await res.json()
       const list = Array.isArray(data) ? data : data.data ?? []
       setIndustryLevels([list])
@@ -65,7 +65,7 @@ export default function EditDirectoryPage() {
     setIndustryLevels(newLevels)
     setDirectory((prev: any) => ({ ...prev, industryId: "" }))
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/industries/${id}/children`)
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/industries/${id}/children`)
     const children = await res.json()
 
     if (children.length > 0) {

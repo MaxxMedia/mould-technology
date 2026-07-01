@@ -128,7 +128,7 @@ export default function SupplierFilters({ onFilterChange }: Props) {
         setLoadingChildren(prev => new Set(prev).add(childId))
         try {
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/admin/industries/${childId}/children`
+            `${process.env.NEXT_PUBLIC_API_URL}/api/industries/${childId}/children`
           )
           const grandchildren = await res.json()
           setChildrenCache(prev => ({ ...prev, [childId]: grandchildren }))

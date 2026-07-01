@@ -3,28 +3,39 @@
 import { useState, useEffect } from "react";
 import { BANNER_PLACEMENTS } from "@/lib/bannerPlacements";
 
+type BannerPlacement = (typeof BANNER_PLACEMENTS)[number]["value"];
+
 type BannerFormProps = {
   initialData?: any;
   onSubmit: (data: any) => Promise<void>;
 };
 
-export default function BannerForm({ initialData, onSubmit }: BannerFormProps) {
+export default function BannerForm({
+  initialData,
+  onSubmit,
+}: BannerFormProps) {
   const [title, setTitle] = useState("");
   const [targetUrl, setTargetUrl] = useState("");
-  const [placement, setPlacement] = useState(BANNER_PLACEMENTS[0].value);
+
+  const [placement, setPlacement] = useState<BannerPlacement>(
+    BANNER_PLACEMENTS[0].value as BannerPlacement
+  );
+
   const [status, setStatus] = useState("ACTIVE");
   const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ FIX: Sync state when initialData changes
   useEffect(() => {
-    if (initialData) {
-      setTitle(initialData.title || "");
-      setTargetUrl(initialData.targetUrl || "");
-      setPlacement(initialData.placement || BANNER_PLACEMENTS[0].value);
-      setStatus(initialData.status || "ACTIVE");
-      setImageUrl(initialData.imageUrl || "");
-    }
+    if (!initialData) return;
+
+    setTitle(initialData.title ?? "");
+    setTargetUrl(initialData.targetUrl ?? "");
+    setPlacement(
+      (initialData.placement ??
+        BANNER_PLACEMENTS[0].value) as BannerPlacement
+    );
+    setStatus(initialData.status ?? "ACTIVE");
+    setImageUrl(initialData.imageUrl ?? "");
   }, [initialData]);
 
   const uploadImage = async (file: File) => {
@@ -91,7 +102,9 @@ export default function BannerForm({ initialData, onSubmit }: BannerFormProps) {
         <select
           className="w-full border p-2 rounded"
           value={placement}
-          onChange={(e) => setPlacement(e.target.value)}
+          onChange={(e) =>
+            setPlacement(e.target.value as BannerPlacement)
+          }
         >
           {BANNER_PLACEMENTS.map((p) => (
             <option key={p.value} value={p.value}>
@@ -120,7 +133,10 @@ export default function BannerForm({ initialData, onSubmit }: BannerFormProps) {
         <input
           type="file"
           accept="image/*"
-          onChange={(e) => uploadImage(e.target.files![0])}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) uploadImage(file);
+          }}
         />
 
         {imageUrl && (
@@ -134,6 +150,7 @@ export default function BannerForm({ initialData, onSubmit }: BannerFormProps) {
 
       {/* Submit */}
       <button
+        type="submit"
         disabled={!imageUrl || loading}
         className="bg-black text-white px-6 py-2 rounded disabled:opacity-50"
       >

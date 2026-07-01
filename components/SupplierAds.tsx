@@ -1,3 +1,4 @@
+// SupplierAds.tsx
 "use client"
 
 import { useEffect, useState } from "react"
@@ -20,10 +21,11 @@ export default function SupplierAds() {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/banners?placement=SIDEBAR`
       )
-      const data = await res.json()
+      const data = await res.json();
 
-      // 🔥 CONTROL HOW MANY ADS TO SHOW
-      setBanners(data.slice(0, 3)) // show only 3 ads
+      console.log("SIDEBAR ADS:", data);
+
+      setBanners(Array.isArray(data) ? data.slice(0, 3) : []);
     }
 
     fetchSidebarAds()
@@ -47,13 +49,18 @@ function Ad({ ad }: { ad: Banner }) {
       className="block bg-white"
       target="_blank"
     >
-      <Image
-        src={ad.imageUrl}
-        alt={ad.title}
-        width={300}
-        height={600}
-        className="w-full object-cover"
-      />
+      <div
+        className="relative overflow-hidden mx-auto"
+        style={{ width: "300px", height: "250px" }}
+      >
+        <Image
+          src={ad.imageUrl}
+          alt={ad.title}
+          fill
+          sizes="300px"
+          className="object-cover"
+        />
+      </div>
     </Link>
   )
 }
@@ -63,32 +70,37 @@ function RecruiterAd({ src }: { src: string }) {
   return (
     <Link
       href="/signup?role=recruiter"
-      className="relative block group overflow-hidden rounded-none"
+      className="relative block group overflow-hidden"
     >
-      {/* IMAGE */}
-      <Image
-        src={src}
-        alt="Hire Candidates"
-        width={300}
-        height={600}
-        className="w-full object-cover"
-      />
+      <div
+        className="relative overflow-hidden mx-auto"
+        style={{ width: "300px", height: "250px" }}
+      >
+        {/* IMAGE */}
+        <Image
+          src={src}
+          alt="Hire Candidates"
+          fill
+          sizes="300px"
+          className="object-cover"
+        />
 
-      {/* DARK OVERLAY */}
-      <div className="absolute inset-0 bg-black/50 group-hover:bg-black/60 transition" />
+        {/* DARK OVERLAY */}
+        <div className="absolute inset-0 bg-black/50 group-hover:bg-black/60 transition" />
 
-      {/* TEXT CONTENT */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-        <h3 className="text-white text-xl font-bold mb-2">
-          Hiring Talent?
-        </h3>
-        <p className="text-white/90 text-sm mb-4">
-          Register your company & post jobs
-        </p>
+        {/* TEXT CONTENT */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+          <h3 className="text-white text-xl font-bold mb-2">
+            Hiring Talent?
+          </h3>
+          <p className="text-white/90 text-sm mb-4">
+            Register your company & post jobs
+          </p>
 
-        <span className="inline-block bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-semibold group-hover:bg-indigo-700 transition">
-          Hire Candidates
-        </span>
+          <span className="inline-block bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-semibold group-hover:bg-indigo-700 transition">
+            Hire Candidates
+          </span>
+        </div>
       </div>
     </Link>
   )

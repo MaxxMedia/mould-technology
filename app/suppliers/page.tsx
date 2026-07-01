@@ -5,6 +5,8 @@ import { ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react"
 import SupplierRowCard from "./SupplierRowCard"
 import SupplierFilters from "./SupplierFilters"
 import SupplierAds from "@/components/SupplierAds"
+import StandOut from "@/components/suppliers/StandOut";
+import ClientBanner from "@/components/Banners/ClientBanner";
 
 type Supplier = {
   id: number
@@ -127,7 +129,7 @@ export default function SuppliersPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-[1400px] mx-auto px-4 md:px-6 pt-0 pb-4 md:py-6">
+      <div className="max-w-[1520.8px] mx-auto px-5 lg:pr-8 pt-0 pb-4 md:py-6">
 
         {/* MOBILE FILTER BUTTON resgg*/}
         <button
@@ -138,10 +140,10 @@ export default function SuppliersPage() {
           <span className="font-semibold">Filters</span>
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:[grid-template-columns:300px_840.8px_316px] gap-6 lg:gap-8 lg:justify-center">
 
           {/* LEFT FILTERS — DESKTOP */}
-          <aside className="hidden lg:block lg:col-span-3">
+          <aside className="hidden lg:block">
             <div className="sticky top-24">
               <SupplierFilters onFilterChange={handleFilterChange} />
             </div>
@@ -175,7 +177,7 @@ export default function SuppliersPage() {
           )}
 
           {/* CENTER CONTENT */}
-          <main className="lg:col-span-6 space-y-4 md:space-y-6">
+          <main className="space-y-4 md:space-y-6">
 
             {/* HERO */}
             <div className="relative w-full h-[96px] sm:h-[140px] md:h-[160px] rounded-lg overflow-hidden">
@@ -239,6 +241,7 @@ export default function SuppliersPage() {
                 <p className="text-gray-400 text-sm mt-1">Try adjusting your filters.</p>
               </div>
             )}
+             
 
             {/* PAGINATION */}
             {totalPages > 1 && (
@@ -283,10 +286,11 @@ export default function SuppliersPage() {
                 <div className="hidden sm:block text-sm text-gray-600">Page {currentPage} of {totalPages}</div>
               </div>
             )}
+             
           </main>
 
           {/* RIGHT ADS — DESKTOP */}
-          <aside className="hidden lg:block lg:col-span-3">
+          <aside className="hidden lg:block">
             <div className="sticky top-24">
               <SupplierAds />
             </div>
@@ -296,8 +300,15 @@ export default function SuppliersPage() {
           <div className="lg:hidden">
             <SupplierAds />
           </div>
+        
         </div>
+          
       </div>
+      {/* Stand Out Section */}
+                <StandOut />
+              
+              {/* Banner after Stand Out */}
+              <ClientBanner placement="SUPPLIER_AFTER_VIDEO" />
     </div>
   )
 }

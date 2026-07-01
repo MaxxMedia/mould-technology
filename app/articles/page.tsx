@@ -3,6 +3,7 @@ import SupplierAds from "@/components/SupplierAds"
 import MagazineGrid from "@/components/magazine/MagazineGrid"
 import type { Post } from "@/types/Post"
 import Link from "next/link"
+import Banner from "@/components/Banners/Banner";
 
 export default async function ArticlesPage() {
 
@@ -58,6 +59,9 @@ export default async function ArticlesPage() {
 
   return (
     <main className="bg-white">
+
+      {/* ================= ARTICLE TOP BANNER ================= */}
+<Banner placement="ARTICLE_TOP" />
 
       {/* ================= WHATS NEW ================= */}
       <section className="border-b border-gray-200 bg-white">
@@ -152,6 +156,9 @@ export default async function ArticlesPage() {
           </div>
         </div>
       </section>
+          {/* ================= ARTICLE MIDDLE BANNER ================= */}
+<Banner placement="ARTICLE_MIDDLE" />
+
 
       {/* ================= IN THIS ISSUE ================= */}
       <section className="max-w-[1320px] mx-auto px-6 py-14">
@@ -218,6 +225,8 @@ export default async function ArticlesPage() {
 
         <MagazineGrid magazines={magazines} />
       </section>
+      {/* ================= ARTICLE BOTTOM BANNER ================= */}
+        <Banner placement="ARTICLE_BOTTOM" />
 
     </main>
   )

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { MapPin, Briefcase, Clock, Users } from "lucide-react"
+import { MapPin, Briefcase, Clock, Users, Eye } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 type Job = {
@@ -11,6 +11,7 @@ type Job = {
   description: string
   location: string
   employmentType?: string
+   views: number
   Company?: {
     name: string
     slug: string
@@ -105,6 +106,10 @@ export default function JobFeed({ isPublic = false }: { isPublic?: boolean }) {
               <Users size={12} />
               Actively hiring
             </span>
+            <span className="flex items-center gap-1">
+    <Eye className="w-4 h-4" />
+    {job.views ?? 0} Views
+  </span>
           </div>
 
           {/* DESCRIPTION */}

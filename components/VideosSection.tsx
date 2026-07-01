@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import type { Post } from "../types/Post"
 
 type VideoPost = Post
@@ -26,26 +26,37 @@ const CATEGORY_COLORS: Record<string, string> = {
 type Props = {
   posts: Post[]
 }
+function getYoutubeEmbed(url?: string) {
+  if (!url) return "";
 
+  let videoId = "";
+
+  if (url.includes("youtu.be/")) {
+    videoId = url.split("youtu.be/")[1].split("?")[0];
+  } else {
+    videoId = url.match(/[?&]v=([^&]+)/)?.[1] || "";
+  }
+
+  if (!videoId) return "";
+
+  return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+}
 export default function VideosSection({ posts }: Props) {
 
   /* ================= FILTER VIDEOS ================= */
 
   const videos = useMemo(() => {
-    return posts
-      .filter((p) =>
-        typeof p.category === "object"
-          ? p.category?.slug?.toLowerCase().includes("video")
-          : String(p.category || "").toLowerCase().includes("video")
-      )
-      .slice(0, 4)
-  }, [posts])
+  return posts
+    .filter((post) => post.youtubeUrl && post.youtubeUrl.trim() !== "")
+    .slice(0, 4);
+}, [posts]);
 
   if (!videos.length) return null
+const [selectedVideo, setSelectedVideo] = useState(videos[0])
 
-  const featured = videos[0]
-  const sideVideos = videos.slice(1)
-
+const sideVideos = videos.filter(
+  (v) => v.id !== selectedVideo?.id
+)
   const imageUrl = (v?: VideoPost) =>
     v?.imageUrl?.startsWith("http")
       ? v.imageUrl
@@ -79,7 +90,7 @@ export default function VideosSection({ posts }: Props) {
         {video.author.name}
       </span>
     ) : null
-
+   
   /* ================= TAG HELPERS ================= */
 
   const getTag = (post?: VideoPost) => {
@@ -110,7 +121,7 @@ export default function VideosSection({ posts }: Props) {
     return { text, color }
   }
 
-  const featuredTag = getTag(featured)
+ const featuredTag = getTag(selectedVideo)
 
   /* ================= RENDER ================= */
 
@@ -120,24 +131,80 @@ export default function VideosSection({ posts }: Props) {
 
         {/* HEADER */}
         <div className="flex items-center justify-between mb-12">
-          <h2 className="text-[36px] font-semibold">Video News</h2>
+          <h2 className="text-[36px] font-semibold">Profile Updates</h2>
 
           <Link
             href="/videos"
             className="text-sm font-medium flex items-center gap-2"
           >
-            View Channel →
+            View All →
           </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[8fr_4fr] gap-8">
 
           {/* FEATURED VIDEO */}
-          <Link
-            href={`/post/${featured.slug}`}
-            className="relative h-[460px] rounded-xl overflow-hidden group"
-          >
-            <Image
+          <div className="relative h-[460px] rounded-xl overflow-hidden bg-black">
+
+  {selectedVideo.youtubeUrl ? (
+  <>
+    <iframe
+      key={selectedVideo.id}
+      src={getYoutubeEmbed(selectedVideo.youtubeUrl)}
+      title={selectedVideo.title}
+      className="w-full h-full"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowFullScreen
+    />
+  </>
+) : (
+    <>
+      <Image
+        src={imageUrl(selectedVideo)}
+        alt={selectedVideo.title}
+        fill
+        priority
+        className="object-cover"
+      />
+
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="bg-red-600 rounded-full p-5 text-3xl">
+          ▶
+        </div>
+      </div>
+    </>
+  )}
+
+{!selectedVideo.youtubeUrl && (
+  <div className="absolute bottom-6 left-6 max-w-[85%]">
+
+    {featuredTag.text && (
+      <span
+        className={`${featuredTag.color} text-xs font-bold px-3 py-1 rounded`}
+      >
+        {featuredTag.text}
+      </span>
+    )}
+
+    <h3 className="text-[28px] font-semibold mt-4 leading-snug">
+      {selectedVideo.title}
+    </h3>
+
+    <div className="flex items-center gap-4 text-sm text-gray-300 mt-3">
+      <AuthorMeta video={selectedVideo} />
+      <span>{date(selectedVideo.publishedAt)}</span>
+
+      {selectedVideo.views && (
+        <span>{selectedVideo.views.toLocaleString()} Views</span>
+      )}
+    </div>
+
+  </div>
+)}
+</div>
+            {/* <Image
               src={imageUrl(featured)}
               alt={featured.title}
               fill
@@ -145,9 +212,9 @@ export default function VideosSection({ posts }: Props) {
               quality={75}
               priority
               className="object-cover"
-            />
+            /> */}
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            {/* <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="bg-red-600 rounded-full p-5">▶</div>
@@ -174,7 +241,7 @@ export default function VideosSection({ posts }: Props) {
                 )}
               </div>
             </div>
-          </Link>
+          </Link> */}
 
           {/* SIDE VIDEOS */}
           <div className="space-y-6">
@@ -182,11 +249,12 @@ export default function VideosSection({ posts }: Props) {
               const tag = getTag(video)
 
               return (
-                <Link
-                  key={video.id}
-                  href={`/post/${video.slug}`}
-                  className="flex gap-4 pb-6 border-b border-white/10"
-                >
+                <button
+  key={video.id}
+  type="button"
+  onClick={() => setSelectedVideo(video)}
+  className="flex gap-4 pb-6 border-b border-white/10 w-full text-left hover:opacity-90 transition"
+>
                   <div className="relative w-[120px] h-[90px] rounded-lg overflow-hidden">
                     <Image
                       src={imageUrl(video)}
@@ -221,7 +289,7 @@ export default function VideosSection({ posts }: Props) {
                       )}
                     </div>
                   </div>
-                </Link>
+                </button>
               )
             })}
           </div>

@@ -120,7 +120,7 @@ export default function FullSupplierSetup() {
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/industries/${industryId}/children`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/industries/${industryId}/children`
       )
       const children = await res.json()
 
@@ -240,7 +240,7 @@ export default function FullSupplierSetup() {
   const fetchRootIndustries = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/industries`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/industries`
       )
       const data = await res.json()
       const list = Array.isArray(data) ? data : data.data ?? []

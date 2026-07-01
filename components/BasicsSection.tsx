@@ -189,7 +189,7 @@ export default function BasicsSection({ posts }: Props) {
   /* ================= RENDER ================= */
 
   return (
-    <section className="bg-[#f7f7f7] py-12 sm:py-16">
+    <section className="bg-[#ffffff] py-12 sm:py-16">
       <div className="max-w-[1320px] mx-auto px-4">
 
         {/* HEADER */}

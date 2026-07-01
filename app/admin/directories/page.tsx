@@ -32,27 +32,35 @@ export default function AdminDirectoriesPage() {
 
   /* ================= FETCH ================= */
 
-  useEffect(() => {
-    if (!token) return
+ useEffect(() => {
+  if (!token) return;
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/suppliers/admin`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+  fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/suppliers/admin`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then(res => res.json())
+    .then(data => {
+      console.log("API RESPONSE:", data);
+
+      const rows = Array.isArray(data)
+        ? data.map((d: any) => ({
+            ...d,
+            company: d.Company,
+            submittedBy: d.User_SupplierDirectory_submittedByIdToUser,
+            approvedBy: d.User_SupplierDirectory_approvedByIdToUser,
+          }))
+        : [];
+
+      setDirectories(rows);
+      setLoading(false);
     })
-      .then(res => res.json())
-      .then(data => {
-  console.log("API RESPONSE:", data)
-
-  setDirectories(Array.isArray(data.data) ? data.data : [])
-
-  setLoading(false)
-})
-      .catch(err => {
-        console.error(err)
-        setLoading(false)
-      })
-  }, [token])
+    .catch(err => {
+      console.error(err);
+      setLoading(false);
+    });
+}, [token]);
 
   /* ================= STATS ================= */
 
