@@ -6,6 +6,7 @@ import {
   Briefcase,
   Users,
   Clock,
+  TrendingUp,
   Bell,
   MapPin,
   FileText,
