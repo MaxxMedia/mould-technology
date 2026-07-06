@@ -11,6 +11,8 @@ import {
   MapPin,
   FileText,
   FolderOpen,
+  Crown,
+  CreditCard,
 } from "lucide-react"
 import { useRecruiterGuard } from "@/lib/useRecruiterGuard"
 import Image from "next/image"
@@ -60,6 +62,23 @@ type DashboardData = {
   directories?: Directory[]
   articles?: Article[]
   recentActivity?: RecentActivity[]
+  subscription?: {
+    plan: string
+    planLabel: string
+    expiresAt: string | null
+    jobPostingCredits: number
+  }
+  recentPurchases?: PackagePurchase[]
+}
+
+type PackagePurchase = {
+  id: number
+  packageType: string
+  packageName: string
+  amount: number
+  status: string
+  createdAt: string
+  expiresAt?: string | null
 }
 
 type RecentActivity = {
@@ -127,6 +146,8 @@ useEffect(() => {
         directories: dashboardData.directories ?? [],
         articles: dashboardData.articles ?? [],
         recentActivity: dashboardData.recentActivity ?? [],
+        subscription: dashboardData.subscription ?? undefined,
+        recentPurchases: dashboardData.recentPurchases ?? [],
       })
 
       /* PROFILE */
@@ -220,18 +241,32 @@ if (stored) {
           </div>
 
           {/* KPI CARDS */}
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-4 gap-6">
+            <KpiCard
+              title="Current Plan"
+              value={dashboard.subscription?.planLabel ?? "Free"}
+              icon={<Crown />}
+              color="bg-gradient-to-br from-indigo-500 to-indigo-600"
+              subtitle={
+                dashboard.subscription?.expiresAt
+                  ? `Expires ${new Date(dashboard.subscription.expiresAt).toLocaleDateString()}`
+                  : dashboard.subscription?.plan === "free"
+                    ? "Free tier"
+                    : "Active"
+              }
+            />
+            <KpiCard
+              title="Job Credits"
+              value={dashboard.subscription?.jobPostingCredits ?? 0}
+              icon={<CreditCard />}
+              color="bg-gradient-to-br from-emerald-500 to-emerald-600"
+              subtitle="Available postings"
+            />
             <KpiCard
               title="Total Applications"
               value={dashboard.applicationsCount}
               icon={<Users />}
               color="bg-gradient-to-br from-purple-500 to-purple-600"
-            />
-            <KpiCard
-              title="Shortlisted"
-              value={dashboard.shortlistedCount}
-              icon={<TrendingUp />}
-              color="bg-gradient-to-br from-cyan-500 to-cyan-600"
             />
             <KpiCard
               title="Active Jobs"
@@ -549,6 +584,45 @@ if (stored) {
   Edit Profile
 </Link>
 
+            <Link
+              href="/packages"
+              className="block mt-3 text-sm border border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              {dashboard.subscription?.plan === "free" ? "Upgrade Plan" : "Manage Packages"}
+            </Link>
+
+          </div>
+
+          {/* PACKAGE PURCHASES */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h3 className="font-semibold mb-4 flex items-center gap-2 text-gray-900">
+              <CreditCard size={18} className="text-blue-600" />
+              Package Purchases
+            </h3>
+
+            {!dashboard.recentPurchases || dashboard.recentPurchases.length === 0 ? (
+              <div className="text-sm text-gray-500">
+                <p>No purchases yet.</p>
+                <Link href="/packages" className="mt-2 inline-block text-blue-600 hover:underline">
+                  Browse packages →
+                </Link>
+              </div>
+            ) : (
+              <ul className="space-y-3 text-sm">
+                {dashboard.recentPurchases.map((purchase) => (
+                  <li
+                    key={purchase.id}
+                    className="rounded-lg border border-gray-100 px-3 py-2"
+                  >
+                    <p className="font-medium text-gray-900">{purchase.packageName}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      ₹{purchase.amount.toLocaleString("en-IN")} ·{" "}
+                      {new Date(purchase.createdAt).toLocaleDateString()}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           {/* ACTIVITY */}
@@ -602,17 +676,20 @@ function KpiCard({
   value,
   icon,
   color,
+  subtitle,
 }: {
   title: string
-  value: number
+  value: number | string
   icon: React.ReactNode
   color: string
+  subtitle?: string
 }) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex justify-between items-start hover:shadow-md transition-shadow">
       <div>
         <p className="text-sm text-gray-600 font-medium">{title}</p>
         <h3 className="text-3xl font-bold text-gray-900 mt-2">{value}</h3>
+        {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
       </div>
       <div
         className={`w-14 h-14 rounded-xl flex items-center justify-center text-white shadow-lg ${color}`}

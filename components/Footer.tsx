@@ -175,6 +175,7 @@ text-black">
                   More
                 </h5>
                 <ul className="space-y-2.5 text-sm">
+                  <li><Link href="/packages" className="hover:text-black transition-colors">Packages &amp; Pricing</Link></li>
                   <li><Link href="/contact" className="hover:text-black transition-colors">Contact Us</Link></li>
                   <li><Link href="/suppliers" className="hover:text-black transition-colors">Find a Supplier</Link></li>
                 </ul>
@@ -322,6 +323,7 @@ text-black">
                 More
               </h5>
               <ul className="space-y-3 text-sm mb-8">
+                <li><Link href="/packages" className="hover:text-black hover:translate-x-1 inline-block transition-all">Packages &amp; Pricing</Link></li>
                 <li><Link href="/contact" className="hover:text-black hover:translate-x-1 inline-block transition-all">Contact Us</Link></li>
                 <li><Link href="/suppliers" className="hover:text-black hover:translate-x-1 inline-block transition-all">Find a Supplier</Link></li>
               </ul>

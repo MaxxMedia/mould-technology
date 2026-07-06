@@ -146,6 +146,13 @@ if (user?.role !== "admin") {
     </div>
 
     <SidebarLink
+      href="/admin/packages"
+      label="Packages"
+      icon={<Folder size={18} />}
+      active={pathname === "/admin/packages"}
+    />
+
+    <SidebarLink
       href="/admin/banners"
       label="Banners"
       icon={<Folder size={18} />}
