@@ -555,6 +555,12 @@ if (stored) {
               </p>
             )}
 
+            {recruiter?.Company?.name && (
+  <p className="text-sm font-medium text-blue-600 mt-1">
+    {recruiter.Company.name}
+  </p>
+)}
+
             {recruiter?.location && (
               <p className="text-xs text-gray-500 flex items-center justify-center gap-1 mt-2">
                 <MapPin size={12} />
