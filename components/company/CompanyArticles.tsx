@@ -84,7 +84,7 @@ export default function CompanyArticles() {
   return (
     <section className="pt-4 sm:pt-8 w-full">
       <div className="max-w-[1320px] mx-auto px-4">
-        <div className="relative bg-[#F7F7F7] rounded-2xl px-4 sm:px-6 py-6 sm:py-7 overflow-hidden">
+        <div className="relative bg-[#F7F7F7] rounded-md px-4 sm:px-6 py-6 sm:py-7 overflow-hidden">
 
           {/* background shapes */}
           <Image
@@ -133,12 +133,12 @@ export default function CompanyArticles() {
               return (
                 <div
                   key={post.id}
-                  className="bg-white rounded-xl p-4 sm:p-5 flex gap-4 h-[140px] sm:h-[160px] overflow-hidden"
+                  className="bg-white rounded-md p-4 sm:p-5 flex gap-4 h-[140px] sm:h-[160px] overflow-hidden"
                 >
                   {/* thumbnail */}
                   <Link
                     href={`/post/${post.slug}`}
-                    className="relative w-[72px] h-[72px] sm:w-[96px] sm:h-[96px] rounded-xl overflow-hidden flex-shrink-0"
+                    className="relative w-[72px] h-[72px] sm:w-[96px] sm:h-[96px] rounded-md overflow-hidden flex-shrink-0"
                   >
                     <Image
                       src={

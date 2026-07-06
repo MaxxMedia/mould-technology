@@ -148,7 +148,7 @@ export default function VideosSection({ posts }: Props) {
         <div className="grid grid-cols-1 lg:grid-cols-[8fr_4fr] gap-8">
 
           {/* FEATURED VIDEO */}
-          <div className="relative h-[460px] rounded-xl overflow-hidden bg-black">
+          <div className="relative h-[460px] rounded-md overflow-hidden bg-black">
 
             {selectedVideo.youtubeUrl ? (
               <>
@@ -279,7 +279,7 @@ export default function VideosSection({ posts }: Props) {
                   onClick={() => setSelectedVideo(video)}
                   className="flex gap-4 pb-6 border-b border-white/10 w-full text-left hover:opacity-90 transition"
                 >
-                  <div className="relative w-[120px] h-[90px] rounded-lg overflow-hidden">
+                  <div className="relative w-[120px] h-[90px] rounded-md overflow-hidden">
                     <Image
                       src={imageUrl(video)}
                       alt={video.title}

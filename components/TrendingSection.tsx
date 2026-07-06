@@ -356,7 +356,7 @@ export default function TrendingSection({ posts }: Props) {
                 height={90}
                 sizes="90px"
                 quality={70}
-                className="rounded-lg object-cover"
+                className="rounded-md object-cover"
               />
 
               <div>
@@ -389,7 +389,7 @@ export default function TrendingSection({ posts }: Props) {
             return (
               <Link
                 href={`/post/${big.slug}`}
-                className="lg:col-span-2 relative h-[420px] rounded-xl overflow-hidden"
+                className="lg:col-span-2 relative h-[420px] rounded-md overflow-hidden"
               >
                 <Image
                   src={imageUrl(big)}
@@ -420,7 +420,7 @@ export default function TrendingSection({ posts }: Props) {
             return (
               <Link
                 href={`/post/${right.slug}`}
-                className="relative h-[420px] rounded-xl overflow-hidden"
+                className="relative h-[420px] rounded-md overflow-hidden"
               >
                 <Image
                   src={imageUrl(right)}

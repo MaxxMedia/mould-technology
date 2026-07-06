@@ -65,7 +65,7 @@ export default function PublicFeedPage() {
 
               {/* Candidate */}
               {(!role || role === "candidate") && (
-                <div className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl p-6 shadow-xl">
+                <div className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-md p-6 shadow-xl">
                   <h3 className="text-xl font-semibold mb-2 text-white">
                     Looking for a job?
                   </h3>
@@ -95,7 +95,7 @@ export default function PublicFeedPage() {
 
               {/* Recruiter */}
               {(!role || role === "recruiter") && (
-                <div className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl p-6 shadow-xl">
+                <div className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-md p-6 shadow-xl">
                   <h3 className="text-xl font-semibold mb-2 text-white">
                     Hiring talent?
                   </h3>

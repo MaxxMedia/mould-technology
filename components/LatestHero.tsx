@@ -86,7 +86,7 @@ export default function LatestHero({ post, posts }: LatestHeroProps) {
           {/* ================= LEFT FEATURED CARD ================= */}
           <Link
             href={`/post/${post.slug}`}
-            className="relative h-[420px] rounded-2xl overflow-hidden group"
+            className="relative h-[420px] rounded-md overflow-hidden group"
           >
             <Image
               src={imageUrl}
@@ -162,7 +162,7 @@ export default function LatestHero({ post, posts }: LatestHeroProps) {
                   href={`/post/${item.slug}`}
                   className="flex gap-4 items-start border-b border-gray-200 pb-6 group"
                 >
-                  <div className="relative w-[88px] h-[88px] rounded-xl overflow-hidden shrink-0">
+                  <div className="relative w-[88px] h-[88px] rounded-md overflow-hidden shrink-0">
                     <Image
                       src={thumb}
                       alt={item.title}

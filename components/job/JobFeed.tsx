@@ -89,7 +89,7 @@ function getPostedText(createdAt: string) {
   return (
     <main className="space-y-4">
       {jobs.map(job => (
-        <div key={job.id} className="bg-white rounded-lg shadow-sm p-5">
+        <div key={job.id} className="bg-white rounded-md shadow-sm p-5">
 
           {/* COMPANY */}
           <div className="flex items-center gap-3 mb-3">

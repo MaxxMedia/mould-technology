@@ -195,7 +195,7 @@ useEffect(() => {
         <div className="lg:col-span-2 space-y-4 min-w-0">
 
           {/* Hero Card */}
-          <div className="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.07)] overflow-hidden">
+          <div className="bg-white rounded-md shadow-[0_2px_12px_rgba(0,0,0,0.07)] overflow-hidden">
             <div className="h-1.5 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500" />
 
             <div className="p-6">
@@ -235,7 +235,7 @@ useEffect(() => {
                       />
                     </button>
                   )}
-                  <div className="w-14 h-14 rounded-xl overflow-hidden shadow-sm bg-white border border-gray-100 flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-md overflow-hidden shadow-sm bg-white border border-gray-100 flex items-center justify-center">
   {job.company?.logoUrl ? (
     <Image
       src={job.company.logoUrl}
@@ -271,7 +271,7 @@ useEffect(() => {
           </div>
 
           {/* Description */}
-          <div className="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.07)] p-6">
+          <div className="bg-white rounded-md shadow-[0_2px_12px_rgba(0,0,0,0.07)] p-6">
             <h2 className="text-base font-bold text-gray-900 mb-4">
               Job Description
             </h2>
@@ -330,7 +330,7 @@ useEffect(() => {
         <div className="space-y-4">
 
           {/* Overview */}
-          <div className="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.07)] p-6">
+          <div className="bg-white rounded-md shadow-[0_2px_12px_rgba(0,0,0,0.07)] p-6">
             <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
               Job Overview
             </h3>
@@ -356,13 +356,13 @@ useEffect(() => {
           </div>
 
           {/* About Company */}
-          <div className="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.07)] p-6">
+          <div className="bg-white rounded-md shadow-[0_2px_12px_rgba(0,0,0,0.07)] p-6">
             <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
               About Company
             </h3>
 
             <div className="flex items-center gap-3 mb-3">
-             <div className="w-10 h-10 rounded-lg overflow-hidden bg-white border border-gray-100 flex items-center justify-center">
+             <div className="w-10 h-10 rounded-md overflow-hidden bg-white border border-gray-100 flex items-center justify-center">
   {job.company?.logoUrl ? (
     <Image
       src={job.company.logoUrl}
@@ -388,7 +388,7 @@ useEffect(() => {
 
           {/* Similar Jobs */}
           {otherJobs.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.07)] p-6">
+            <div className="bg-white rounded-md shadow-[0_2px_12px_rgba(0,0,0,0.07)] p-6">
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
                 Similar Jobs
               </h3>
@@ -398,9 +398,9 @@ useEffect(() => {
                   <Link
                     key={item.id}
                     href={`/jobs/${item.slug}`}
-                    className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors group"
+                    className="flex items-start gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-md bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <Building2 size={12} className="text-gray-500" />
                     </div>
 

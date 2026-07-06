@@ -131,7 +131,7 @@ export default function HomeCompanyArticles() {
                 return (
                   <article
                     key={`${post.id}-${i}`}
-                    className={`bg-white rounded-xl overflow-hidden border border-[#F0F0F0] shadow-sm
+                    className={`bg-white rounded-md overflow-hidden border border-[#F0F0F0] shadow-sm
                       transition-all duration-500
                       ${fade ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}`}
                   >

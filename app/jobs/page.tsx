@@ -39,7 +39,7 @@ export default function JobsPage() {
           <Link
             key={job.id}
             href={`/jobs/${job.slug}`}
-            className="block border rounded-xl p-6 hover:shadow transition"
+            className="block border rounded-md p-6 hover:shadow transition"
           >
             <h2 className="text-xl font-semibold mb-2">
               {job.title}

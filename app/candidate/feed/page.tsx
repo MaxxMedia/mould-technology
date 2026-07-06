@@ -51,7 +51,7 @@ export default function CandidateFeedPage() {
         {/* ================= LEFT SIDEBAR ================= */}
         <aside className="col-span-12 lg:col-span-3 space-y-4 lg:sticky lg:top-6 self-start">
 
-          <div className="bg-white rounded-lg overflow-hidden shadow-sm">
+          <div className="bg-white rounded-md overflow-hidden shadow-sm">
             <div className="h-16 bg-gradient-to-r from-blue-600 to-indigo-600" />
             <div className="flex flex-col items-center -mt-8 pb-4">
               <div className="relative w-16 h-16">
@@ -81,7 +81,7 @@ export default function CandidateFeedPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-4 text-sm space-y-2">
+          <div className="bg-white rounded-md shadow-sm p-4 text-sm space-y-2">
             <p className="font-medium">Quick links</p>
             <Link
               href="/candidate/saved-jobs"
@@ -108,7 +108,7 @@ export default function CandidateFeedPage() {
         <main className="col-span-12 lg:col-span-6 space-y-4 lg:overflow-y-auto scrollbar-hide lg:h-full pr-2">
 
           {/* SEARCH BAR (unchanged UI) */}
-          <div className="bg-white rounded-lg shadow-sm p-4">
+          <div className="bg-white rounded-md shadow-sm p-4">
             <div className="flex items-center gap-3">
              <div className="relative w-10 h-10">
   <Image
@@ -134,7 +134,7 @@ export default function CandidateFeedPage() {
 
         {/* ================= RIGHT SIDEBAR ================= */}
         <aside className="col-span-12 lg:col-span-3 space-y-4 lg:sticky lg:top-6 self-start">
-          <div className="bg-white rounded-lg shadow-sm p-4">
+          <div className="bg-white rounded-md shadow-sm p-4">
             <h4 className="font-semibold mb-3">
               Job Market News
             </h4>
