@@ -18,6 +18,9 @@ import { useRecruiterGuard } from "@/lib/useRecruiterGuard"
 import Image from "next/image"
 import CreateArticleButton from "@/components/recruiter/CreateArticleButton"
 import PostJobButton from "@/components/recruiter/PostJobButton"
+import RecruiterAnalyticsCharts, {
+  type RecruiterAnalytics,
+} from "@/components/recruiter/RecruiterAnalyticsCharts"
 import type { JobPostingEligibility } from "@/lib/jobPosting"
 import type { ContentLimitEligibility } from "@/lib/packageLimits"
 
@@ -80,6 +83,7 @@ type DashboardData = {
   jobPosting?: JobPostingEligibility
   articlePosting?: ContentLimitEligibility
   productListings?: ContentLimitEligibility
+  analytics?: RecruiterAnalytics
 }
 
 type PackagePurchase = {
@@ -204,6 +208,7 @@ useEffect(() => {
         jobPosting: dashboardData.jobPosting ?? undefined,
         articlePosting: dashboardData.articlePosting ?? undefined,
         productListings: dashboardData.productListings ?? undefined,
+        analytics: dashboardData.analytics ?? undefined,
       })
 
       /* PROFILE */
@@ -369,6 +374,14 @@ if (stored) {
               color="bg-gradient-to-br from-orange-400 to-orange-500"
             />
           </div>
+
+          {dashboard.analytics && (
+            <RecruiterAnalyticsCharts
+              analytics={dashboard.analytics}
+              applicationsCount={dashboard.applicationsCount}
+              shortlistedCount={dashboard.shortlistedCount}
+            />
+          )}
 
           {/* QUICK ACTIONS */}
           <div>
