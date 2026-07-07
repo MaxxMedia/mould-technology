@@ -8,6 +8,7 @@ import UploadBox from "@/components/UploadBox"
 import { useState, useEffect } from "react"
 import { loadGeo } from "@/lib/geo"
 import PackageLimitModal from "@/components/recruiter/PackageLimitModal"
+import BusinessListingGuidelinesSummary from "@/components/recruiter/BusinessListingGuidelinesSummary"
 import {
   fetchProductListingEligibility,
   type ContentLimitEligibility,
@@ -52,6 +53,10 @@ const DirectorySchema = Yup.object({
   city: Yup.string().required("City required"),
   address: Yup.string().min(10).required("Address required"),
   industryId: Yup.number().required("Industry required"),
+  acceptedGuidelines: Yup.boolean().oneOf(
+    [true],
+    "Please agree to the Business Listing Guidelines."
+  ),
 })
 
 export default function AddDirectoryPage() {
@@ -258,6 +263,7 @@ export default function AddDirectoryPage() {
           city: "",
           address: "",
           industryId: "",
+          acceptedGuidelines: false,
         }}
         validationSchema={DirectorySchema}
         onSubmit={submit}
@@ -453,13 +459,38 @@ export default function AddDirectoryPage() {
 
   {status && <p className="text-red-600 text-sm">{status}</p>}
 
-  <button
-    type="submit"
-    disabled={isSubmitting || uploadingLogo || uploadingCover}
-    className="bg-black text-white px-6 py-2 rounded"
-  >
-    {isSubmitting ? "Submitting..." : "Submit for Approval"}
-  </button>
+  <div className="space-y-5 pt-2">
+    <BusinessListingGuidelinesSummary />
+
+    <label className="flex items-start gap-3 rounded-2xl border border-[#e5e7eb] bg-[#f8fafc] p-4 text-sm text-[#0f172a]">
+      <Field
+        type="checkbox"
+        name="acceptedGuidelines"
+        className="mt-1 h-5 w-5 rounded border border-[#cbd5e1] text-[#2563eb] focus:ring-[#2563eb]"
+      />
+      <span>I have read and agree to the Business Listing Guidelines.</span>
+    </label>
+    <ErrorMessage
+      name="acceptedGuidelines"
+      component="p"
+      className="text-sm text-red-600"
+    />
+
+    <div className="flex justify-center">
+      <button
+        type="submit"
+        disabled={
+          isSubmitting ||
+          uploadingLogo ||
+          uploadingCover ||
+          !values.acceptedGuidelines
+        }
+        className="min-w-[260px] rounded-xl bg-black px-8 py-3 text-base font-semibold text-white transition hover:bg-[#111827] disabled:cursor-not-allowed disabled:bg-black/50"
+      >
+        {isSubmitting ? "Submitting..." : "Submit for Approval"}
+      </button>
+    </div>
+  </div>
 
 </Form>
           )

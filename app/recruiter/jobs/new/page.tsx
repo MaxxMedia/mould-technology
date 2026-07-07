@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import "react-quill-new/dist/quill.snow.css"
 import { fetchJobPostingEligibility, type JobPostingEligibility } from "@/lib/jobPosting"
+import JobPostingPolicySummary from "@/components/recruiter/JobPostingPolicySummary"
 
 const ReactQuill = dynamic(() => import("react-quill-new"), {
   ssr: false,
@@ -23,6 +24,7 @@ export default function CreateJobPage() {
     salaryRange: "",
     location: "",
     isRemote: false,
+    acceptedPolicy: false,
   })
 
   const [loading, setLoading] = useState(false)
@@ -80,6 +82,12 @@ export default function CreateJobPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
+
+    if (!form.acceptedPolicy) {
+      setError("Please read and agree to the Job Posting Policy.")
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -89,6 +97,8 @@ export default function CreateJobPage() {
         return
       }
 
+      const { acceptedPolicy: _acceptedPolicy, ...payload } = form
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/jobs`,
         {
@@ -97,7 +107,7 @@ export default function CreateJobPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(form),
+          body: JSON.stringify(payload),
         }
       )
 
@@ -268,12 +278,29 @@ export default function CreateJobPage() {
   />
 </div>
 
-        <button
-          disabled={loading}
-          className="bg-blue-600 text-white px-6 py-3 rounded disabled:opacity-60"
-        >
-          {loading ? "Publishing..." : "Publish Job"}
-        </button>
+        <div className="space-y-5 pt-2">
+          <JobPostingPolicySummary />
+
+          <label className="flex items-start gap-3 rounded-[22px] border border-slate-200 bg-slate-50 px-5 py-4 text-[16px] text-slate-900">
+            <input
+              type="checkbox"
+              name="acceptedPolicy"
+              checked={form.acceptedPolicy}
+              onChange={handleChange}
+              className="mt-1 h-5 w-5 rounded border border-slate-300 text-blue-600 focus:ring-blue-600"
+            />
+            <span>I have read and agree to the Job Posting Policy.</span>
+          </label>
+
+          <div className="flex justify-center">
+            <button
+              disabled={loading || !form.acceptedPolicy}
+              className="min-w-[240px] rounded-2xl bg-blue-600 px-8 py-4 text-[16px] font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+            >
+              {loading ? "Publishing..." : "Publish Job"}
+            </button>
+          </div>
+        </div>
       </form>
         </>
       )}
