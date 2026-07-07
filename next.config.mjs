@@ -41,6 +41,21 @@ const nextConfig = {
       { protocol: "https", hostname: "example.com" },
     ],
   },
+  serverExternalPackages: ["country-state-city"],
+  async redirects() {
+    return [
+      {
+        source: "/recruiter/directories/new",
+        destination: "/recruiter/directory/new",
+        permanent: true,
+      },
+      {
+        source: "/recruiter/directories/:id/edit",
+        destination: "/recruiter/directory/:id/edit",
+        permanent: true,
+      },
+    ]
+  },
 }
 
 export default nextConfig

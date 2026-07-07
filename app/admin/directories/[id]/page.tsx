@@ -98,7 +98,7 @@ export default function ReviewDirectoryPage() {
 
         <div>
           <strong>Submitted by:</strong>{" "}
-          {directory.submittedBy.fullName || directory.submittedBy.email}
+          {directory.submittedBy?.fullName || directory.submittedBy?.email || "—"}
         </div>
 
         <div>

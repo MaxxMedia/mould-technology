@@ -2,6 +2,11 @@
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import CreateArticleButton from "@/components/recruiter/CreateArticleButton"
+import {
+  fetchArticlePostingEligibility,
+  type ContentLimitEligibility,
+} from "@/lib/packageLimits"
 
 type Article = {
   id: number
@@ -16,11 +21,23 @@ type Article = {
 
 export default function RecruiterArticlesPage() {
   const [articles, setArticles] = useState<Article[]>([])
+  const [eligibility, setEligibility] = useState<ContentLimitEligibility | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchArticles()
+    loadEligibility()
   }, [])
+
+  async function loadEligibility() {
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) return
+      setEligibility(await fetchArticlePostingEligibility(token))
+    } catch (error) {
+      console.error("Article eligibility error:", error)
+    }
+  }
 
   async function fetchArticles() {
     try {
@@ -85,14 +102,20 @@ export default function RecruiterArticlesPage() {
   return (
     <div className="max-w-6xl mx-auto p-10">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold">My Articles</h1>
+        <div>
+          <h1 className="text-2xl font-bold">My Articles</h1>
+          {eligibility && (
+            <p className="text-sm text-gray-500 mt-1">
+              {eligibility.isUnlimited
+                ? "Unlimited technical articles on your plan"
+                : eligibility.canCreate
+                  ? `${eligibility.remaining ?? 0} article${eligibility.remaining === 1 ? "" : "s"} remaining this year`
+                  : eligibility.message}
+            </p>
+          )}
+        </div>
 
-        <Link
-          href="/recruiter/articles/create"
-          className="bg-black text-white px-5 py-2 rounded-lg"
-        >
-          + Create Article
-        </Link>
+        <CreateArticleButton eligibility={eligibility} />
       </div>
 
       {articles.length === 0 ? (
