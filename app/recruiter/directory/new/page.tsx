@@ -476,7 +476,7 @@ export default function AddDirectoryPage() {
       className="text-sm text-red-600"
     />
 
-    <div className="flex justify-center">
+    <div className="flex justify-start">
       <button
         type="submit"
         disabled={
@@ -485,7 +485,7 @@ export default function AddDirectoryPage() {
           uploadingCover ||
           !values.acceptedGuidelines
         }
-        className="min-w-[260px] rounded-xl bg-black px-8 py-3 text-base font-semibold text-white transition hover:bg-[#111827] disabled:cursor-not-allowed disabled:bg-black/50"
+        className="w-full max-w-[220px] rounded-xl bg-black px-8 py-3 text-base font-semibold text-white transition hover:bg-[#111827] disabled:cursor-not-allowed disabled:bg-black/50"
       >
         {isSubmitting ? "Submitting..." : "Submit for Approval"}
       </button>
