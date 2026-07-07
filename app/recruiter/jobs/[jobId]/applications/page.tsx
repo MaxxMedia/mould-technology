@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import { useParams } from "next/navigation"
 import { Mail, Clock, FileText, Check, X } from "lucide-react"
 
@@ -115,12 +114,9 @@ export default function JobApplicantsPage() {
               {/* HEADER */}
               <div className="flex justify-between items-start">
                 <div>
-                  <Link
-                    href={`/recruiter/jobs/${jobId}/applications/${app.id}`}
-                    className="text-xl font-bold text-blue-600 hover:underline"
-                  >
-                    {app.User?.fullName || "Candidate"}
-                  </Link>
+                  <h2 className="text-xl font-bold text-blue-600">
+  {app.User?.fullName || "Candidate"}
+</h2>
 
                   <p className="text-gray-600 mt-1">
                     {app.User?.headline || "—"}
@@ -161,10 +157,7 @@ export default function JobApplicantsPage() {
                   {app.Job?.title}
                 </div>
 
-                <div>
-                  <span className="font-semibold">Company:</span>{" "}
-                  {app.Job?.Company?.name}
-                </div>
+    
 
                 <div>
                   <span className="font-semibold">Location:</span>{" "}

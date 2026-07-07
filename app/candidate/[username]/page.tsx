@@ -42,27 +42,27 @@ export default async function CandidateProfilePage(props: {
           <div className="bg-white rounded-lg overflow-hidden shadow-sm">
 
             {/* COVER */}
-            <div className="h-52 bg-gradient-to-r from-slate-800 to-slate-900 relative">
+            <div className="h-32 bg-gradient-to-r from-slate-800 to-slate-900 relative">
               <button className="absolute top-3 right-3 bg-white p-2 rounded-full shadow">
                 <Pencil size={16} />
               </button>
             </div>
 
             {/* PROFILE INFO */}
-            <div className="p-6 relative">
+            <div className="px-6 pb-4 pt-0 relative">
 
               {/* AVATAR */}
-              <div className="relative w-40 h-40 absolute -top-20 left-6">
-  <Image
-    src={candidate.avatarUrl || "https://i.pravatar.cc/180"}
-    alt={candidate.fullName || candidate.username}
-    fill
-    className="rounded-full border-4 border-white object-cover bg-white"
-    sizes="160px"
-  />
-</div>
+              <div className="relative w-24 h-24 absolute -top-12 left-6">
+                <Image
+                  src={candidate.avatarUrl || "https://i.pravatar.cc/180"}
+                  alt={candidate.fullName || candidate.username}
+                  fill
+                  className="rounded-full border-4 border-white object-cover bg-white"
+                  sizes="160px"
+                />
+              </div>
 
-              <div className="pt-24 flex justify-between gap-6">
+              <div className=" flex justify-between gap-6">
 
                 {/* LEFT INFO */}
                 <div>
@@ -71,29 +71,29 @@ export default async function CandidateProfilePage(props: {
                     <CheckCircle size={18} className="text-blue-600" />
                   </h1>
 
-                  <p className="text-gray-700 mt-1">
+                  <p className="text-gray-700 -mt-0.5">
                     {candidate.headline || "Add your headline"}
                   </p>
 
                   {candidate.company && (
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-gray-600 -mt-0.5">
                       {candidate.company}
                     </p>
                   )}
 
                   {candidate.location && (
-                    <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                    <p className="text-sm text-gray-500 flex items-center gap-1 -mt-0.5">
                       <MapPin size={14} />
                       {candidate.location}
                     </p>
                   )}
 
-                  <p className="text-sm text-blue-600 mt-1">
+                  <p className="text-sm text-blue-600 -mt-0.5">
                     500+ connections
                   </p>
 
                   {/* ACTIONS */}
-                  <div className="flex flex-wrap gap-3 mt-4">
+                  <div className="flex flex-wrap gap-3 mt-3">
                     <button className="bg-blue-600 text-white px-5 py-1.5 rounded-full text-sm font-medium">
                       Open to
                     </button>

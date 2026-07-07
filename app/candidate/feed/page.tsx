@@ -4,6 +4,9 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useCandidateGuard } from "@/lib/useCandidateGuard"
 import JobFeed from "@/components/job/JobFeed"
+import SavedJobs from "@/components/job/SavedJobs"
+import MyApplicationsPage from "../applications/page"
+import JobAlertsPage from "../job-alerts/page"
 
 type CandidateProfile = {
   fullName?: string
@@ -16,6 +19,7 @@ export default function CandidateFeedPage() {
   useCandidateGuard()
 
   const [profile, setProfile] = useState<CandidateProfile | null>(null)
+  const [activeSection, setActiveSection] = useState("feed");
 
   useEffect(() => {
     async function loadProfile() {
@@ -81,27 +85,33 @@ export default function CandidateFeedPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-md shadow-sm p-4 text-sm space-y-2">
-            <p className="font-medium">Quick links</p>
-            <Link
-              href="/candidate/saved-jobs"
-              className="text-gray-600 hover:underline block"
-            >
-              Saved jobs
-            </Link>
-            <Link
-              href="/candidate/applications"
-              className="text-gray-600 hover:underline block"
-            >
-              My applications
-            </Link>
-            <Link
-              href="/candidate/job-alerts"
-              className="text-gray-600 hover:underline block"
-            >
-              Job alerts
-            </Link>
-          </div>
+<button
+  onClick={() => setActiveSection("feed")}
+  className="block text-left w-full text-gray-600 hover:underline"
+>
+  Home Feed
+</button>
+
+<button
+  onClick={() => setActiveSection("saved")}
+  className="block text-left w-full text-gray-600 hover:underline"
+>
+  Saved jobs
+</button>
+
+<button
+  onClick={() => setActiveSection("applications")}
+  className="block text-left w-full text-gray-600 hover:underline"
+>
+  My applications
+</button>
+
+<button
+  onClick={() => setActiveSection("alerts")}
+  className="block text-left w-full text-gray-600 hover:underline"
+>
+  Job alerts
+</button>
         </aside>
 
         {/* ================= FEED ================= */}
@@ -126,9 +136,13 @@ export default function CandidateFeedPage() {
               />
             </div>
           </div>
+{activeSection === "feed" && <JobFeed />}
 
-          {/* 🔥 REUSED COMPONENT */}
-          <JobFeed />
+{activeSection === "saved" && <SavedJobs />}
+
+{activeSection === "applications" && <MyApplicationsPage />}
+
+{activeSection === "alerts" && <JobAlertsPage />}
 
         </main>
 
