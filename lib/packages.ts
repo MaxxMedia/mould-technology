@@ -51,20 +51,20 @@ export const SUBSCRIPTION_FEATURES: SubscriptionFeature[] = [
   { name: "Product Launch Announcements", free: false, basic: false, professional: "6/year", enterprise: "Unlimited" },
   { name: "Job Postings", free: "2", basic: "20", professional: "Unlimited", enterprise: "Unlimited" },
   { name: "Internship Listings", free: false, basic: "10", professional: "Unlimited", enterprise: "Unlimited" },
-  { name: "Featured Job", free: false, basic: false, professional: "10", enterprise: "Unlimited" },
+  { name: "Featured Job", free: false, basic: false, professional: "10 Days", enterprise: "30 Days" },
   { name: "Company Career Page", free: false, basic: false, professional: false, enterprise: true },
   { name: "Resume Download", free: false, basic: "10", professional: "20", enterprise: "Unlimited" },
-  { name: "RFQ Leads", free: false, basic: "10/month", professional: "20/month", enterprise: "Unlimited" },
+  { name: "RFQ Leads", free: false, basic: "10/PER MONTH", professional: "20/PER MONTH", enterprise: "Unlimited" },
   { name: "Quote Request Form", free: false, basic: false, professional: true, enterprise: true },
-  { name: "Lead Notifications", free: "Email", basic: "Email", professional: "Email+SMS", enterprise: "Email+WhatsApp+SMS Realtime" },
+  { name: "Lead Notifications", free: "Email", basic: "Email", professional: "Email+SMS", enterprise: "Email+Whatsapp+Realtime" },
 
   { name: "Search Ranking", free: "Standard", basic: "Priority", professional: "Top Results", enterprise: "#1 Priority" },
   { name: "Featured in Category", free: false, basic: true, professional: true, enterprise: true },
-  { name: "Homepage Featured", free: false, basic: false, professional: "1 Ad/Month", enterprise: "1 Ad/Week" },
-  { name: "Newsletter Promotion", free: false, basic: "Half Yearly", professional: "Quarterly", enterprise: "Every Month" },
-  { name: "Social Media Promotion", free: false, basic: "1 Post/Year", professional: "6 Posts/Year", enterprise: "12 Posts/Year" },
+  { name: "Homepage Featured", free: false, basic: false, professional: "1 AD / PER MONTH", enterprise: "1 AD PER WEEK" },
+  { name: "Newsletter Promotion", free: false, basic: "3 times per year", professional: "6 times per year", enterprise: "Every Month" },
+  { name: "Social Media Promotion", free: false, basic: "1 Post/Year", professional: "6 Post/Year", enterprise: "12 Posts/Year" },
   { name: "Homepage Spotlight", free: false, basic: false, professional: true, enterprise: true },
-  { name: "Trending Supplier Badge", free: false, basic: false, professional: false, enterprise: false },
+  { name: "Trending Supplier Badge", free: false, basic: false, professional: false, enterprise: true },
 
   { name: "Homepage Hero Banner", free: false, basic: false, professional: false, enterprise: "1 / Rotational" },
   { name: "Homepage Sidebar", free: false, basic: false, professional: "1 / Rotational", enterprise: "1 / Rotational" },
@@ -74,12 +74,13 @@ export const SUBSCRIPTION_FEATURES: SubscriptionFeature[] = [
 
   { name: "CEO Video Interview", free: false, basic: false, professional: false, enterprise: "1/Year" },
   { name: "Factory Visit Feature", free: false, basic: false, professional: false, enterprise: "1/Year" },
-  { name: "Product Demo Video on Home Page", free: false, basic: false, professional: "1/Year", enterprise: "4/Year" },
+  { name: "Product Demo Video on Home Page", free: false, basic: false, professional: "1/Year", enterprise: "4/ Year" },
 
   { name: "Email Support", free: true, basic: true, professional: true, enterprise: "Priority" },
   { name: "Phone Support", free: false, basic: false, professional: true, enterprise: true },
   { name: "Dedicated Account Manager", free: false, basic: false, professional: false, enterprise: true },
 ];
+
 
 export const BANNER_PACKAGES = [
   { id: "homepage-hero", position: "Homepage Hero Banner", monthly: 40000, quarterly: 108000, annual: 360000 },
