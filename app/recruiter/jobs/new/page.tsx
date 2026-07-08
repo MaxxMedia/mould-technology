@@ -281,7 +281,7 @@ export default function CreateJobPage() {
         <div className="space-y-5 pt-2">
           <JobPostingPolicySummary />
 
-          <label className="flex items-start gap-3 rounded-[22px] border border-slate-200 bg-slate-50 px-5 py-4 text-[16px] text-slate-900">
+          <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-5 py-4 text-[16px] text-slate-900">
             <input
               type="checkbox"
               name="acceptedPolicy"
@@ -292,10 +292,10 @@ export default function CreateJobPage() {
             <span>I have read and agree to the Job Posting Policy.</span>
           </label>
 
-          <div className="flex justify-center">
+          <div className="flex justify-start pt-2">
             <button
               disabled={loading || !form.acceptedPolicy}
-              className="min-w-[240px] rounded-2xl bg-blue-600 px-8 py-4 text-[16px] font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+              className="w-full max-w-[220px] rounded-xl bg-blue-600 px-8 py-4 text-[16px] font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
             >
               {loading ? "Publishing..." : "Publish Job"}
             </button>
