@@ -332,7 +332,7 @@ export default function PackagesPageClient() {
         </div>
       </section>
 
-      <section className="bg-[#f8f9fb] py-16 sm:py-20">
+      {/* <section className="bg-[#f8f9fb] py-16 sm:py-20">
         <div className="mx-auto max-w-[1320px] px-4 sm:px-6">
           <SectionHeading
             title="Recruitment Packages"
@@ -374,7 +374,7 @@ export default function PackagesPageClient() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
     </main>
   );
 }
