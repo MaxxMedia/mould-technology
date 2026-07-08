@@ -1,5 +1,5 @@
 "use client"
-
+import ContentSubmissionPolicy from "@/components/ContentSubmissionPolicy"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -21,6 +21,8 @@ export default function CreateRecruiterArticlePage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [eligibility, setEligibility] = useState<ContentLimitEligibility | null>(null)
+  const [acceptedPolicy, setAcceptedPolicy] = useState(false)
+  
 
   useEffect(() => {
     async function loadEligibility() {
@@ -171,11 +173,20 @@ export default function CreateRecruiterArticlePage() {
     Uploading image...
   </p>
 )}
+<ContentSubmissionPolicy
+  checked={acceptedPolicy}
+  onChange={setAcceptedPolicy}
+/>
 
 
         <button
           type="submit"
-          disabled={loading || uploading || eligibility?.canCreate === false}
+          disabled={
+  loading ||
+  uploading ||
+  eligibility?.canCreate === false ||
+  !acceptedPolicy
+}
           className="bg-black text-white px-6 py-2 rounded disabled:opacity-50"
         >
           {loading ? "Publishing..." : "Publish Article"}

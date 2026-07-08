@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
-import { Mail, Clock, FileText, Check, X } from "lucide-react"
+import { Mail, Phone, Clock, FileText, Check, X } from "lucide-react"
 
 type Application = {
   id: number
@@ -16,6 +16,7 @@ type Application = {
     fullName: string | null
     email: string
     headline: string | null
+    phone: string | null
   }
 
   Job: {
@@ -138,17 +139,24 @@ export default function JobApplicantsPage() {
               </div>
 
               {/* ✅ META - Email and Date only */}
-              <div className="flex flex-wrap gap-4 text-xs text-gray-500 mt-3">
-                <span className="flex items-center gap-1">
-                  <Mail size={12} />
-                  {app.User?.email}
-                </span>
+  <div className="flex flex-wrap gap-4 text-xs text-gray-500 mt-3">
+  <span className="flex items-center gap-1">
+    <Mail size={12} />
+    {app.User?.email}
+  </span>
 
-                <span className="flex items-center gap-1">
-                  <Clock size={12} />
-                  {new Date(app.createdAt).toLocaleDateString()}
-                </span>
-              </div>
+  {app.User?.phone && (
+    <span className="flex items-center gap-1">
+      <Phone size={12} />
+      {app.User.phone}
+    </span>
+  )}
+
+  <span className="flex items-center gap-1">
+    <Clock size={12} />
+    {new Date(app.createdAt).toLocaleDateString()}
+  </span>
+</div>
 
               {/* ✅ JOB DETAILS - Moved here with border top */}
               <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm border-t pt-4">
