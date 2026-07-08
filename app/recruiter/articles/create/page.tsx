@@ -178,21 +178,6 @@ export default function CreateRecruiterArticlePage() {
   onChange={setAcceptedPolicy}
 />
 
-<<<<<<< HEAD
-
-        <button
-          type="submit"
-          disabled={
-  loading ||
-  uploading ||
-  eligibility?.canCreate === false ||
-  !acceptedPolicy
-}
-          className="bg-black text-white px-6 py-2 rounded disabled:opacity-50"
-        >
-          {loading ? "Publishing..." : "Publish Article"}
-        </button>
-=======
         <div className="flex justify-start">
           <button
             type="submit"
@@ -202,7 +187,6 @@ export default function CreateRecruiterArticlePage() {
             {loading ? "Publishing..." : "Publish Article"}
           </button>
         </div>
->>>>>>> 77bb476fc86e9a22d1132598aecee28d0c53f4dd
       </form>
     </div>
   )
