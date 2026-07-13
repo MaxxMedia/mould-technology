@@ -13,6 +13,8 @@ export const BANNER_PLACEMENTS = [
   { value: "JOB_RIGHT", label: "Job" },
   { value: "INDUSTRY_TALKS_RIGHT", label: "Industry Talks" },
   { value: "MAGAZINE_RIGHT", label: "Magazine" },
+  { value: "Archive", label: "Archive" },
+
 ] as const;
 
 export type BannerPlacement =

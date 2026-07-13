@@ -1,4 +1,4 @@
-
+// Banner.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -20,7 +20,8 @@ export type BannerPlacement =
   | "SUPPLIER_RIGHT"
   | "JOB_RIGHT"
   | "INDUSTRY_TALKS_RIGHT"
-  | "MAGAZINE_RIGHT";
+  | "MAGAZINE_RIGHT"
+  | "Archive";
 
 type BannerData = {
   id: number;
@@ -57,6 +58,7 @@ const RIGHT_RAIL_PLACEMENTS: BannerPlacement[] = [
   "JOB_RIGHT",
   "INDUSTRY_TALKS_RIGHT",
   "MAGAZINE_RIGHT",
+  "Archive",
 ];
 
 // everything else (SUPPLIER_TOP, SUPPLIER_AFTER_VIDEO, FOOTER) falls through

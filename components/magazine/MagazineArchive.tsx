@@ -106,7 +106,7 @@ export default function MagazineArchive() {
 
           {/* RIGHT – SIDEBAR ADS */}
           <aside className="space-y-6">
-            <Banner placement="MAGAZINE_RIGHT" />
+            <Banner placement="Archive" />
           </aside>
 
         </div>
