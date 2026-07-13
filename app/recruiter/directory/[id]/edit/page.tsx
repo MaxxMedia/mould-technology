@@ -323,7 +323,7 @@ export default function EditDirectoryPage() {
       {/* SOCIAL LINKS */}
       <Section title="Social Media">
         <div className="grid grid-cols-2 gap-4">
-          {["facebook", "linkedin", "twitter", "youtube"].map((key) => (
+          {["facebook", "linkedin", "twitter", "youtube", "whatsapp"].map((key) => (
             <div key={key}>
               <label className="label capitalize">{key}</label>
               <input

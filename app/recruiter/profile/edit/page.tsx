@@ -9,10 +9,28 @@ type Industry = {
   name: string
 }
 
+type CompanyProfileLimits = {
+  descriptionLimit: number | null
+  coverBanner: boolean
+  website: boolean
+  googleMap: boolean
+  whatsapp: boolean
+  galleryImages: number | null
+  factoryImages: number | null
+  productCategories: number | null
+  productListings: number | null
+  productImages: number | null
+  productVideos: number | null
+  brochures: boolean
+  certifications: boolean
+}
+
 export default function EditRecruiterProfile() {
   const router = useRouter()
 
   const [industries, setIndustries] = useState<Industry[]>([])
+  const [profileLimits, setProfileLimits] =
+  useState<CompanyProfileLimits | null>(null)
 
   const [form, setForm] = useState({
     fullName: "",
@@ -39,67 +57,114 @@ export default function EditRecruiterProfile() {
   const [success, setSuccess] = useState("")
   const [error, setError] = useState("")
 
+  // NEW: field-level validation errors
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
   /* ================= LOAD PROFILE ================= */
 
-useEffect(() => {
-  async function loadData() {
-    const token = localStorage.getItem("token")
+  useEffect(() => {
+    async function loadData() {
+      const token = localStorage.getItem("token")
 
-    console.log("TOKEN:", token)
+      console.log("TOKEN:", token)
 
-    const [profileRes, industryRes] = await Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/recruiters/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/industries`),
-    ])
+      const [profileRes, industryRes, limitsRes] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/recruiters/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
 
-    console.log("PROFILE STATUS:", profileRes.status)
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/industries`),
 
-    const profile = await profileRes.json()
+        fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/recruiters/company-profile-eligibility`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        ),
+      ])
 
-    console.log("PROFILE DATA:", profile)
+      console.log("PROFILE STATUS:", profileRes.status)
 
-    const industryData = await industryRes.json()
+      const profile = await profileRes.json()
 
-    setIndustries(industryData || [])
+      console.log("PROFILE DATA:", profile)
 
-    setForm({
-      fullName: profile.fullName || "",
-      headline: profile.headline || "",
-      about: profile.about || "",
-      location: profile.location || "",
-      websiteUrl: profile.websiteUrl || "",
-      avatarUrl: profile.avatarUrl || "",
+      const industryData = await industryRes.json()
 
-      companyName: profile.Company?.name || "",
-      companyTagline: profile.Company?.tagline || "",
-      companyDescription: profile.Company?.description || "",
-      companyIndustryId: profile.Company?.industryId?.toString() || "",
-      companyLocation: profile.Company?.location || "",
-      companyAddress: profile.Company?.address || "",
-      companySize: profile.Company?.companySize || "",
-      companyWebsite: profile.Company?.website || "",
-      companyLogoUrl: profile.Company?.logoUrl || "",
-      companyCoverImageUrl: profile.Company?.coverImageUrl || "",
-    })
-  }
+      if (limitsRes.ok) {
+        const limits = await limitsRes.json()
+        setProfileLimits(limits)
+      }
 
-  loadData()
-}, [])
+      setIndustries(industryData || [])
+
+      setForm({
+        fullName: profile.fullName || "",
+        headline: profile.headline || "",
+        about: profile.about || "",
+        location: profile.location || "",
+        websiteUrl: profile.websiteUrl || "",
+        avatarUrl: profile.avatarUrl || "",
+
+        companyName: profile.Company?.name || "",
+        companyTagline: profile.Company?.tagline || "",
+        companyDescription: profile.Company?.description || "",
+        companyIndustryId: profile.Company?.industryId?.toString() || "",
+        companyLocation: profile.Company?.location || "",
+        companyAddress: profile.Company?.address || "",
+        companySize: profile.Company?.companySize || "",
+        companyWebsite: profile.Company?.website || "",
+        companyLogoUrl: profile.Company?.logoUrl || "",
+        companyCoverImageUrl: profile.Company?.coverImageUrl || "",
+      })
+    }
+
+    loadData()
+  }, [])
 
   /* ================= HANDLE INPUT ================= */
 
   function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+
+    if (
+      name === "companyDescription" &&
+      profileLimits?.descriptionLimit &&
+      value.length > profileLimits.descriptionLimit
+    ) {
+      return
+    }
+
+    setForm({
+      ...form,
+      [name]: value,
+    })
+
+    // clear the field's error as soon as the user edits it
+    if (errors[name]) {
+      setErrors((prev) => {
+        const next = { ...prev }
+        delete next[name]
+        return next
+      })
+    }
   }
 
   /* ================= HANDLE IMAGE UPLOAD ================= */
 
   async function handleImageUpload(file: File, field: string) {
     try {
+      if (
+        field === "companyCoverImageUrl" &&
+        !profileLimits?.coverBanner
+      ) {
+        alert("Upgrade to Basic or above to upload a Company Cover Banner.");
+        return;
+      }
       setUploading(true)
       const token = localStorage.getItem("token")
 
@@ -129,13 +194,96 @@ useEffect(() => {
     }
   }
 
+  /* ================= VALIDATION ================= */
+
+  function validateForm() {
+    const newErrors: Record<string, string> = {}
+
+    // ---- Recruiter Information ----
+
+    if (!form.fullName.trim())
+      newErrors.fullName = "Full name is required."
+    else if (form.fullName.trim().length < 3 || form.fullName.trim().length > 60)
+      newErrors.fullName = "Full name must be between 3 and 60 characters."
+
+    if (!form.headline.trim())
+      newErrors.headline = "Headline is required."
+    else if (form.headline.trim().length < 10 || form.headline.trim().length > 120)
+      newErrors.headline = "Headline must be between 10 and 120 characters."
+
+    if (!form.about.trim())
+      newErrors.about = "About is required."
+    else if (form.about.trim().length < 30 || form.about.trim().length > 1000)
+      newErrors.about = "About must be between 30 and 1000 characters."
+
+    if (!form.location.trim())
+      newErrors.location = "Location is required."
+
+    // ---- Company Information ----
+    // Company Logo is optional — availability/requirement is package-based,
+    // not enforced client-side as mandatory.
+
+    if (!form.companyName.trim())
+      newErrors.companyName = "Company name is required."
+    else if (form.companyName.trim().length < 3 || form.companyName.trim().length > 100)
+      newErrors.companyName = "Company name must be between 3 and 100 characters."
+
+    if (!form.companyTagline.trim())
+      newErrors.companyTagline = "Company tagline is required."
+    else if (form.companyTagline.trim().length < 5 || form.companyTagline.trim().length > 120)
+      newErrors.companyTagline = "Tagline must be between 5 and 120 characters."
+
+    if (!form.companyDescription.trim()) {
+      newErrors.companyDescription = "Description is required."
+    } else if (
+      profileLimits?.descriptionLimit &&
+      form.companyDescription.length > profileLimits.descriptionLimit
+    ) {
+      newErrors.companyDescription = `Maximum ${profileLimits.descriptionLimit} characters allowed.`
+    }
+
+    if (!form.companyIndustryId)
+      newErrors.companyIndustryId = "Select an industry."
+
+    if (!form.companyLocation.trim())
+      newErrors.companyLocation = "Company location is required."
+
+    if (!form.companyAddress.trim())
+      newErrors.companyAddress = "Full address is required."
+
+    if (!form.companySize.trim())
+      newErrors.companySize = "Company size is required."
+
+    // ---- URL validations (optional fields) ----
+
+    const urlRegex = /^https?:\/\/.+/i
+
+    if (form.websiteUrl && !urlRegex.test(form.websiteUrl)) {
+      newErrors.websiteUrl = "Enter a valid URL (must start with http:// or https://)."
+    }
+
+    if (form.companyWebsite && !urlRegex.test(form.companyWebsite)) {
+      newErrors.companyWebsite = "Enter a valid URL (must start with http:// or https://)."
+    }
+
+    setErrors(newErrors)
+
+    return Object.keys(newErrors).length === 0
+  }
+
   /* ================= SUBMIT ================= */
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
     setError("")
     setSuccess("")
+
+    if (!validateForm()) {
+      setError("Please fix the highlighted fields before submitting.")
+      return
+    }
+
+    setLoading(true)
 
     try {
       const token = localStorage.getItem("token")
@@ -189,7 +337,7 @@ useEffect(() => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
 
           {/* ================= RECRUITER SECTION ================= */}
           <SectionTitle title="Company Owner Information" />
@@ -202,12 +350,42 @@ useEffect(() => {
             accept="image/*"
           />
 
-          <Input label="Full Name" name="fullName" value={form.fullName} onChange={handleChange} />
-          <Input label="Headline" name="headline" value={form.headline} onChange={handleChange} />
-          <Input label="Location" name="location" value={form.location} onChange={handleChange} />
-          <Input label="Website URL" name="websiteUrl" value={form.websiteUrl} onChange={handleChange} />
+          <Input
+            label="Full Name"
+            name="fullName"
+            value={form.fullName}
+            onChange={handleChange}
+            error={errors.fullName}
+          />
+          <Input
+            label="Headline"
+            name="headline"
+            value={form.headline}
+            onChange={handleChange}
+            error={errors.headline}
+          />
+          <Input
+            label="Location"
+            name="location"
+            value={form.location}
+            onChange={handleChange}
+            error={errors.location}
+          />
+          <Input
+            label="Website URL"
+            name="websiteUrl"
+            value={form.websiteUrl}
+            onChange={handleChange}
+            error={errors.websiteUrl}
+          />
 
-          <Textarea label="About" name="about" value={form.about} onChange={handleChange} />
+          <Textarea
+            label="About"
+            name="about"
+            value={form.about}
+            onChange={handleChange}
+            error={errors.about}
+          />
 
           {/* ================= COMPANY SECTION ================= */}
           <SectionTitle title="Company Information" />
@@ -220,17 +398,55 @@ useEffect(() => {
             accept="image/*"
           />
 
-          <UploadBox
-            label="Company Cover Image"
-            value={form.companyCoverImageUrl}
-            onUpload={(file) => handleImageUpload(file, "companyCoverImageUrl")}
-            height="h-40"
-            accept="image/*"
-          />
+          {profileLimits?.coverBanner ? (
+            <UploadBox
+              label="Company Cover Image"
+              value={form.companyCoverImageUrl}
+              onUpload={(file) =>
+                handleImageUpload(file, "companyCoverImageUrl")
+              }
+              height="h-40"
+              accept="image/*"
+            />
+          ) : (
+            <div className="rounded-lg border border-yellow-300 bg-yellow-50 p-4">
+              <p className="text-sm text-yellow-800">
+                Company Cover Banner is available on the Basic plan and above.
+              </p>
+            </div>
+          )}
 
-          <Input label="Company Name" name="companyName" value={form.companyName} onChange={handleChange} />
-          <Input label="Tagline" name="companyTagline" value={form.companyTagline} onChange={handleChange} />
-          <Textarea label="Company Description" name="companyDescription" value={form.companyDescription} onChange={handleChange} />
+          <Input
+            label="Company Name"
+            name="companyName"
+            value={form.companyName}
+            onChange={handleChange}
+            error={errors.companyName}
+          />
+          <Input
+            label="Tagline"
+            name="companyTagline"
+            value={form.companyTagline}
+            onChange={handleChange}
+            error={errors.companyTagline}
+          />
+          <Textarea
+            label={`Company Description ${
+              profileLimits?.descriptionLimit
+                ? `(Max ${profileLimits.descriptionLimit} characters)`
+                : ""
+            }`}
+            name="companyDescription"
+            value={form.companyDescription}
+            onChange={handleChange}
+            maxLength={profileLimits?.descriptionLimit ?? undefined}
+            error={errors.companyDescription}
+          />
+          {profileLimits?.descriptionLimit && (
+            <p className="text-xs text-gray-500 mt-1">
+              {form.companyDescription.length}/{profileLimits.descriptionLimit}
+            </p>
+          )}
 
           <div>
             <label className="text-sm font-medium text-gray-700">Industry</label>
@@ -238,7 +454,9 @@ useEffect(() => {
               name="companyIndustryId"
               value={form.companyIndustryId}
               onChange={handleChange}
-              className="w-full h-[48px] px-4 mt-1 border rounded-md"
+              className={`w-full h-[48px] px-4 mt-1 rounded-md border ${
+                errors.companyIndustryId ? "border-red-500" : "border-gray-300"
+              }`}
             >
               <option value="">Select Industry</option>
               {industries.map((industry) => (
@@ -247,12 +465,39 @@ useEffect(() => {
                 </option>
               ))}
             </select>
+            {errors.companyIndustryId && (
+              <p className="mt-1 text-xs text-red-500">{errors.companyIndustryId}</p>
+            )}
           </div>
 
-          <Input label="Company Location" name="companyLocation" value={form.companyLocation} onChange={handleChange} />
-          <Input label="Full Address" name="companyAddress" value={form.companyAddress} onChange={handleChange} />
-          <Input label="Company Size" name="companySize" value={form.companySize} onChange={handleChange} />
-          <Input label="Company Website" name="companyWebsite" value={form.companyWebsite} onChange={handleChange} />
+          <Input
+            label="Company Location"
+            name="companyLocation"
+            value={form.companyLocation}
+            onChange={handleChange}
+            error={errors.companyLocation}
+          />
+          <Input
+            label="Full Address"
+            name="companyAddress"
+            value={form.companyAddress}
+            onChange={handleChange}
+            error={errors.companyAddress}
+          />
+          <Input
+            label="Company Size"
+            name="companySize"
+            value={form.companySize}
+            onChange={handleChange}
+            error={errors.companySize}
+          />
+          <Input
+            label="Company Website"
+            name="companyWebsite"
+            value={form.companyWebsite}
+            onChange={handleChange}
+            error={errors.companyWebsite}
+          />
 
           <button
             type="submit"
@@ -282,11 +527,13 @@ function Input({
   name,
   value,
   onChange,
+  error,
 }: {
   label: string
   name: string
   value: string
   onChange: any
+  error?: string
 }) {
   return (
     <div>
@@ -296,8 +543,15 @@ function Input({
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full h-[48px] px-4 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+        className={`w-full h-[48px] px-4 mt-1 rounded-md border focus:outline-none focus:ring-2 ${
+          error
+            ? "border-red-500 focus:ring-red-500"
+            : "border-gray-300 focus:ring-blue-600"
+        }`}
       />
+      {error && (
+        <p className="mt-1 text-xs text-red-500">{error}</p>
+      )}
     </div>
   )
 }
@@ -307,11 +561,15 @@ function Textarea({
   name,
   value,
   onChange,
+  maxLength,
+  error,
 }: {
   label: string
   name: string
   value: string
   onChange: any
+  maxLength?: number
+  error?: string
 }) {
   return (
     <div>
@@ -321,8 +579,16 @@ function Textarea({
         value={value}
         onChange={onChange}
         rows={4}
-        className="w-full mt-1 px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+        maxLength={maxLength}
+        className={`w-full mt-1 px-4 py-3 rounded-md border focus:outline-none focus:ring-2 ${
+          error
+            ? "border-red-500 focus:ring-red-500"
+            : "border-gray-300 focus:ring-blue-600"
+        }`}
       />
+      {error && (
+        <p className="mt-1 text-xs text-red-500">{error}</p>
+      )}
     </div>
   )
 }

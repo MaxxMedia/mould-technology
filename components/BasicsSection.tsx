@@ -199,7 +199,7 @@ export default function BasicsSection({ posts }: Props) {
           </h2>
 
           <Link
-            href="/basics"
+            href="/articles"
             className="text-sm font-semibold uppercase text-[#0073ff]"
           >
             View All →

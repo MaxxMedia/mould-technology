@@ -326,7 +326,7 @@ export default function TrendingSection({ posts }: Props) {
             Trending News
           </h2>
           <Link
-            href="/trending"
+            href="/post/tooling-plays-a-fundamental-role-in-manufacturing"
             className="text-sm text-white/70 hover:text-white"
           >
             View All →

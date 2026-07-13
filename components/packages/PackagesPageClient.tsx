@@ -244,7 +244,7 @@ export default function PackagesPageClient() {
         </div>
       </section>
 
-      <section className="bg-[#f8f9fb] py-16 sm:py-20">
+      {/* <section className="bg-[#f8f9fb] py-16 sm:py-20">
         <div className="mx-auto max-w-[1320px] px-4 sm:px-6">
           <SectionHeading
             title="Banner Advertising Packages"
@@ -291,9 +291,9 @@ export default function PackagesPageClient() {
             </table>
           </div>
         </div>
-      </section>
+      </section> */}
 
-      <section className="py-16 sm:py-20">
+      {/* <section className="py-16 sm:py-20">
         <div className="mx-auto max-w-[1320px] px-4 sm:px-6">
           <SectionHeading
             title="Sponsored Content Packages"
@@ -330,7 +330,7 @@ export default function PackagesPageClient() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* <section className="bg-[#f8f9fb] py-16 sm:py-20">
         <div className="mx-auto max-w-[1320px] px-4 sm:px-6">

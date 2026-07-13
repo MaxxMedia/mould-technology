@@ -1,5 +1,5 @@
 "use client"
-
+import ContentSubmissionPolicy from "@/components/ContentSubmissionPolicy"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -21,6 +21,8 @@ export default function CreateRecruiterArticlePage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [eligibility, setEligibility] = useState<ContentLimitEligibility | null>(null)
+  const [acceptedPolicy, setAcceptedPolicy] = useState(false)
+  
 
   useEffect(() => {
     async function loadEligibility() {
@@ -171,6 +173,10 @@ export default function CreateRecruiterArticlePage() {
     Uploading image...
   </p>
 )}
+<ContentSubmissionPolicy
+  checked={acceptedPolicy}
+  onChange={setAcceptedPolicy}
+/>
 
         <div className="flex justify-start">
           <button

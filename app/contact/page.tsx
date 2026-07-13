@@ -2,11 +2,67 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
+import { sendContactMessage, ContactFormData } from "@/lib/api/contact";
 
 export default function ContactPage() {
+  const [formData, setFormData] = useState<ContactFormData>({
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    website: "",
+    message: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    try {
+      const response = await sendContactMessage(formData);
+      
+      if (response.success) {
+        setSuccessMessage("Thank you! Your message has been sent successfully.");
+        // Reset form
+        setFormData({
+          fullName: "",
+          email: "",
+          phoneNumber: "",
+          website: "",
+          message: "",
+        });
+        // Clear success message after 5 seconds
+        setTimeout(() => setSuccessMessage(""), 5000);
+      }
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Failed to send message. Please try again."
+      );
+      // Clear error message after 5 seconds
+      setTimeout(() => setErrorMessage(""), 5000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <main className="w-full bg-white">
-
       {/* ================= HERO / BREADCRUMB ================= */}
       <section className="relative bg-[#f8f9fb] py-24 text-center">
         <h1 className="text-4xl font-semibold text-[#121213]">Contact</h1>
@@ -23,7 +79,6 @@ export default function ContactPage() {
       <section className="py-24">
         <div className="max-w-[1320px] mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-
             {[
               {
                 title: "California",
@@ -75,7 +130,6 @@ export default function ContactPage() {
                 </p>
               </div>
             ))}
-
           </div>
         </div>
       </section>
@@ -84,49 +138,95 @@ export default function ContactPage() {
       <section className="pb-32">
         <div className="max-w-[1320px] mx-auto px-6">
           <div className="bg-white rounded-[28px] border border-blue-500/20 p-10 md:p-14 grid grid-cols-1 lg:grid-cols-2 gap-12">
-
             {/* FORM */}
             <div>
               <h2 className="text-3xl font-semibold text-[#121213] mb-8">
                 Feel Free to Contact Us
               </h2>
 
-              <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[
-                  { label: "Full Name*", type: "text", placeholder: "Robot fox" },
-                  { label: "Email Address*", type: "email", placeholder: "info@toolingtrends.com" },
-                  { label: "Phone Number*", type: "text", placeholder: "(480) 555-0103" },
-                  { label: "Website*", type: "text", placeholder: "www.toolingtrends.com" },
-                ].map((field, i) => (
-                  <div key={i}>
-                    <label className="text-sm text-[#121213]">
-                      {field.label}
-                    </label>
-                    <input
-                      type={field.type}
-                      placeholder={field.placeholder}
-                      className="mt-2 w-full rounded-lg border px-4 py-3 text-sm outline-none focus:border-blue-600"
-                    />
-                  </div>
-                ))}
+              {successMessage && (
+                <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                  {successMessage}
+                </div>
+              )}
+
+              {errorMessage && (
+                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                  {errorMessage}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-sm text-[#121213]">Full Name*</label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    placeholder="Robot fox"
+                    className="mt-2 w-full rounded-lg border px-4 py-3 text-sm outline-none focus:border-blue-600"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-[#121213]">Email Address*</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="info@toolingtrends.com"
+                    className="mt-2 w-full rounded-lg border px-4 py-3 text-sm outline-none focus:border-blue-600"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-[#121213]">Phone Number</label>
+                  <input
+                    type="text"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    placeholder="(480) 555-0103"
+                    className="mt-2 w-full rounded-lg border px-4 py-3 text-sm outline-none focus:border-blue-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-[#121213]">Website</label>
+                  <input
+                    type="text"
+                    name="website"
+                    value={formData.website}
+                    onChange={handleChange}
+                    placeholder="www.toolingtrends.com"
+                    className="mt-2 w-full rounded-lg border px-4 py-3 text-sm outline-none focus:border-blue-600"
+                  />
+                </div>
 
                 <div className="md:col-span-2">
-                  <label className="text-sm text-[#121213]">
-                    Message*
-                  </label>
+                  <label className="text-sm text-[#121213]">Message*</label>
                   <textarea
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
                     rows={6}
                     placeholder="Type here..."
                     className="mt-2 w-full rounded-lg border px-4 py-3 text-sm outline-none focus:border-blue-600"
+                    required
                   />
                 </div>
 
                 <div className="md:col-span-2">
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+                    disabled={loading}
+                    className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Send Message →
+                    {loading ? "Sending..." : "Send Message →"}
                   </button>
                 </div>
               </form>
@@ -142,11 +242,9 @@ export default function ContactPage() {
                 sizes="(max-width: 1024px) 100vw, 50vw"
               />
             </div>
-
           </div>
         </div>
       </section>
-
     </main>
   );
 }
