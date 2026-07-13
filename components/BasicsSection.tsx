@@ -119,7 +119,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useMemo } from "react";
 import type { Post } from "../types/Post";
-import SupplierAds from "@/components/SupplierAds";
+import Banner from "./Banners/Banner";
 
 /* ================= CATEGORY COLORS ================= */
 
@@ -262,9 +262,9 @@ export default function BasicsSection({ posts }: Props) {
           </div>
 
           {/* RIGHT SIDEBAR */}
-          <aside className="order-last lg:order-none">
+          <aside className="order-last lg:order-none" aria-label="Sponsored">
             <div className="space-y-8">
-              <SupplierAds />
+              <Banner placement="SIDEBAR" />
             </div>
           </aside>
 

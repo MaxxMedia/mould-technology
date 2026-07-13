@@ -4,7 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
 import type { Post } from "../types/Post"
-import SupplierAds from "./SupplierAds"
+import Banner from "./Banners/Banner"
 
 const ROTATE_INTERVAL = 6000
 const PAGE_SIZE = 6 // 3 rows × 2 cols
@@ -223,9 +223,9 @@ export default function HomeCompanyArticles() {
           </div>
 
           {/* ══ RIGHT: Ads ══ */}
-          <div className="hidden xl:block w-[300px] flex-shrink-0">
-            <SupplierAds />
-          </div>
+          <aside className="hidden xl:block w-[300px] flex-shrink-0" aria-label="Sponsored">
+            <Banner placement="SIDEBAR" />
+          </aside>
 
         </div>
       </div>

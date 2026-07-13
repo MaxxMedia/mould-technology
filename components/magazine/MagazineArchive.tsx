@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import SupplierAds from "@/components/SupplierAds"
+import Banner from "@/components/Banners/Banner"
 
 type Magazine = {
   id: number
@@ -106,7 +106,7 @@ export default function MagazineArchive() {
 
           {/* RIGHT – SIDEBAR ADS */}
           <aside className="space-y-6">
-            <SupplierAds />
+            <Banner placement="MAGAZINE_RIGHT" />
           </aside>
 
         </div>

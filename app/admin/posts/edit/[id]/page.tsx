@@ -68,8 +68,11 @@ export default function EditPost() {
           whatsappNumber: post.whatsappNumber || "",
         })
 
-        setAuthors((await authorRes.json()).data || [])
-        setCategories((await categoryRes.json()).data || [])
+        const authorJson = await authorRes.json()
+        const categoryJson = await categoryRes.json()
+
+        setAuthors(Array.isArray(authorJson) ? authorJson : authorJson.data || [])
+        setCategories(Array.isArray(categoryJson) ? categoryJson : categoryJson.data || [])
       } catch {
         setMessage("❌ Failed to load post")
       }
@@ -87,6 +90,13 @@ export default function EditPost() {
       .replace(/(^-|-$)+/g, "")
     setForm(prev => ({ ...prev, title, slug }))
   }
+
+  function handleBadgeChange(e: ChangeEvent<HTMLInputElement>) {
+  const value = e.target.value
+  if (/^[A-Za-z]{0,10}$/.test(value)) {
+    setForm(prev => ({ ...prev, badge: value }))
+  }
+}
 
   function handleChange(
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -181,12 +191,13 @@ export default function EditPost() {
         />
 
         <input
-          name="badge"
-          value={form.badge}
-          onChange={handleChange}
-          placeholder="Badge"
-          className="w-full p-3 border rounded"
-        />
+        name="badge"
+        value={form.badge}
+        onChange={handleBadgeChange}
+        placeholder="Badge"
+        maxLength={10}
+        className="w-full p-3 border rounded"
+      />
 
         <input type="file" accept="image/*" onChange={handleFileChange} />
         {form.imageUrl && (

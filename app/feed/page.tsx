@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import JobFeed from "@/components/job/JobFeed";
 import Link from "next/link";
+import Banner from "@/components/Banners/Banner";
 
 export default function PublicFeedPage() {
   const [role, setRole] = useState<string | null>(null);
@@ -19,9 +20,7 @@ export default function PublicFeedPage() {
 
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
-
       console.log("JWT Payload:", payload);
-
       setRole(payload.role?.toLowerCase() || null);
     } catch (err) {
       console.error(err);
@@ -128,8 +127,8 @@ export default function PublicFeedPage() {
         </div>
       </section>
 
-      {/* ================= JOB LIST ================= */}
-      <section className="max-w-[900px] mx-auto px-4 py-14">
+      {/* ================= JOB LIST + SIDEBAR ================= */}
+      <section className="max-w-[1200px] mx-auto px-4 py-14">
         <div className="mb-8">
           <h2 className="text-3xl font-bold">
             Explore Jobs
@@ -140,7 +139,19 @@ export default function PublicFeedPage() {
           </p>
         </div>
 
-        <JobFeed isPublic />
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+          {/* Main job feed */}
+          <div>
+            <JobFeed isPublic />
+          </div>
+
+          {/* Sidebar ads */}
+          <aside className="hidden lg:block" aria-label="Sponsored">
+            <div className="sticky top-6">
+              <Banner placement="JOB_RIGHT" />
+            </div>
+          </aside>
+        </div>
       </section>
 
     </div>

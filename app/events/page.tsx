@@ -1,8 +1,6 @@
-
-
 import Image from "next/image"
 import Link from "next/link"
-import SupplierAds from "@/components/SupplierAds"
+import Banner from "@/components/Banners/Banner"
 
 type Event = {
   id: number
@@ -201,11 +199,10 @@ export default async function EventsPage({ searchParams }: PageProps) {
 
         {/* RIGHT: ADS */}
         <aside className="lg:col-span-4">
-          <SupplierAds />
+          <Banner placement="EVENT_RIGHT" />
         </aside>
       </div>
     </div>
     
   )
 }
-
