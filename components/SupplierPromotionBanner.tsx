@@ -16,6 +16,7 @@ import {
     LucideYoutube,
 } from "lucide-react";
 import type { PlanTier } from "@/lib/packages";
+import QuoteRequestButton from "./QuteRequestForm";
 
 type SocialLinks = {
     facebook?: string;
@@ -30,25 +31,26 @@ type Props = {
     name: string;
     location?: string;
     logoUrl?: string;
-    coverImageUrl?: string[];  // ✅ Array of strings
-    tagline?: string;  // ✅ Add tagline prop
+    coverImageUrl?: string[];
+    tagline?: string;
     tradeNames?: string[];
     phoneNumber?: string;
     email?: string;
     website?: string;
     socialLinks?: SocialLinks;
+    slug?: string;
+    showQuoteButton?: boolean;
 };
 
-const TIER_STYLES: Record<
-    Exclude<PlanTier, "free">,
-    {
-        badgeBg: string;
-        badgeText: string;
-        accent: string;
-        label: string;
-        gradient: string;
-    }
-> = {
+type TierStyles = {
+    badgeBg: string;
+    badgeText: string;
+    accent: string;
+    label: string;
+    gradient: string;
+};
+
+const TIER_STYLES: Record<Exclude<PlanTier, "free">, TierStyles> = {
     basic: {
         badgeBg: "bg-white",
         badgeText: "text-gray-700",
@@ -80,9 +82,9 @@ function ContactItem({
     children: React.ReactNode;
 }) {
     return (
-        <span className="flex items-center gap-1.5 text-white/90 text-sm drop-shadow">
+        <span className="flex items-center gap-1.5 text-white/90 text-xs sm:text-sm drop-shadow">
             {icon}
-            {children}
+            <span className="truncate">{children}</span>
         </span>
     );
 }
@@ -117,7 +119,7 @@ function CoverImageCarousel({ images, name }: { images: string[]; name: string }
                 type="button"
                 onClick={goPrev}
                 aria-label="Previous cover image"
-                className="absolute left-3 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/40 hover:bg-black/60 text-white p-1.5 transition"
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-20 rounded-full bg-black/40 hover:bg-black/60 text-white p-1.5 transition"
             >
                 <ChevronLeft className="w-5 h-5" />
             </button>
@@ -125,12 +127,12 @@ function CoverImageCarousel({ images, name }: { images: string[]; name: string }
                 type="button"
                 onClick={goNext}
                 aria-label="Next cover image"
-                className="absolute right-3 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/40 hover:bg-black/60 text-white p-1.5 transition"
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 rounded-full bg-black/40 hover:bg-black/60 text-white p-1.5 transition"
             >
                 <ChevronRight className="w-5 h-5" />
             </button>
 
-            <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 flex gap-1.5">
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
                 {images.map((_, i) => (
                     <button
                         key={i}
@@ -158,136 +160,115 @@ export default function SupplierPromotionBanner({
     email,
     website,
     socialLinks,
+    slug,
+    showQuoteButton = true,
 }: Props) {
-    if (planTier === "free") return null;
+    const normalized = String(planTier ?? "free").trim().toLowerCase() as PlanTier;
 
-    const tier = TIER_STYLES[planTier];
+    if (normalized === "free" || !TIER_STYLES[normalized as Exclude<PlanTier, "free">]) {
+        if (normalized !== "free" && process.env.NODE_ENV !== "production") {
+            // eslint-disable-next-line no-console
+            console.warn(
+                `SupplierPromotionBanner: unrecognized planTier "${planTier}" — banner hidden.`
+            );
+        }
+        return null;
+    }
+
+    const tier = TIER_STYLES[normalized as Exclude<PlanTier, "free">];
     const social = socialLinks || {};
     const hasSocial =
         !!(social.facebook || social.linkedin || social.twitter || social.youtube);
-    const hasContactRow =
+    const hasContactInfo =
         !!(phoneNumber || email || website || social.whatsapp || (tradeNames && tradeNames.length > 0));
 
-    // ✅ Safely handle possibly undefined coverImageUrl
     const images = (coverImageUrl || []).filter(Boolean);
 
     return (
         <div
-            className={`w-full overflow-hidden rounded-2xl border ${tier.accent} shadow-xl bg-white mb-10`}
+            className={`w-full overflow-hidden rounded-2xl border ${tier.accent} shadow-xl bg-white mb-8 md:mb-10`}
         >
-            <div
-                className={`relative min-h-[280px] md:min-h-[360px] bg-gradient-to-br ${tier.gradient}`}
-            >
+            {/* ===== IMAGE / GRADIENT ZONE ===== */}
+            <div className="relative min-h-[220px] sm:min-h-[260px] md:min-h-[300px]">
+                <div className={`absolute inset-0 bg-gradient-to-br ${tier.gradient}`} />
                 <CoverImageCarousel images={images} name={name} />
 
-                <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
-                <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/40 to-transparent" />
+                {/* Strong gradient across the WHOLE image */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/10" />
 
-                <div className="absolute top-6 left-6">
+                <div className="absolute top-4 left-4 sm:top-5 sm:left-5">
                     <div
-                        className={`inline-flex items-center gap-2 rounded-full px-4 py-2 font-semibold shadow-lg ${tier.badgeBg} ${tier.badgeText}`}
+                        className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold shadow-lg ${tier.badgeBg} ${tier.badgeText}`}
                     >
                         <BadgeCheck className="w-4 h-4" />
                         {tier.label}
                     </div>
                 </div>
 
-                <div className="absolute inset-x-0 bottom-0 p-6 md:p-8 text-white">
-                    <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-                        <div className="flex items-end gap-4">
-                            {logoUrl && (
-                                <img
-                                    src={logoUrl}
-                                    alt={`${name} logo`}
-                                    className="w-16 h-16 md:w-20 md:h-20 rounded-lg bg-white object-contain p-1.5 shadow-lg shrink-0"
-                                />
-                            )}
-                            <div>
-                                <h2 className="text-2xl md:text-4xl font-bold leading-tight drop-shadow-lg">
-                                    {name}
-                                </h2>
-                                {tagline && (
-                                    <p className="mt-1 text-white/90 text-sm md:text-base drop-shadow">
-                                        {tagline}
-                                    </p>
-                                )}
-                                {location && (
-                                    <div className="flex items-center gap-2 mt-1.5 text-white/90 drop-shadow text-sm">
-                                        <MapPin className="w-4 h-4" />
-                                        <span>{location}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {hasSocial && (
-                            <div className="flex gap-3 shrink-0">
-                                {social.facebook && (
-                                    <a
-                                        href={social.facebook}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        <LucideFacebook className="w-5 h-5 text-white/90 hover:text-white" />
-                                    </a>
-                                )}
-                                {social.linkedin && (
-                                    <a
-                                        href={social.linkedin}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        <LucideLinkedin className="w-5 h-5 text-white/90 hover:text-white" />
-                                    </a>
-                                )}
-                                {social.twitter && (
-                                    <a
-                                        href={social.twitter}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        <LucideTwitter className="w-5 h-5 text-white/90 hover:text-white" />
-                                    </a>
-                                )}
-                                {social.youtube && (
-                                    <a
-                                        href={social.youtube}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        <LucideYoutube className="w-5 h-5 text-white/90 hover:text-white" />
-                                    </a>
-                                )}
-                            </div>
+                {/* Logo + name + tagline + location sit ON the image, bottom-left */}
+                <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 md:p-6 text-white">
+                    <div className="flex items-end gap-3 sm:gap-4">
+                        {logoUrl && (
+                            <img
+                                src={logoUrl}
+                                alt={`${name} logo`}
+                                className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-lg bg-white object-contain p-1.5 shadow-lg shrink-0"
+                            />
                         )}
+                        <div className="min-w-0">
+                            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold leading-tight drop-shadow-lg truncate sm:whitespace-normal">
+                                {name}
+                            </h2>
+                            {tagline && (
+                                <p className="mt-1 text-white/90 text-xs sm:text-sm drop-shadow line-clamp-1 sm:line-clamp-2">
+                                    {tagline}
+                                </p>
+                            )}
+                            {location && (
+                                <div className="flex items-center gap-1.5 mt-1 text-white/85 drop-shadow text-xs sm:text-sm">
+                                    <MapPin className="w-3.5 h-3.5 shrink-0" />
+                                    <span className="truncate">{location}</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
+                </div>
+            </div>
 
-                    {hasContactRow && (
-                        <div className="flex flex-wrap gap-x-6 gap-y-2 mt-5 pt-5 border-t border-white/20">
+            {/* ===== SOLID INFO PANEL ===== */}
+            {(hasContactInfo || hasSocial || (showQuoteButton && slug)) && (
+                <div className="bg-white border-t-2 border-gray-100 px-4 sm:px-6 py-4 sm:py-5">
+                    <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 md:gap-6 items-start md:items-center">
+                        {/* LEFT COLUMN: contact details + social */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-gray-700 min-w-0">
                             {phoneNumber && (
-                                <ContactItem icon={<Phone className="w-3.5 h-3.5" />}>
-                                    {phoneNumber}
-                                </ContactItem>
+                                <span className="flex items-center gap-2 min-w-0">
+                                    <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                    <span className="truncate">{phoneNumber}</span>
+                                </span>
                             )}
                             {email && (
-                                <ContactItem icon={<Mail className="w-3.5 h-3.5" />}>
-                                    {email}
-                                </ContactItem>
+                                <span className="flex items-center gap-2 min-w-0">
+                                    <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                    <span className="truncate">{email}</span>
+                                </span>
                             )}
                             {website && (
-                                <ContactItem icon={<Globe className="w-3.5 h-3.5" />}>
+                                <span className="flex items-center gap-2 min-w-0">
+                                    <Globe className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                                     <a
                                         href={website}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="hover:underline"
+                                        className="truncate text-blue-600 hover:underline"
                                     >
                                         {website}
                                     </a>
-                                </ContactItem>
+                                </span>
                             )}
                             {social.whatsapp && (
-                                <ContactItem icon={<MessageCircle className="w-3.5 h-3.5" />}>
+                                <span className="flex items-center gap-2 min-w-0">
+                                    <MessageCircle className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                                     <a
                                         href={
                                             social.whatsapp.startsWith("http")
@@ -296,22 +277,58 @@ export default function SupplierPromotionBanner({
                                         }
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="hover:underline"
+                                        className="truncate text-blue-600 hover:underline"
                                     >
                                         WhatsApp
                                     </a>
-                                </ContactItem>
+                                </span>
                             )}
                             {tradeNames && tradeNames.length > 0 && (
-                                <ContactItem icon={null}>
-                                    <span className="text-white/70">Trade Names:</span>{" "}
-                                    {tradeNames.join(", ")}
-                                </ContactItem>
+                                <span className="flex items-start gap-2 sm:col-span-2 min-w-0">
+                                    <span className="text-gray-400 shrink-0">Trade Names:</span>
+                                    <span className="truncate">{tradeNames.join(", ")}</span>
+                                </span>
+                            )}
+
+                            {hasSocial && (
+                                <div className="flex gap-3 sm:col-span-2 pt-1">
+                                    {social.facebook && (
+                                        <a href={social.facebook} target="_blank" rel="noopener noreferrer">
+                                            <LucideFacebook className="w-4.5 h-4.5 text-gray-400 hover:text-[#3b5998]" />
+                                        </a>
+                                    )}
+                                    {social.linkedin && (
+                                        <a href={social.linkedin} target="_blank" rel="noopener noreferrer">
+                                            <LucideLinkedin className="w-4.5 h-4.5 text-gray-400 hover:text-[#0077b5]" />
+                                        </a>
+                                    )}
+                                    {social.twitter && (
+                                        <a href={social.twitter} target="_blank" rel="noopener noreferrer">
+                                            <LucideTwitter className="w-4.5 h-4.5 text-gray-400 hover:text-black" />
+                                        </a>
+                                    )}
+                                    {social.youtube && (
+                                        <a href={social.youtube} target="_blank" rel="noopener noreferrer">
+                                            <LucideYoutube className="w-4.5 h-4.5 text-gray-400 hover:text-red-600" />
+                                        </a>
+                                    )}
+                                </div>
                             )}
                         </div>
-                    )}
+
+                        {/* RIGHT COLUMN: button */}
+                        {showQuoteButton && slug && (
+                            <div className="shrink-0 w-full md:w-auto">
+                                <QuoteRequestButton
+                                    supplierSlug={slug}
+                                    supplierName={name}
+                                    className="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-[#0b3954] text-white px-6 py-2.5 text-sm font-semibold uppercase tracking-wide hover:bg-[#092f46] transition rounded"
+                                />
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
