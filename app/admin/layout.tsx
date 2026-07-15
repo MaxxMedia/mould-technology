@@ -1,3 +1,4 @@
+// app/admin/layout.tsx
 "use client"
 
 import { usePathname, useRouter } from "next/navigation"
@@ -9,6 +10,8 @@ import {
   Folder,
   LogOut,
   Mail,
+  Users,
+  UserPlus,
 } from "lucide-react"
 
 export default function AdminLayout({
@@ -88,7 +91,7 @@ export default function AdminLayout({
         </div>
 
         {/* NAV */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           <SidebarLink
             href="/admin/dashboard"
             label="Dashboard"
@@ -101,11 +104,10 @@ export default function AdminLayout({
             <button
               onClick={() => setArticlesOpen(!articlesOpen)}
               className={`flex items-center justify-between w-full px-4 py-2.5 rounded-md text-sm font-medium transition-all
-                ${
-                  pathname.startsWith("/admin/posts") ||
+                ${pathname.startsWith("/admin/posts") ||
                   pathname.startsWith("/admin/articles")
-                    ? "bg-white/20 text-white"
-                    : "text-white/80 hover:bg-white/10 hover:text-white"
+                  ? "bg-white/20 text-white"
+                  : "text-white/80 hover:bg-white/10 hover:text-white"
                 }
               `}
             >
@@ -158,11 +160,19 @@ export default function AdminLayout({
             active={pathname === "/admin/events"}
           />
 
-          {/* ✅ NEW: Contact Menu Item */}
+          {/* ✅ LEADS Menu Item */}
+          <SidebarLink
+            href="/admin/leads"
+            label="Leads"
+            icon={<Users size={18} />}
+            active={pathname === "/admin/leads" || pathname.startsWith("/admin/leads/")}
+          />
+
+          {/* ✅ CONTACT Menu Item */}
           <SidebarLink
             href="/admin/contact"
             label="Contact"
-            icon={<Folder size={18} />}
+            icon={<Mail size={18} />}
             active={pathname === "/admin/contact" || pathname.startsWith("/admin/contact/")}
           />
 
@@ -195,11 +205,11 @@ export default function AdminLayout({
           />
 
           <SidebarLink
-  href="/admin/newsletter"
-  label="Newsletter"
-  icon={<Mail size={18} />}
-  active={pathname.startsWith("/admin/newsletter")}
-/>
+            href="/admin/newsletter"
+            label="Newsletter"
+            icon={<Mail size={18} />}
+            active={pathname.startsWith("/admin/newsletter")}
+          />
         </nav>
 
         {/* FOOTER */}
@@ -245,10 +255,9 @@ function SidebarLink({
     <Link
       href={href}
       className={`flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-all
-        ${
-          active
-            ? "bg-white/20 text-white"
-            : "text-white/80 hover:bg-white/10 hover:text-white"
+        ${active
+          ? "bg-white/20 text-white"
+          : "text-white/80 hover:bg-white/10 hover:text-white"
         }
       `}
     >

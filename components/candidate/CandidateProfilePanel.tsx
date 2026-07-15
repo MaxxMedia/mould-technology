@@ -79,22 +79,27 @@ export default function CandidateProfilePanel({
       .finally(() => setLoading(false));
   }, []);
 
-  // Load team status when profile is loaded
+  // Load team status when profile is loaded.
+  // NOTE: we always check — even before a company is linked to the profile —
+  // because companyId is only set on the User once a recruiter approves the
+  // request. Calling /api/team/me without a companyId returns the
+  // candidate's most recent membership request across any company, so a
+  // PENDING or REJECTED request is visible before approval happens.
   useEffect(() => {
+    if (!profile) return;
     const company = getCompanyFromProfile(profile);
-    if (company?.id) {
-      loadTeamStatus(company.id);
-    }
+    loadTeamStatus(company?.id);
   }, [profile]);
 
-  async function loadTeamStatus(companyId: number) {
+  async function loadTeamStatus(companyId?: number) {
     setLoadingTeam(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/team/me?companyId=${companyId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const url = companyId
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/team/me?companyId=${companyId}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/team/me`;
+
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
 
       if (res.status === 404) {
         setTeamStatus(null);
@@ -102,11 +107,13 @@ export default function CandidateProfilePanel({
       }
 
       if (res.ok) {
-        const data = await res.json();
-        setTeamStatus(data);
+        const result = await res.json();
+        const data = result?.data ?? result;
+        setTeamStatus(data && data.id ? data : null);
       }
     } catch (error) {
       console.error("Failed to load team status:", error);
+      setTeamStatus(null);
     } finally {
       setLoadingTeam(false);
     }
@@ -178,6 +185,14 @@ export default function CandidateProfilePanel({
     e.preventDefault();
     if (!selectedCompany || !profile) return;
 
+    // Guard: don't allow submitting a second request while one is already
+    // pending. The backend already blocks duplicates for the SAME company,
+    // but this also covers picking a DIFFERENT company while pending.
+    if (teamStatus?.status === 'PENDING') {
+      setMessage('You already have a pending request awaiting approval.');
+      return;
+    }
+
     setSubmittingCompany(true);
     try {
       const token = localStorage.getItem('token');
@@ -214,6 +229,11 @@ export default function CandidateProfilePanel({
       setProfile(updatedProfile);
       onProfileUpdated?.(updatedProfile);
 
+      // Refresh team status too, so the new PENDING request shows up
+      // immediately instead of waiting for the next profile reload.
+      const company = getCompanyFromProfile(updatedProfile);
+      loadTeamStatus(company?.id ?? selectedCompany.id);
+
     } catch (error: any) {
       setMessage(error.message || 'Failed to submit request');
     } finally {
@@ -239,6 +259,12 @@ export default function CandidateProfilePanel({
 
   // Get company from profile (handles both 'company' and 'Company')
   const company = getCompanyFromProfile(profile);
+
+  // A candidate can only ever have one live request at a time. They're
+  // free to search/request a (new) company when there's no existing
+  // membership, or when the last one was REJECTED / FORMER.
+  const canRequestNewCompany =
+    !teamStatus || teamStatus.status === 'REJECTED' || teamStatus.status === 'FORMER';
 
   return (
     <div className="bg-white rounded-md shadow-sm border border-gray-100 overflow-hidden">
@@ -291,7 +317,7 @@ export default function CandidateProfilePanel({
               <Building2 className="h-4 w-4 text-blue-600" />
               Company
             </h3>
-            {!company && !showCompanySearch && (
+            {!company && !showCompanySearch && canRequestNewCompany && (
               <button
                 onClick={() => setShowCompanySearch(true)}
                 className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition flex items-center gap-1"
@@ -301,6 +327,38 @@ export default function CandidateProfilePanel({
               </button>
             )}
           </div>
+
+          {/* NEW: pending/rejected/former messaging shown even before a
+              company is linked to the profile (i.e. before approval). */}
+          {!company && teamStatus && (
+            <div
+              className={`mb-4 rounded-lg p-3 text-sm ${teamStatus.status === 'PENDING'
+                  ? 'bg-yellow-50 border border-yellow-200 text-yellow-700'
+                  : teamStatus.status === 'REJECTED'
+                    ? 'bg-red-50 border border-red-200 text-red-600'
+                    : 'bg-gray-50 border border-gray-200 text-gray-600'
+                }`}
+            >
+              {teamStatus.status === 'PENDING' && (
+                <>
+                  ⏳ Your request to join <strong>{teamStatus.company?.name}</strong> is pending
+                  approval from the recruiter.
+                </>
+              )}
+              {teamStatus.status === 'REJECTED' && (
+                <>
+                  ❌ Your request to join <strong>{teamStatus.company?.name}</strong> was rejected
+                  {teamStatus.rejectionReason ? `: ${teamStatus.rejectionReason}` : '.'} You can
+                  search for a company and submit a new request.
+                </>
+              )}
+              {teamStatus.status === 'FORMER' && (
+                <>
+                  You were previously a member of <strong>{teamStatus.company?.name}</strong>.
+                </>
+              )}
+            </div>
+          )}
 
           {/* Company Search */}
           {showCompanySearch && !company && (
@@ -498,11 +556,11 @@ export default function CandidateProfilePanel({
                 </div>
                 {teamStatus && (
                   <span className={`text-xs px-3 py-1 rounded-full font-medium ${teamStatus.status === 'ACTIVE' ? 'bg-green-100 text-green-700' :
-                      teamStatus.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
-                        teamStatus.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
-                          'bg-gray-100 text-gray-700'
+                    teamStatus.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                      teamStatus.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                        'bg-gray-100 text-gray-700'
                     }`}>
-                    {teamStatus.status === 'ACTIVE' && '✅ Verified'}
+                    {teamStatus.status === 'ACTIVE' && '✅ Verified Team Member'}
                     {teamStatus.status === 'PENDING' && '⏳ Pending'}
                     {teamStatus.status === 'REJECTED' && '❌ Rejected'}
                     {teamStatus.status === 'FORMER' && '📤 Former'}
@@ -618,8 +676,8 @@ export default function CandidateProfilePanel({
           {message && (
             <p
               className={`text-sm ${message.toLowerCase().includes("could not") || message.toLowerCase().includes("failed")
-                  ? "text-red-600"
-                  : "text-green-600"
+                ? "text-red-600"
+                : "text-green-600"
                 }`}
             >
               {message}

@@ -1,8 +1,9 @@
-// GalleryTabs.tsx
+// components/GalleryTabs.tsx
 "use client"
 
 import { useState } from "react"
 import VideoGallery from "./VideoGallery"
+import SupplierTeamTab from "./SupplierTeamTab"
 import { FileText, Download, Eye } from "lucide-react"
 
 type GalleryTabsProps = {
@@ -10,8 +11,9 @@ type GalleryTabsProps = {
   productGallery?: string[]
   companyGallery?: string[]
   factoryGallery?: string[]
-  productCatalogues?: string[] // ✅ Add product catalogues
+  productCatalogues?: string[]
   isPaid?: boolean
+  companySlug?: string // Company slug for fetching team members
 }
 
 const NO_PLAN_MESSAGE =
@@ -25,7 +27,6 @@ function EmptyState({ message }: { message: string }) {
   )
 }
 
-/* Simple responsive image grid reused for product/company/factory galleries */
 function ImageGrid({ images }: { images: string[] }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -48,7 +49,6 @@ function ImageGrid({ images }: { images: string[] }) {
   )
 }
 
-/* ✅ PDF/ Document Viewer with Download Button */
 function DocumentViewer({ documents }: { documents: string[] }) {
   const [selectedDoc, setSelectedDoc] = useState<string | null>(
     documents.length > 0 ? documents[0] : null
@@ -112,7 +112,6 @@ function DocumentViewer({ documents }: { documents: string[] }) {
     <div className="mt-6 space-y-4">
       <h4 className="text-sm font-semibold text-gray-700">Product Catalogues</h4>
 
-      {/* Document List as Buttons */}
       <div className="flex flex-wrap gap-3">
         {documents.filter(Boolean).map((doc, index) => (
           <div key={index} className="flex items-center gap-2">
@@ -134,7 +133,6 @@ function DocumentViewer({ documents }: { documents: string[] }) {
               </span>
             </button>
 
-            {/* Download button for each document */}
             <button
               onClick={() => handleDownload(doc)}
               className="p-2 text-gray-500 hover:text-green-600 transition rounded-lg hover:bg-green-50"
@@ -146,7 +144,6 @@ function DocumentViewer({ documents }: { documents: string[] }) {
         ))}
       </div>
 
-      {/* Document Preview */}
       {selectedDoc && (
         <div className="rounded-lg border border-gray-200 overflow-hidden mt-4">
           <div className="flex items-center justify-between bg-gray-50 px-4 py-2 border-b border-gray-200">
@@ -200,20 +197,27 @@ export default function GalleryTabs({
   factoryGallery,
   productCatalogues,
   isPaid = false,
+  companySlug,
 }: GalleryTabsProps) {
   const [activeTab, setActiveTab] = useState("video")
 
+  const baseTabs = [
+    { id: "video", label: "Video Gallery" },
+    { id: "product", label: "Product Gallery" },
+    { id: "company", label: "Company Gallery" },
+    { id: "factory", label: "Factory Gallery" },
+  ]
+
+  // Add "Our Team" tab only for paid plans
+  const tabs = isPaid
+    ? [...baseTabs, { id: "team", label: "Our Team" }]
+    : baseTabs
+
   return (
     <div>
-      {/* Tab Navigation - Side by Side */}
       <div className="border-b border-gray-200 mb-8">
         <div className="flex gap-8 overflow-x-auto">
-          {[
-            { id: "video", label: "Video Gallery" },
-            { id: "product", label: "Product Gallery" },
-            { id: "company", label: "Company Gallery" },
-            { id: "factory", label: "Factory Gallery" },
-          ].map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -230,7 +234,6 @@ export default function GalleryTabs({
         </div>
       </div>
 
-      {/* Tab Content */}
       {activeTab === "video" &&
         (videoGallery && videoGallery.filter(Boolean).length > 0 ? (
           <VideoGallery videos={videoGallery} />
@@ -244,14 +247,12 @@ export default function GalleryTabs({
             <EmptyState message={NO_PLAN_MESSAGE} />
           ) : (
             <>
-              {/* Product Images */}
               {productGallery && productGallery.filter(Boolean).length > 0 ? (
                 <ImageGrid images={productGallery} />
               ) : (
                 <EmptyState message="No product images available" />
               )}
 
-              {/* ✅ Product Catalogues - Displayed below product images */}
               {productCatalogues && productCatalogues.filter(Boolean).length > 0 && (
                 <DocumentViewer documents={productCatalogues} />
               )}
@@ -277,6 +278,11 @@ export default function GalleryTabs({
         ) : (
           <EmptyState message="No factory images available" />
         ))}
+
+      {/* Our Team Tab */}
+      {activeTab === "team" && isPaid && (
+        <SupplierTeamTab companySlug={companySlug} />
+      )}
     </div>
   )
 }

@@ -1,3 +1,4 @@
+// components/QuteRequestForm.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -32,7 +33,7 @@ export default function QuoteRequestButton({
     className,
 }: QuoteRequestButtonProps) {
     const [open, setOpen] = useState(false)
-    const [mounted, setMounted] = useState(false) // needed since document doesn't exist during SSR
+    const [mounted, setMounted] = useState(false)
     const [form, setForm] = useState<FormState>(initialForm)
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState("")
@@ -42,8 +43,7 @@ export default function QuoteRequestButton({
         setMounted(true)
     }, [])
 
-    // Lock background scroll while modal is open — also prevents the page
-    // scrolling behind the modal on mobile.
+    // Lock background scroll while modal is open
     useEffect(() => {
         if (open) {
             const original = document.body.style.overflow
@@ -78,18 +78,26 @@ export default function QuoteRequestButton({
 
         try {
             setSubmitting(true)
+
+            // ✅ FIX: Use the correct endpoint - /quote-request not /inquiries
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/suppliers/${supplierSlug}/inquiries`,
+                `${process.env.NEXT_PUBLIC_API_URL}/api/suppliers/${supplierSlug}/quote-request`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(form),
+                    body: JSON.stringify({
+                        fullName: form.fullName,
+                        email: form.email,
+                        phoneNumber: form.phone,
+                        companyName: form.companyName,
+                        message: form.message,
+                    }),
                 }
             )
 
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}))
-                throw new Error(data.error || "Failed to send your request. Please try again.")
+                throw new Error(data.message || data.error || "Failed to send your request. Please try again.")
             }
 
             setSuccess(true)
@@ -246,10 +254,6 @@ export default function QuoteRequestButton({
                 Request a Quote
             </button>
 
-            {/* Portal to document.body: escapes any parent's overflow-hidden/
-                rounded-2xl clipping (like the SupplierPromotionBanner card),
-                so the modal always renders full-screen and centered no matter
-                where this button is used in the page. */}
             {mounted && modalContent && createPortal(modalContent, document.body)}
         </>
     )
