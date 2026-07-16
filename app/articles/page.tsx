@@ -1,5 +1,6 @@
 import Image from "next/image"
 import SupplierAds from "@/components/SupplierAds"
+import PopularNewsSidebar from "@/components/PopularNewsSidebar"
 import MagazineGrid from "@/components/magazine/MagazineGrid"
 import type { Post } from "@/types/Post"
 import Link from "next/link"
@@ -51,6 +52,13 @@ export default async function ArticlesPage() {
     slugOf(p).includes("product")
   )
 
+  const rawColumnPosts = posts.filter(p =>
+    slugOf(p).includes("column")
+  )
+  // Fallback: show 4 latest posts when no column-category posts exist
+  const columnsFallback = rawColumnPosts.length === 0
+  const columnPosts = columnsFallback ? posts.slice(0, 4) : rawColumnPosts
+
   const whatsNewPosts = posts
     .filter(p => !slugOf(p).includes("whatsnew"))
     .slice(0, 5)
@@ -61,7 +69,7 @@ export default async function ArticlesPage() {
     <main className="bg-white">
 
       {/* ================= ARTICLE TOP BANNER ================= */}
-<Banner placement="ARTICLE_TOP" />
+      <Banner placement="ARTICLE_TOP" />
 
       {/* ================= WHATS NEW ================= */}
       <section className="border-b border-gray-200 bg-white">
@@ -78,10 +86,10 @@ export default async function ArticlesPage() {
                   <span className="text-xs text-gray-500">
                     {post.publishedAt
                       ? new Date(post.publishedAt).toLocaleDateString("en-US", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })
                       : ""}
                   </span>
                 </div>
@@ -109,14 +117,14 @@ export default async function ArticlesPage() {
           {/* RIGHT – LATEST MAGAZINE HERO */}
           {latestMagazine && (
             <div className="relative h-[520px]">
-  <Image
-    src={latestMagazine.coverImageUrl}
-    alt={latestMagazine.title}
-    fill
-    className="object-cover"
-    priority
-    sizes="(max-width:1024px) 100vw, 60vw"
-  />
+              <Image
+                src={latestMagazine.coverImageUrl}
+                alt={latestMagazine.title}
+                fill
+                className="object-cover"
+                priority
+                sizes="(max-width:1024px) 100vw, 60vw"
+              />
 
               <div className="absolute inset-0 bg-black/50" />
 
@@ -151,13 +159,13 @@ export default async function ArticlesPage() {
         <div className="bg-[#0F5B78]">
           <div className="max-w-[1320px] mx-auto flex gap-10 px-10 py-4 text-white text-sm font-semibold">
             <Link href="#features">FEATURES</Link>
-            <Link href="/columns">COLUMNS</Link>
+            <Link href="#columns">COLUMNS</Link>
             <Link href="#archive">ARCHIVE</Link>
           </div>
         </div>
       </section>
-          {/* ================= ARTICLE MIDDLE BANNER ================= */}
-<Banner placement="ARTICLE_MIDDLE" />
+      {/* ================= ARTICLE MIDDLE BANNER ================= */}
+      <Banner placement="ARTICLE_MIDDLE" />
 
 
       {/* ================= IN THIS ISSUE ================= */}
@@ -175,14 +183,14 @@ export default async function ArticlesPage() {
             {remainingIssues.map((post) => (
               <article key={post.id}>
                 <div className="relative w-full aspect-[16/9] mb-4">
-  <Image
-    src={getImageUrl(post.imageUrl)}
-    alt={post.title}
-    fill
-    className="object-cover rounded"
-    sizes="(max-width:768px) 100vw, 50vw"
-  />
-</div>
+                  <Image
+                    src={getImageUrl(post.imageUrl)}
+                    alt={post.title}
+                    fill
+                    className="object-cover rounded"
+                    sizes="(max-width:768px) 100vw, 50vw"
+                  />
+                </div>
 
                 <div className="flex items-center gap-4 mb-3">
                   <span className="bg-[#0072BC] text-white text-xs font-bold px-3 py-1 uppercase">
@@ -220,6 +228,53 @@ export default async function ArticlesPage() {
         </div>
       </section>
 
+      {/* ================= COLUMNS ================= */}
+      <section
+        id="columns"
+        className="max-w-[1320px] mx-auto px-6 py-14 scroll-mt-24"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b-2 border-[#003B5C] pb-3 mb-0">
+          <h2 className="text-[28px] font-bold text-[#003B5C] uppercase tracking-wide">
+            {columnsFallback ? "  " : "Columns"}
+          </h2>
+        </div>
+
+        {/* List rows */}
+        <div>
+          {columnPosts.map((post) => {
+            const catName =
+              typeof post.category === "object"
+                ? post.category?.name ?? ""
+                : String(post.category ?? "")
+            return (
+              <Link
+                key={post.id}
+                href={`/post/${post.slug}`}
+                className="group flex items-center justify-between gap-6 border-b border-gray-200 py-5 hover:bg-gray-50 transition-colors px-1"
+              >
+                {/* Left: badge + title */}
+                <div>
+                  {catName && (
+                    <span className="inline-block bg-[#3a3a3a] text-white text-[10px] font-bold uppercase px-2 py-[3px] mb-2 tracking-wider">
+                      {catName}
+                    </span>
+                  )}
+                  <h3 className="text-[22px] font-bold text-[#0f1318] leading-snug group-hover:text-[#C70000] transition-colors">
+                    {post.title}
+                  </h3>
+                </div>
+
+                {/* Right: READ MORE */}
+                <span className="flex-shrink-0 text-[#C70000] text-xs font-bold uppercase tracking-widest whitespace-nowrap">
+                  READ MORE &rsaquo;
+                </span>
+              </Link>
+            )
+          })}
+        </div>
+      </section>
+
       {/* ================= ARCHIVE GRID ================= */}
       <section
         id="archive"
@@ -232,7 +287,7 @@ export default async function ArticlesPage() {
         <MagazineGrid magazines={magazines} />
       </section>
       {/* ================= ARTICLE BOTTOM BANNER ================= */}
-        <Banner placement="ARTICLE_BOTTOM" />
+      <Banner placement="ARTICLE_BOTTOM" />
 
     </main>
   )
