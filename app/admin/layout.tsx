@@ -145,6 +145,12 @@ export default function AdminLayout({
             icon={<Folder size={18} />}
             active={pathname === "/admin/packages"}
           />
+          <SidebarLink
+            href="/admin/package-usage"
+            label="users"
+            icon={<UserPlus size={18} />}
+            active={pathname === "/admin/package-usage"}
+          />
 
           <SidebarLink
             href="/admin/banners"
