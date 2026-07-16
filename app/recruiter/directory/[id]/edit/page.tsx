@@ -47,6 +47,7 @@ export default function EditDirectoryPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [uploadingCatalogue, setUploadingCatalogue] = useState(false);
   const [listingEligibility, setListingEligibility] =
     useState<ContentLimitEligibility | null>(null);
@@ -227,7 +228,29 @@ export default function EditDirectoryPage() {
 
   async function saveChanges() {
     if (!directory?.isLiveEditable) {
-      alert("Directory is not approved yet");
+      setSaveError("This directory is pending approval and cannot be edited yet.");
+      return;
+    }
+
+    // Client-side validation
+    const validationErrors: string[] = [];
+    if (!directory.name?.trim()) validationErrors.push("Company name is required.");
+    if (!directory.phoneNumber?.trim()) validationErrors.push("Phone number is required.");
+    if (!directory.email?.trim()) validationErrors.push("Email is required.");
+    if (directory.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(directory.email))
+      validationErrors.push("Please enter a valid email address.");
+    if (!directory.description?.trim() || directory.description.trim().length < 20)
+      validationErrors.push("Description must be at least 20 characters.");
+    if (!directory.country) validationErrors.push("Country is required.");
+    if (!directory.state) validationErrors.push("State is required.");
+    if (!directory.city) validationErrors.push("City is required.");
+    if (!directory.address?.trim() || directory.address.trim().length < 10)
+      validationErrors.push("Full address must be at least 10 characters.");
+    if (!directory.industryId) validationErrors.push("Industry is required.");
+
+    if (validationErrors.length > 0) {
+      setSaveError(validationErrors.join(" "));
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     try {
@@ -307,7 +330,10 @@ export default function EditDirectoryPage() {
 
       const data = await res.json();
       console.log("Save successful:", data);
-      router.push("/recruiter/dashboard");
+      setSaveSuccess(true);
+      setTimeout(() => {
+        router.push("/recruiter/dashboard");
+      }, 1800);
     } catch (error: any) {
       console.error("Save error:", error);
       setSaveError(error.message || "An unexpected error occurred");
@@ -344,9 +370,19 @@ export default function EditDirectoryPage() {
     <div className="max-w-4xl mx-auto p-10 space-y-6">
       <h1 className="text-2xl font-bold">Edit Supplier Directory</h1>
 
+      {saveSuccess && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
+          <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          <span>Changes saved successfully! Redirecting to dashboard...</span>
+        </div>
+      )}
+
       {saveError && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          {saveError}
+          <p className="font-semibold mb-1">Please fix the following:</p>
+          <p>{saveError}</p>
         </div>
       )}
 
@@ -502,19 +538,25 @@ export default function EditDirectoryPage() {
 
       {/* DESCRIPTION */}
       <div>
-        <label className="label">Description</label>
-        <RichTextEditor
-          value={directory.description}
-          onChange={(val: string) => setDirectory({ ...directory, description: val })}
+        <label className="label" htmlFor="description">Description</label>
+        <textarea
+          id="description"
+          name="description"
+          rows={4}
+          value={directory.description || ""}
+          onChange={(e) => setDirectory({ ...directory, description: e.target.value })}
+          className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          placeholder="Enter your description..."
         />
         {profileLimits?.descriptionLimit !== null && profileLimits?.descriptionLimit !== undefined && (
           <p className="text-xs text-gray-400 mt-1">
-            {profileLimits.descriptionLimit === null
-              ? "Unlimited words on your plan."
+            {profileLimits.descriptionLimit === null 
+              ? "Unlimited words on your plan." 
               : `Maximum ${profileLimits.descriptionLimit} words on your plan.`}
           </p>
         )}
       </div>
+
 
       {/* LOGO */}
       <div className="grid grid-cols-2 gap-6">

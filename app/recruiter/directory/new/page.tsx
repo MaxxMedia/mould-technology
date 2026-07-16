@@ -243,10 +243,27 @@ export default function AddDirectoryPage() {
         .filter(Boolean)
         .join(", ");
 
+      // Strip empty strings so gated fields (initialised as [""]) don't
+      // trigger backend plan-restriction errors for Free users.
+      const cleanArray = (arr: any[]) =>
+        (arr ?? []).filter((item: any) => typeof item === "string" ? item.trim().length > 0 : Boolean(item));
+
       const payload = {
         ...values,
         location,
-        coverImageUrl: values.coverImages,
+        coverImageUrl: cleanArray(values.coverImages),
+        tradeNames: cleanArray(values.tradeNames),
+        videoGallery: cleanArray(values.videoGallery),
+        productSupplies: cleanArray(values.productSupplies),
+        productGallery: cleanArray(values.productGallery),
+        companyGallery: cleanArray(values.companyGallery),
+        factoryGallery: cleanArray(values.factoryGallery),
+        productCatalogues: cleanArray(values.productCatalogues),
+        companyBrochure: cleanArray(values.companyBrochure),
+        certifications: cleanArray(values.certifications),
+        brandsRepresented: cleanArray(values.brandsRepresented),
+        industriesServed: cleanArray(values.industriesServed),
+        exportMarkets: cleanArray(values.exportMarkets),
       };
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/suppliers`, {
@@ -481,12 +498,21 @@ export default function AddDirectoryPage() {
 
               {/* DESCRIPTION - with word limit */}
               <div>
-                <label className="label">Description</label>
-                <RichTextEditor name="description" />
+                <label className="label" htmlFor="description">Description</label>
+                <textarea
+                  id="description"
+                  name="description"
+                  rows={4}
+                  value={values.description}
+                  onChange={(e) => setFieldValue("description", e.target.value)}
+                  className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Enter your description..."
+                />
+                <ErrorMessage name="description" component="p" className="error" />
                 {profileLimits?.descriptionLimit !== null && profileLimits?.descriptionLimit !== undefined && (
                   <p className="text-xs text-gray-400 mt-1">
-                    {profileLimits.descriptionLimit === null
-                      ? "Unlimited words on your plan."
+                    {profileLimits.descriptionLimit === null 
+                      ? "Unlimited words on your plan." 
                       : `Maximum ${profileLimits.descriptionLimit} words on your plan.`}
                   </p>
                 )}
