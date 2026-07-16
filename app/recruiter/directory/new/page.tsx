@@ -79,6 +79,20 @@ const DirectorySchema = Yup.object({
   ),
 })
 
+const PLAN_LIMITS: Record<string, Record<string, number>> = {
+  companyGallery: { free: 0, basic: 10, professional: 15, enterprise: Infinity },
+  factoryGallery: { free: 0, basic: 10, professional: 30, enterprise: Infinity },
+  productSupplies: { free: 5, basic: 25, professional: 100, enterprise: Infinity },
+  productGallery: { free: 10, basic: 50, professional: 100, enterprise: Infinity },
+  videoGallery: { free: 0, basic: 5, professional: 20, enterprise: Infinity },
+  productCatalogues: { free: 0, basic: 2, professional: 10, enterprise: Infinity },
+  companyBrochure: { free: 0, basic: 5, professional: 10, enterprise: Infinity },
+  certifications: { free: 0, basic: 5, professional: 10, enterprise: Infinity },
+  brandsRepresented: { free: 0, basic: 10, professional: Infinity, enterprise: Infinity },
+  industriesServed: { free: 5, basic: 20, professional: Infinity, enterprise: Infinity },
+  exportMarkets: { free: 0, basic: 5, professional: 10, enterprise: Infinity },
+}
+
 export default function AddDirectoryPage() {
   const router = useRouter()
 
@@ -105,6 +119,20 @@ export default function AddDirectoryPage() {
 
   const maxCoverImages = listingEligibility?.maxCoverImages ?? 0
   const allowWhatsapp = listingEligibility?.allowWhatsapp ?? false
+  const plan = (listingEligibility?.plan || "free").toLowerCase()
+  const limits = {
+    companyGallery: PLAN_LIMITS.companyGallery[plan] ?? 0,
+    factoryGallery: PLAN_LIMITS.factoryGallery[plan] ?? 0,
+    productSupplies: PLAN_LIMITS.productSupplies[plan] ?? 5,
+    productGallery: PLAN_LIMITS.productGallery[plan] ?? 10,
+    videoGallery: PLAN_LIMITS.videoGallery[plan] ?? 0,
+    productCatalogues: PLAN_LIMITS.productCatalogues[plan] ?? 0,
+    companyBrochure: PLAN_LIMITS.companyBrochure[plan] ?? 0,
+    certifications: PLAN_LIMITS.certifications[plan] ?? 0,
+    brandsRepresented: PLAN_LIMITS.brandsRepresented[plan] ?? 0,
+    industriesServed: PLAN_LIMITS.industriesServed[plan] ?? 5,
+    exportMarkets: PLAN_LIMITS.exportMarkets[plan] ?? 0,
+  }
 
   /* ================= INDUSTRY CASCADE ================= */
   const [industryLevels, setIndustryLevels] = useState<any[][]>([])
@@ -254,6 +282,29 @@ export default function AddDirectoryPage() {
   /* ================= SUBMIT ================= */
   async function submit(values: any, { setSubmitting, setStatus }: any) {
     try {
+      const validationChecks = [
+        { key: "companyGallery", name: "company gallery images", limit: limits.companyGallery },
+        { key: "factoryGallery", name: "factory gallery images", limit: limits.factoryGallery },
+        { key: "productSupplies", name: "product supplies", limit: limits.productSupplies },
+        { key: "productGallery", name: "product gallery images", limit: limits.productGallery },
+        { key: "videoGallery", name: "video gallery links", limit: limits.videoGallery },
+        { key: "productCatalogues", name: "product catalogues", limit: limits.productCatalogues },
+        { key: "companyBrochure", name: "company brochures", limit: limits.companyBrochure },
+        { key: "certifications", name: "certifications", limit: limits.certifications },
+        { key: "brandsRepresented", name: "brands represented", limit: limits.brandsRepresented },
+        { key: "industriesServed", name: "industries served", limit: limits.industriesServed },
+        { key: "exportMarkets", name: "export markets", limit: limits.exportMarkets },
+      ]
+
+      for (const check of validationChecks) {
+        const count = (values[check.key] || []).filter(Boolean).length
+        if (count > check.limit) {
+          setStatus(`Your plan allows a maximum of ${check.limit === Infinity ? "unlimited" : check.limit} ${check.name}. Please remove some.`)
+          setSubmitting(false)
+          return
+        }
+      }
+
       const token = localStorage.getItem("token")
       const geoLib = geo ?? (await loadGeo())
 
@@ -547,62 +598,84 @@ export default function AddDirectoryPage() {
 
               {/* PRODUCT SUPPLIES */}
               <Section title="Product Supplies / Services">
-                <p className="text-sm text-gray-500 mb-3">
-                  List the products or services in this directory. Package limits apply to
-                  how many supplier directories you can create, not how many products each
-                  contains.
-                </p>
-                <FieldArray name="productSupplies">
-                  {({ push, remove }) => (
-                    <>
-                      {values.productSupplies.map((_: any, i: number) => (
-                        <div key={i} className="flex gap-2">
-                          <Field name={`productSupplies.${i}`} className="input flex-1" />
-                          {i > 0 && <button type="button" onClick={() => remove(i)}>✕</button>}
+                {limits.productSupplies === 0 ? (
+                  <div className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+                    Product supplies are available on the Basic plan and above. Upgrade your plan to add products.
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Your plan allows up to {limits.productSupplies === Infinity ? "unlimited" : limits.productSupplies} product supplies / services.
+                    </p>
+                    <FieldArray name="productSupplies">
+                      {({ push, remove }) => (
+                        <div className="space-y-2">
+                          {values.productSupplies.map((_: any, i: number) => (
+                            <div key={i} className="flex gap-2">
+                              <Field name={`productSupplies.${i}`} className="input flex-1" />
+                              {i > 0 && <button type="button" onClick={() => remove(i)}>✕</button>}
+                            </div>
+                          ))}
+                          <div>
+                            <button
+                              type="button"
+                              disabled={values.productSupplies.length >= limits.productSupplies}
+                              onClick={() => push("")}
+                              className="disabled:opacity-40 disabled:cursor-not-allowed border px-4 py-2 rounded bg-gray-50 hover:bg-gray-100 text-sm font-medium"
+                            >
+                              + Add product ({values.productSupplies.length}/{limits.productSupplies === Infinity ? "Unlimited" : limits.productSupplies})
+                            </button>
+                          </div>
                         </div>
-                      ))}
-                      <button type="button" onClick={() => push("")}>
-                        + Add product
-                      </button>
-                    </>
-                  )}
-                </FieldArray>
+                      )}
+                    </FieldArray>
+                  </>
+                )}
               </Section>
 
               {/* PRODUCT CATALOGUES - WITH FILE UPLOAD */}
               <Section title="Product Catalogues">
-                <p className="text-sm text-gray-500 mb-3">
-                  Upload your product catalogues (PDFs, brochures, etc.).
-                </p>
-                <FieldArray name="productCatalogues">
-                  {({ push, remove }) => (
-                    <div className="grid grid-cols-2 gap-4">
-                      {values.productCatalogues.map((url: string, i: number) => (
-                        <div key={i} className="space-y-1">
-                          <UploadBox
-                            label={`Product Catalogue ${i + 1}`}
-                            value={url}
-                            onUpload={(file) =>
-                              handleCatalogueUpload(file, setFieldValue, values, i)
-                            }
-                          />
-                          <button type="button" onClick={() => remove(i)}>
-                            ✕ Remove
-                          </button>
+                {limits.productCatalogues === 0 ? (
+                  <div className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+                    Product catalogues are available on the Basic plan and above. Upgrade your plan to add catalogues.
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Your plan allows up to {limits.productCatalogues === Infinity ? "unlimited" : limits.productCatalogues} product catalogues.
+                    </p>
+                    <FieldArray name="productCatalogues">
+                      {({ push, remove }) => (
+                        <div className="grid grid-cols-2 gap-4">
+                          {values.productCatalogues.map((url: string, i: number) => (
+                            <div key={i} className="space-y-1">
+                              <UploadBox
+                                label={`Product Catalogue ${i + 1}`}
+                                value={url}
+                                onUpload={(file) =>
+                                  handleCatalogueUpload(file, setFieldValue, values, i)
+                                }
+                              />
+                              <button type="button" onClick={() => remove(i)}>
+                                ✕ Remove
+                              </button>
+                            </div>
+                          ))}
+                          <div className="col-span-2">
+                            <button
+                              type="button"
+                              disabled={values.productCatalogues.length >= limits.productCatalogues}
+                              onClick={() => push("")}
+                              className="disabled:opacity-40 disabled:cursor-not-allowed border px-4 py-2 rounded bg-gray-50 hover:bg-gray-100 text-sm font-medium"
+                            >
+                              + Add product catalogue ({values.productCatalogues.length}/{limits.productCatalogues === Infinity ? "Unlimited" : limits.productCatalogues})
+                            </button>
+                          </div>
                         </div>
-                      ))}
-                      <div className="col-span-2">
-                        <button
-                          type="button"
-                          onClick={() => push("")}
-                          className="disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                          + Add product catalogue
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </FieldArray>
+                      )}
+                    </FieldArray>
+                  </>
+                )}
               </Section>
 
               {/* SOCIAL LINKS */}
@@ -644,221 +717,387 @@ export default function AddDirectoryPage() {
 
               {/* VIDEO GALLERY */}
               <Section title="YouTube Video Gallery">
-                <FieldArray name="videoGallery">
-                  {({ push, remove }) => (
-                    <>
-                      {values.videoGallery.map((_: any, i: number) => (
-                        <div key={i} className="flex gap-2">
-                          <Field name={`videoGallery.${i}`} className="input flex-1" />
-                          {i > 0 && <button type="button" onClick={() => remove(i)}>✕</button>}
+                {limits.videoGallery === 0 ? (
+                  <div className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+                    YouTube videos are available on the Basic plan and above. Upgrade your plan to add videos.
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Your plan allows up to {limits.videoGallery === Infinity ? "unlimited" : limits.videoGallery} videos.
+                    </p>
+                    <FieldArray name="videoGallery">
+                      {({ push, remove }) => (
+                        <div className="space-y-2">
+                          {values.videoGallery.map((_: any, i: number) => (
+                            <div key={i} className="flex gap-2">
+                              <Field name={`videoGallery.${i}`} className="input flex-1" />
+                              {i > 0 && <button type="button" onClick={() => remove(i)}>✕</button>}
+                            </div>
+                          ))}
+                          <div>
+                            <button
+                              type="button"
+                              disabled={values.videoGallery.length >= limits.videoGallery}
+                              onClick={() => push("")}
+                              className="disabled:opacity-40 disabled:cursor-not-allowed border px-4 py-2 rounded bg-gray-50 hover:bg-gray-100 text-sm font-medium"
+                            >
+                              + Add video ({values.videoGallery.length}/{limits.videoGallery === Infinity ? "Unlimited" : limits.videoGallery})
+                            </button>
+                          </div>
                         </div>
-                      ))}
-                      <button type="button" onClick={() => push("")}>+ Add video</button>
-                    </>
-                  )}
-                </FieldArray>
+                      )}
+                    </FieldArray>
+                  </>
+                )}
               </Section>
 
               <Section title="Product Gallery">
-                <FieldArray name="productGallery">
-                  {({ push, remove }) => (
-                    <>
-                      {values.productGallery.map((_: any, i: number) => (
-                        <div key={i} className="flex gap-2">
-                          <Field
-                            name={`productGallery.${i}`}
-                            className="input flex-1"
-                            placeholder="Image URL"
-                          />
-                          {i > 0 && (
-                            <button type="button" onClick={() => remove(i)}>
-                              ✕
+                {limits.productGallery === 0 ? (
+                  <div className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+                    Product gallery images are available on the Basic plan and above. Upgrade your plan to add images.
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Your plan allows up to {limits.productGallery === Infinity ? "unlimited" : limits.productGallery} product images.
+                    </p>
+                    <FieldArray name="productGallery">
+                      {({ push, remove }) => (
+                        <div className="space-y-2">
+                          {values.productGallery.map((_: any, i: number) => (
+                            <div key={i} className="flex gap-2">
+                              <Field
+                                name={`productGallery.${i}`}
+                                className="input flex-1"
+                                placeholder="Image URL"
+                              />
+                              {i > 0 && (
+                                <button type="button" onClick={() => remove(i)}>
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          <div>
+                            <button
+                              type="button"
+                              disabled={values.productGallery.length >= limits.productGallery}
+                              onClick={() => push("")}
+                              className="disabled:opacity-40 disabled:cursor-not-allowed border px-4 py-2 rounded bg-gray-50 hover:bg-gray-100 text-sm font-medium"
+                            >
+                              + Add Product Image ({values.productGallery.length}/{limits.productGallery === Infinity ? "Unlimited" : limits.productGallery})
                             </button>
-                          )}
+                          </div>
                         </div>
-                      ))}
-                      <button type="button" onClick={() => push("")}>
-                        + Add Product Image
-                      </button>
-                    </>
-                  )}
-                </FieldArray>
+                      )}
+                    </FieldArray>
+                  </>
+                )}
               </Section>
 
               <Section title="Company Gallery">
-                <FieldArray name="companyGallery">
-                  {({ push, remove }) => (
-                    <>
-                      {values.companyGallery.map((_: any, i: number) => (
-                        <div key={i} className="flex gap-2">
-                          <Field
-                            name={`companyGallery.${i}`}
-                            className="input flex-1"
-                          />
-                          {i > 0 && (
-                            <button type="button" onClick={() => remove(i)}>
-                              ✕
+                {limits.companyGallery === 0 ? (
+                  <div className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+                    Company gallery images are available on the Basic plan and above. Upgrade your
+                    plan to add company gallery images.
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Your plan allows up to {limits.companyGallery === Infinity ? "unlimited" : limits.companyGallery} company gallery image{limits.companyGallery > 1 ? "s" : ""}.
+                    </p>
+                    <FieldArray name="companyGallery">
+                      {({ push, remove }) => (
+                        <div className="space-y-2">
+                          {values.companyGallery.map((_: any, i: number) => (
+                            <div key={i} className="flex gap-2">
+                              <Field
+                                name={`companyGallery.${i}`}
+                                className="input flex-1"
+                                placeholder="Image URL"
+                              />
+                              {i > 0 && (
+                                <button type="button" onClick={() => remove(i)}>
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          <div>
+                            <button
+                              type="button"
+                              disabled={values.companyGallery.length >= limits.companyGallery}
+                              onClick={() => push("")}
+                              className="disabled:opacity-40 disabled:cursor-not-allowed border px-4 py-2 rounded bg-gray-50 hover:bg-gray-100 text-sm font-medium"
+                            >
+                              + Add Company Image ({values.companyGallery.length}/{limits.companyGallery === Infinity ? "Unlimited" : limits.companyGallery})
                             </button>
-                          )}
+                          </div>
                         </div>
-                      ))}
-                      <button type="button" onClick={() => push("")}>
-                        + Add Company Image
-                      </button>
-                    </>
-                  )}
-                </FieldArray>
+                      )}
+                    </FieldArray>
+                  </>
+                )}
               </Section>
 
               <Section title="Factory Gallery">
-                <FieldArray name="factoryGallery">
-                  {({ push, remove }) => (
-                    <>
-                      {values.factoryGallery.map((_: any, i: number) => (
-                        <div key={i} className="flex gap-2">
-                          <Field
-                            name={`factoryGallery.${i}`}
-                            className="input flex-1"
-                          />
-                          {i > 0 && (
-                            <button type="button" onClick={() => remove(i)}>
-                              ✕
+                {limits.factoryGallery === 0 ? (
+                  <div className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+                    Factory gallery images are available on the Basic plan and above. Upgrade your plan to add factory images.
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Your plan allows up to {limits.factoryGallery === Infinity ? "unlimited" : limits.factoryGallery} factory images.
+                    </p>
+                    <FieldArray name="factoryGallery">
+                      {({ push, remove }) => (
+                        <div className="space-y-2">
+                          {values.factoryGallery.map((_: any, i: number) => (
+                            <div key={i} className="flex gap-2">
+                              <Field
+                                name={`factoryGallery.${i}`}
+                                className="input flex-1"
+                              />
+                              {i > 0 && (
+                                <button type="button" onClick={() => remove(i)}>
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          <div>
+                            <button
+                              type="button"
+                              disabled={values.factoryGallery.length >= limits.factoryGallery}
+                              onClick={() => push("")}
+                              className="disabled:opacity-40 disabled:cursor-not-allowed border px-4 py-2 rounded bg-gray-50 hover:bg-gray-100 text-sm font-medium"
+                            >
+                              + Add Factory Image ({values.factoryGallery.length}/{limits.factoryGallery === Infinity ? "Unlimited" : limits.factoryGallery})
                             </button>
-                          )}
+                          </div>
                         </div>
-                      ))}
-                      <button type="button" onClick={() => push("")}>
-                        + Add Factory Image
-                      </button>
-                    </>
-                  )}
-                </FieldArray>
+                      )}
+                    </FieldArray>
+                  </>
+                )}
               </Section>
 
               <Section title="Company Brochure">
-                <FieldArray name="companyBrochure">
-                  {({ push, remove }) => (
-                    <>
-                      {values.companyBrochure.map((_: any, i: number) => (
-                        <div key={i} className="flex gap-2">
-                          <Field
-                            name={`companyBrochure.${i}`}
-                            className="input flex-1"
-                            placeholder="PDF URL"
-                          />
-                          {i > 0 && (
-                            <button type="button" onClick={() => remove(i)}>
-                              ✕
+                {limits.companyBrochure === 0 ? (
+                  <div className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+                    Company brochures are available on the Basic plan and above. Upgrade your plan to add brochures.
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Your plan allows up to {limits.companyBrochure === Infinity ? "unlimited" : limits.companyBrochure} brochures.
+                    </p>
+                    <FieldArray name="companyBrochure">
+                      {({ push, remove }) => (
+                        <div className="space-y-2">
+                          {values.companyBrochure.map((_: any, i: number) => (
+                            <div key={i} className="flex gap-2">
+                              <Field
+                                name={`companyBrochure.${i}`}
+                                className="input flex-1"
+                                placeholder="PDF URL"
+                              />
+                              {i > 0 && (
+                                <button type="button" onClick={() => remove(i)}>
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          <div>
+                            <button
+                              type="button"
+                              disabled={values.companyBrochure.length >= limits.companyBrochure}
+                              onClick={() => push("")}
+                              className="disabled:opacity-40 disabled:cursor-not-allowed border px-4 py-2 rounded bg-gray-50 hover:bg-gray-100 text-sm font-medium"
+                            >
+                              + Add Brochure ({values.companyBrochure.length}/{limits.companyBrochure === Infinity ? "Unlimited" : limits.companyBrochure})
                             </button>
-                          )}
+                          </div>
                         </div>
-                      ))}
-                      <button type="button" onClick={() => push("")}>
-                        + Add Brochure
-                      </button>
-                    </>
-                  )}
-                </FieldArray>
+                      )}
+                    </FieldArray>
+                  </>
+                )}
               </Section>
 
               <Section title="Certifications">
-                <FieldArray name="certifications">
-                  {({ push, remove }) => (
-                    <>
-                      {values.certifications.map((_: any, i: number) => (
-                        <div key={i} className="flex gap-2">
-                          <Field
-                            name={`certifications.${i}`}
-                            className="input flex-1"
-                          />
-                          {i > 0 && (
-                            <button type="button" onClick={() => remove(i)}>
-                              ✕
+                {limits.certifications === 0 ? (
+                  <div className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+                    Certifications are available on the Basic plan and above. Upgrade your plan to add certifications.
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Your plan allows up to {limits.certifications === Infinity ? "unlimited" : limits.certifications} certifications.
+                    </p>
+                    <FieldArray name="certifications">
+                      {({ push, remove }) => (
+                        <div className="space-y-2">
+                          {values.certifications.map((_: any, i: number) => (
+                            <div key={i} className="flex gap-2">
+                              <Field
+                                name={`certifications.${i}`}
+                                className="input flex-1"
+                              />
+                              {i > 0 && (
+                                <button type="button" onClick={() => remove(i)}>
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          <div>
+                            <button
+                              type="button"
+                              disabled={values.certifications.length >= limits.certifications}
+                              onClick={() => push("")}
+                              className="disabled:opacity-40 disabled:cursor-not-allowed border px-4 py-2 rounded bg-gray-50 hover:bg-gray-100 text-sm font-medium"
+                            >
+                              + Add Certification ({values.certifications.length}/{limits.certifications === Infinity ? "Unlimited" : limits.certifications})
                             </button>
-                          )}
+                          </div>
                         </div>
-                      ))}
-                      <button type="button" onClick={() => push("")}>
-                        + Add Certification
-                      </button>
-                    </>
-                  )}
-                </FieldArray>
+                      )}
+                    </FieldArray>
+                  </>
+                )}
               </Section>
 
               <Section title="Brands Represented">
-                <FieldArray name="brandsRepresented">
-                  {({ push, remove }) => (
-                    <>
-                      {values.brandsRepresented.map((_: any, i: number) => (
-                        <div key={i} className="flex gap-2">
-                          <Field
-                            name={`brandsRepresented.${i}`}
-                            className="input flex-1"
-                          />
-                          {i > 0 && (
-                            <button type="button" onClick={() => remove(i)}>
-                              ✕
+                {limits.brandsRepresented === 0 ? (
+                  <div className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+                    Brands represented are available on the Basic plan and above. Upgrade your plan to add brands.
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Your plan allows up to {limits.brandsRepresented === Infinity ? "unlimited" : limits.brandsRepresented} brands represented.
+                    </p>
+                    <FieldArray name="brandsRepresented">
+                      {({ push, remove }) => (
+                        <div className="space-y-2">
+                          {values.brandsRepresented.map((_: any, i: number) => (
+                            <div key={i} className="flex gap-2">
+                              <Field
+                                name={`brandsRepresented.${i}`}
+                                className="input flex-1"
+                              />
+                              {i > 0 && (
+                                <button type="button" onClick={() => remove(i)}>
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          <div>
+                            <button
+                              type="button"
+                              disabled={values.brandsRepresented.length >= limits.brandsRepresented}
+                              onClick={() => push("")}
+                              className="disabled:opacity-40 disabled:cursor-not-allowed border px-4 py-2 rounded bg-gray-50 hover:bg-gray-100 text-sm font-medium"
+                            >
+                              + Add Brand ({values.brandsRepresented.length}/{limits.brandsRepresented === Infinity ? "Unlimited" : limits.brandsRepresented})
                             </button>
-                          )}
+                          </div>
                         </div>
-                      ))}
-                      <button type="button" onClick={() => push("")}>
-                        + Add Brand
-                      </button>
-                    </>
-                  )}
-                </FieldArray>
+                      )}
+                    </FieldArray>
+                  </>
+                )}
               </Section>
 
               <Section title="Industries Served">
-                <FieldArray name="industriesServed">
-                  {({ push, remove }) => (
-                    <>
-                      {values.industriesServed.map((_: any, i: number) => (
-                        <div key={i} className="flex gap-2">
-                          <Field
-                            name={`industriesServed.${i}`}
-                            className="input flex-1"
-                          />
-                          {i > 0 && (
-                            <button type="button" onClick={() => remove(i)}>
-                              ✕
+                {limits.industriesServed === 0 ? (
+                  <div className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+                    Industries served are available on the Basic plan and above. Upgrade your plan to add industries.
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Your plan allows up to {limits.industriesServed === Infinity ? "unlimited" : limits.industriesServed} industries served.
+                    </p>
+                    <FieldArray name="industriesServed">
+                      {({ push, remove }) => (
+                        <div className="space-y-2">
+                          {values.industriesServed.map((_: any, i: number) => (
+                            <div key={i} className="flex gap-2">
+                              <Field
+                                name={`industriesServed.${i}`}
+                                className="input flex-1"
+                              />
+                              {i > 0 && (
+                                <button type="button" onClick={() => remove(i)}>
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          <div>
+                            <button
+                              type="button"
+                              disabled={values.industriesServed.length >= limits.industriesServed}
+                              onClick={() => push("")}
+                              className="disabled:opacity-40 disabled:cursor-not-allowed border px-4 py-2 rounded bg-gray-50 hover:bg-gray-100 text-sm font-medium"
+                            >
+                              + Add Industry ({values.industriesServed.length}/{limits.industriesServed === Infinity ? "Unlimited" : limits.industriesServed})
                             </button>
-                          )}
+                          </div>
                         </div>
-                      ))}
-                      <button type="button" onClick={() => push("")}>
-                        + Add Industry
-                      </button>
-                    </>
-                  )}
-                </FieldArray>
+                      )}
+                    </FieldArray>
+                  </>
+                )}
               </Section>
 
               <Section title="Export Markets">
-                <FieldArray name="exportMarkets">
-                  {({ push, remove }) => (
-                    <>
-                      {values.exportMarkets.map((_: any, i: number) => (
-                        <div key={i} className="flex gap-2">
-                          <Field
-                            name={`exportMarkets.${i}`}
-                            className="input flex-1"
-                          />
-                          {i > 0 && (
-                            <button type="button" onClick={() => remove(i)}>
-                              ✕
+                {limits.exportMarkets === 0 ? (
+                  <div className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+                    Export markets are available on the Basic plan and above. Upgrade your plan to add markets.
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Your plan allows up to {limits.exportMarkets === Infinity ? "unlimited" : limits.exportMarkets} export markets.
+                    </p>
+                    <FieldArray name="exportMarkets">
+                      {({ push, remove }) => (
+                        <div className="space-y-2">
+                          {values.exportMarkets.map((_: any, i: number) => (
+                            <div key={i} className="flex gap-2">
+                              <Field
+                                name={`exportMarkets.${i}`}
+                                className="input flex-1"
+                              />
+                              {i > 0 && (
+                                <button type="button" onClick={() => remove(i)}>
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          <div>
+                            <button
+                              type="button"
+                              disabled={values.exportMarkets.length >= limits.exportMarkets}
+                              onClick={() => push("")}
+                              className="disabled:opacity-40 disabled:cursor-not-allowed border px-4 py-2 rounded bg-gray-50 hover:bg-gray-100 text-sm font-medium"
+                            >
+                              + Add Country ({values.exportMarkets.length}/{limits.exportMarkets === Infinity ? "Unlimited" : limits.exportMarkets})
                             </button>
-                          )}
+                          </div>
                         </div>
-                      ))}
-                      <button type="button" onClick={() => push("")}>
-                        + Add Country
-                      </button>
-                    </>
-                  )}
-                </FieldArray>
+                      )}
+                    </FieldArray>
+                  </>
+                )}
               </Section>
 
               <div>
