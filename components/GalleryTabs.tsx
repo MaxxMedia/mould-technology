@@ -5,6 +5,7 @@ import { useState } from "react"
 import VideoGallery from "./VideoGallery"
 import SupplierTeamTab from "./SupplierTeamTab"
 import { FileText, Download, Eye } from "lucide-react"
+import ProductGalleryPremium from "../components/suppliers/ProductGalleryPremium"
 
 type GalleryTabsProps = {
   videoGallery?: string[]
@@ -248,7 +249,8 @@ export default function GalleryTabs({
           ) : (
             <>
               {productGallery && productGallery.filter(Boolean).length > 0 ? (
-                <ImageGrid images={productGallery} />
+                // <ImageGrid images={productGallery} />
+                <ProductGalleryPremium images={productGallery} />
               ) : (
                 <EmptyState message="No product images available" />
               )}
