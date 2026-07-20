@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Check, Loader2, X } from "lucide-react";
 import PackagesHero from "./PackagesHero";
 import {
@@ -21,9 +21,6 @@ import {
   type PlanTier,
 } from "@/lib/packages";
 
-// ✅ FIX (root cause #4/#5): pulls fresh user/subscription state and writes
-// it back to localStorage right after any payment or free-plan activation,
-// so packageSelected/subscriptionPlan are never stale on the next screen.
 async function refreshLocalUser() {
   const token = localStorage.getItem("token");
   if (!token) return;
@@ -40,8 +37,7 @@ async function refreshLocalUser() {
       window.dispatchEvent(new Event("userChanged"));
     }
   } catch {
-    // ignore — worst case the next full page load / RecruiterLayout
-    // check will refresh it again
+    // ignore
   }
 }
 
@@ -79,6 +75,64 @@ function SectionHeading({
         <p className="mt-2 text-sm text-[#616C74] sm:text-base">{subtitle}</p>
       )}
       <div className="mx-auto mt-4 h-[2px] w-12 bg-blue-600" />
+    </div>
+  );
+}
+
+// New component for Free Plan Card
+function FreePlanCard({ onContinue }: { onContinue: () => Promise<void> }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleContinue = async () => {
+    setLoading(true);
+    setError("");
+
+    await activateFreePlan({
+      onSuccess: async () => {
+        await refreshLocalUser();
+        window.location.href = "/recruiter/onboarding";
+      },
+      onError: (message) => {
+        setError(message);
+        setLoading(false);
+      },
+    });
+  };
+
+  return (
+    <div className="mx-auto max-w-2xl mb-12">
+      <div className="rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white p-8 shadow-lg">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+            <span className="text-3xl">🚀</span>
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            Continue with Free Plan
+          </h3>
+          <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            Start using ToolingTrends immediately with our Free plan.
+            You can upgrade your subscription anytime.
+          </p>
+          <button
+            onClick={handleContinue}
+            disabled={loading}
+            className="inline-flex items-center justify-center px-8 py-3 text-base font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              "Continue with Free Plan"
+            )}
+          </button>
+          {error && (
+            <p className="mt-3 text-sm text-red-600">{error}</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -126,7 +180,6 @@ function PayButton({
     if (packageType === "SUBSCRIPTION" && packageId === "free") {
       await activateFreePlan({
         onSuccess: async () => {
-          // ✅ FIX: refresh cached user/plan before navigating
           await refreshLocalUser();
           router.push("/recruiter/onboarding");
         },
@@ -140,13 +193,6 @@ function PayButton({
       packageType,
       packageId,
       onSuccess: async () => {
-        // ✅ FIX: refresh cached user/plan before navigating.
-        // Note: at this point in the flow the recruiter typically still
-        // has no Company yet (payment happens before onboarding), so
-        // packageSelected will flip to true, but subscriptionPlan may
-        // still read "free" until onboarding creates the Company —
-        // that's expected and handled by the backfill+sync in
-        // companyController.js createCompany().
         await refreshLocalUser();
         router.push("/recruiter/onboarding");
       },
@@ -188,11 +234,31 @@ function PayButton({
 }
 
 export default function PackagesPageClient() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
+
   const planKeys: PlanTier[] = ["free", "basic", "professional", "enterprise"];
   const bannerDurations = ["monthly", "quarterly", "annual"] as const;
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [recruitmentExpiresAt, setRecruitmentExpiresAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPackageSelected, setIsPackageSelected] = useState(false);
+
+  // Check if user already has packageSelected
+  useEffect(() => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.packageSelected) {
+          setIsPackageSelected(true);
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, []);
 
   useEffect(() => {
     async function loadCurrentPlan() {
@@ -216,7 +282,7 @@ export default function PackagesPageClient() {
           setRecruitmentExpiresAt(data.subscription?.recruitmentExpiresAt ?? null);
         }
       } catch {
-        // ignore — user may not be logged in
+        // ignore
       } finally {
         setIsLoading(false);
       }
@@ -224,6 +290,14 @@ export default function PackagesPageClient() {
 
     loadCurrentPlan();
   }, []);
+
+  // Show free plan card only if user came from login/signup and hasn't selected a package
+  const showFreePlanCard = (from === "login" || from === "signup") && !isPackageSelected;
+
+  // Filter out free plan from subscription plans when showing free plan card
+  const displaySubscriptionPlans = showFreePlanCard
+    ? SUBSCRIPTION_PLANS.filter(plan => plan.id !== "free")
+    : SUBSCRIPTION_PLANS;
 
   if (isLoading) {
     return (
@@ -246,6 +320,9 @@ export default function PackagesPageClient() {
 
       <section className="py-16 sm:py-20">
         <div className="mx-auto max-w-[1320px] px-4 sm:px-6">
+          {/* Show Free Plan Card if user came from login/signup */}
+          {showFreePlanCard && <FreePlanCard onContinue={async () => { }} />}
+
           <SectionHeading
             title="ToolingTrends.com Subscription Plans"
             subtitle="Annual membership plans for suppliers and manufacturers"
@@ -256,7 +333,7 @@ export default function PackagesPageClient() {
               <thead>
                 <tr className="bg-[#2a3d47] text-white">
                   <th className="px-4 py-4 text-sm font-semibold sm:px-6">Feature</th>
-                  {SUBSCRIPTION_PLANS.map((plan) => (
+                  {displaySubscriptionPlans.map((plan) => (
                     <th
                       key={plan.id}
                       className="px-4 py-4 text-center text-sm font-semibold sm:px-6"
@@ -278,11 +355,13 @@ export default function PackagesPageClient() {
                     <td className="px-4 py-3 text-sm font-medium text-[#121213] sm:px-6">
                       {feature.name}
                     </td>
-                    {planKeys.map((key) => (
-                      <td key={key} className="px-4 py-3 text-center sm:px-6">
-                        <FeatureCell value={feature[key]} />
-                      </td>
-                    ))}
+                    {planKeys
+                      .filter(key => displaySubscriptionPlans.some(p => p.id === key))
+                      .map((key) => (
+                        <td key={key} className="px-4 py-3 text-center sm:px-6">
+                          <FeatureCell value={feature[key]} />
+                        </td>
+                      ))}
                   </tr>
                 ))}
               </tbody>
@@ -290,7 +369,7 @@ export default function PackagesPageClient() {
           </div>
 
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            {SUBSCRIPTION_PLANS.map((plan) => (
+            {displaySubscriptionPlans.map((plan) => (
               <PayButton
                 key={plan.id}
                 label={plan.price === 0 ? "Get Started Free" : `Buy ${plan.name}`}

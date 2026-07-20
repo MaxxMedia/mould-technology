@@ -252,6 +252,16 @@ export default async function Home() {
     return <div className="text-center p-10">No posts available</div>
   }
 
+  // Log categories of all posts
+  posts.forEach((post, index) => {
+    console.log(`Post ${index + 1}:`, {
+      title: post.title,
+      category: post.category,
+      categoryType: typeof post.category,
+      slug: post.slug
+    });
+  });
+
 //   /* ================= FETCH BANNER ================= */
 
 //   const bannerRes = await fetch(
@@ -308,7 +318,7 @@ export default async function Home() {
 
       {/* 📰 Latest Hero */}
       {latestPost && (
-        <LatestHero post={latestPost} posts={posts} />
+        <LatestHero post={latestPost} posts={posts} />  
       )}
 
       {/* 🔥 Advertisement
@@ -332,7 +342,7 @@ export default async function Home() {
       /> */}
 
 
-      <HomeCompanyArticles />
+      <HomeCompanyArticles posts={posts} />
 
         {/* ================= HOME BOTTOM BANNER ================= */}
       <Banner placement="HOME_BOTTOM" />

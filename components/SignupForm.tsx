@@ -107,6 +107,17 @@ export default function SignupForm() {
         return
       }
 
+      // Redirect to packages with from=signup for recruiters
+      // Check if user selected recruiter role during signup
+      const userStr = localStorage.getItem("user")
+      if (userStr) {
+        const user = JSON.parse(userStr)
+        if (user.role === "recruiter") {
+          router.push("/packages?from=signup")
+          return
+        }
+      }
+
       router.push("/login?verified=true")
     } catch {
       setError("Verification failed")
