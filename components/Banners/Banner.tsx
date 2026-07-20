@@ -200,11 +200,11 @@ function SquareAd({ ad }: { ad: BannerData }) {
   return (
     <Link
       href={ad.targetUrl || "#"}
-      className="block bg-white"
+      className="block bg-white shadow-[0_4px_16px_rgba(0,0,0,0.12)] rounded-sm"
       target="_blank"
       rel="noopener noreferrer"
     >
-      <div className="relative overflow-hidden mx-auto" style={{ width: "300px", height: "250px" }}>
+      <div className="relative overflow-hidden mx-auto rounded-sm" style={{ width: "300px", height: "250px" }}>
         <Image src={ad.imageUrl} alt={ad.title} fill sizes="300px" className="object-cover" />
       </div>
     </Link>
