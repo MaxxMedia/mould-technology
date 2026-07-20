@@ -11,15 +11,12 @@ import {
   type PackageType,
 } from "@/lib/razorpay";
 import {
-  BANNER_PACKAGES,
   formatInr,
-  RECRUITMENT_PACKAGES,
-  SPONSORED_CONTENT_PACKAGES,
-  SUBSCRIPTION_FEATURES,
-  SUBSCRIPTION_PLANS,
   type FeatureValue,
-  type PlanTier,
 } from "@/lib/packages";
+
+// Keep the types but fetch data from API
+type PlanTier = string;
 
 async function refreshLocalUser() {
   const token = localStorage.getItem("token");
@@ -79,7 +76,7 @@ function SectionHeading({
   );
 }
 
-// New component for Free Plan Card
+// Free Plan Card component
 function FreePlanCard({ onContinue }: { onContinue: () => Promise<void> }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -136,6 +133,27 @@ function FreePlanCard({ onContinue }: { onContinue: () => Promise<void> }) {
     </div>
   );
 }
+
+// Type for API response
+type ApiPackage = {
+  id: string;
+  name: string;
+  type: string;
+  price: number;
+  billingCycle: string;
+  description: string | null;
+  badge: string | null;
+  displayOrder: number;
+  isHighlighted: boolean;
+  isActive: boolean;
+  metadata: any;
+  fromFallback?: boolean;
+};
+
+// Extended package type with features for sponsored content
+type SponsoredPackage = ApiPackage & {
+  features?: string[];
+};
 
 function PayButton({
   label,
@@ -238,12 +256,19 @@ export default function PackagesPageClient() {
   const searchParams = useSearchParams();
   const from = searchParams.get("from");
 
-  const planKeys: PlanTier[] = ["free", "basic", "professional", "enterprise"];
   const bannerDurations = ["monthly", "quarterly", "annual"] as const;
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [recruitmentExpiresAt, setRecruitmentExpiresAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPackageSelected, setIsPackageSelected] = useState(false);
+
+  // State for packages from API
+  const [subscriptionPlans, setSubscriptionPlans] = useState<any[]>([]);
+  const [subscriptionFeatures, setSubscriptionFeatures] = useState<any[]>([]);
+  const [bannerPackages, setBannerPackages] = useState<any[]>([]);
+  const [sponsoredPackages, setSponsoredPackages] = useState<SponsoredPackage[]>([]);
+  const [recruitmentPackages, setRecruitmentPackages] = useState<any[]>([]);
+  const [fromFallback, setFromFallback] = useState(false);
 
   // Check if user already has packageSelected
   useEffect(() => {
@@ -258,6 +283,63 @@ export default function PackagesPageClient() {
         // ignore
       }
     }
+  }, []);
+
+  // Fetch packages from API
+  useEffect(() => {
+    async function fetchPackages() {
+      try {
+        // Public, unauthenticated endpoint — do NOT point this at /api/admin/packages,
+        // that route requires requireAuth + requireAdmin and will 401 for site visitors,
+        // silently dropping into the hardcoded fallback below every time.
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/packages?includeInactive=false`);
+        const data = await res.json();
+
+        if (data.success) {
+          setFromFallback(data.fromFallback || false);
+
+          // Group packages by type
+          const grouped = data.data.reduce((acc: any, pkg: ApiPackage) => {
+            const type = pkg.type.toLowerCase();
+            if (!acc[type]) acc[type] = [];
+            acc[type].push(pkg);
+            return acc;
+          }, {});
+
+          // Sort by display order
+          const sortByOrder = (items: any[]) =>
+            items.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+
+          setSubscriptionPlans(sortByOrder(grouped.subscription || []));
+          setBannerPackages(sortByOrder(grouped.banner || []));
+          setSponsoredPackages(sortByOrder(grouped.sponsored || []));
+          setRecruitmentPackages(sortByOrder(grouped.recruitment || []));
+
+          // Subscription feature comparison rows aren't per-package DB data —
+          // they always come from the static SUBSCRIPTION_FEATURES table.
+          const { SUBSCRIPTION_FEATURES } = await import("@/lib/packages");
+          setSubscriptionFeatures(SUBSCRIPTION_FEATURES);
+        } else {
+          throw new Error(data.error || "Failed to load packages");
+        }
+      } catch (error) {
+        console.error("Failed to fetch packages:", error);
+        // Fallback to hardcoded data if API fails
+        try {
+          const { SUBSCRIPTION_PLANS, SUBSCRIPTION_FEATURES, BANNER_PACKAGES, SPONSORED_CONTENT_PACKAGES, RECRUITMENT_PACKAGES } = await import('@/lib/packages');
+          setSubscriptionPlans(SUBSCRIPTION_PLANS as unknown as any[]);
+          setSubscriptionFeatures(SUBSCRIPTION_FEATURES);
+          setBannerPackages(BANNER_PACKAGES as unknown as any[]);
+          setSponsoredPackages(SPONSORED_CONTENT_PACKAGES as unknown as any[]);
+          setRecruitmentPackages(RECRUITMENT_PACKAGES as unknown as any[]);
+          setFromFallback(true);
+        } catch (fallbackError) {
+          console.error("Failed to load fallback packages:", fallbackError);
+        }
+      }
+    }
+
+    fetchPackages();
   }, []);
 
   useEffect(() => {
@@ -296,8 +378,10 @@ export default function PackagesPageClient() {
 
   // Filter out free plan from subscription plans when showing free plan card
   const displaySubscriptionPlans = showFreePlanCard
-    ? SUBSCRIPTION_PLANS.filter(plan => plan.id !== "free")
-    : SUBSCRIPTION_PLANS;
+    ? subscriptionPlans.filter((plan: any) => plan.id !== "free")
+    : subscriptionPlans;
+
+  const planKeys = displaySubscriptionPlans.map((plan: any) => plan.id);
 
   if (isLoading) {
     return (
@@ -318,6 +402,15 @@ export default function PackagesPageClient() {
         description="Grow your visibility on ToolingTrends.com with subscription plans, banner advertising, sponsored content, and recruitment packages. Secure checkout powered by Razorpay."
       />
 
+      {/* Show fallback notice if using fallback data */}
+      {fromFallback && (
+        <div className="max-w-[1320px] mx-auto px-4 mt-4">
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md text-sm">
+            ⚠️ Using fallback package data. Admin can override packages in the database.
+          </div>
+        </div>
+      )}
+
       <section className="py-16 sm:py-20">
         <div className="mx-auto max-w-[1320px] px-4 sm:px-6">
           {/* Show Free Plan Card if user came from login/signup */}
@@ -333,12 +426,24 @@ export default function PackagesPageClient() {
               <thead>
                 <tr className="bg-[#2a3d47] text-white">
                   <th className="px-4 py-4 text-sm font-semibold sm:px-6">Feature</th>
-                  {displaySubscriptionPlans.map((plan) => (
+                  {displaySubscriptionPlans.map((plan: any) => (
                     <th
                       key={plan.id}
-                      className="px-4 py-4 text-center text-sm font-semibold sm:px-6"
+                      className="px-4 py-4 text-center text-sm font-semibold sm:px-6 relative"
                     >
-                      <div>{plan.name}</div>
+                      {plan.isHighlighted && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                          <span className="bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
+                            {plan.badge || "Most Popular"}
+                          </span>
+                        </div>
+                      )}
+                      <div className="mt-2">{plan.name}</div>
+                      {plan.description && (
+                        <div className="mt-1 text-xs font-normal text-white/70 max-w-[120px] mx-auto">
+                          {plan.description}
+                        </div>
+                      )}
                       <div className="mt-1 text-xs font-normal text-white/80">
                         {plan.price === 0 ? "₹0" : `${formatInr(plan.price)}/year`}
                       </div>
@@ -347,7 +452,7 @@ export default function PackagesPageClient() {
                 </tr>
               </thead>
               <tbody>
-                {SUBSCRIPTION_FEATURES.map((feature, index) => (
+                {subscriptionFeatures.map((feature: any, index: number) => (
                   <tr
                     key={feature.name}
                     className={index % 2 === 0 ? "bg-white" : "bg-[#f8f9fb]"}
@@ -356,7 +461,7 @@ export default function PackagesPageClient() {
                       {feature.name}
                     </td>
                     {planKeys
-                      .filter(key => displaySubscriptionPlans.some(p => p.id === key))
+                      .filter(key => displaySubscriptionPlans.some((p: any) => p.id === key))
                       .map((key) => (
                         <td key={key} className="px-4 py-3 text-center sm:px-6">
                           <FeatureCell value={feature[key]} />
@@ -369,7 +474,7 @@ export default function PackagesPageClient() {
           </div>
 
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            {displaySubscriptionPlans.map((plan) => (
+            {displaySubscriptionPlans.map((plan: any) => (
               <PayButton
                 key={plan.id}
                 label={plan.price === 0 ? "Get Started Free" : `Buy ${plan.name}`}
@@ -400,29 +505,32 @@ export default function PackagesPageClient() {
                 </tr>
               </thead>
               <tbody>
-                {BANNER_PACKAGES.map((row, index) => (
+                {bannerPackages.map((row: any, index: number) => (
                   <tr
                     key={row.id}
                     className={index % 2 === 0 ? "bg-white" : "bg-[#f8f9fb]"}
                   >
                     <td className="px-4 py-3 text-sm font-medium text-[#121213] sm:px-6">
-                      {row.position}
+                      {row.name}
                     </td>
-                    {bannerDurations.map((duration) => (
-                      <td key={duration} className="px-4 py-3 text-center sm:px-6">
-                        <div className="text-sm font-medium text-[#2a3d47]">
-                          {formatInr(row[duration])}
-                        </div>
-                        <div className="mt-2 flex justify-center">
-                          <PayButton
-                            label="Buy"
-                            packageType="BANNER"
-                            packageId={`${row.id}:${duration}`}
-                            variant="secondary"
-                          />
-                        </div>
-                      </td>
-                    ))}
+                    {bannerDurations.map((duration) => {
+                      const price = row.metadata?.[duration] || row[duration];
+                      return (
+                        <td key={duration} className="px-4 py-3 text-center sm:px-6">
+                          <div className="text-sm font-medium text-[#2a3d47]">
+                            {formatInr(price)}
+                          </div>
+                          <div className="mt-2 flex justify-center">
+                            <PayButton
+                              label="Buy"
+                              packageType="BANNER"
+                              packageId={`${row.id}:${duration}`}
+                              variant="secondary"
+                            />
+                          </div>
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>
@@ -439,17 +547,30 @@ export default function PackagesPageClient() {
           />
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {SPONSORED_CONTENT_PACKAGES.map((pkg) => (
+            {sponsoredPackages.map((pkg: SponsoredPackage) => (
               <div
                 key={pkg.id}
-                className="flex flex-col rounded-2xl border border-[#e5e9ef] bg-white p-8 shadow-sm"
+                className={`flex flex-col rounded-2xl border p-8 shadow-sm relative ${pkg.isHighlighted
+                  ? "border-yellow-400 bg-gradient-to-b from-yellow-50 to-white"
+                  : "border-[#e5e9ef] bg-white"
+                  }`}
               >
+                {pkg.isHighlighted && pkg.badge && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-full">
+                      {pkg.badge}
+                    </span>
+                  </div>
+                )}
                 <h3 className="text-xl font-semibold text-[#121213]">{pkg.name}</h3>
+                {pkg.description && (
+                  <p className="text-sm text-[#616C74] mt-1">{pkg.description}</p>
+                )}
                 <p className="mt-2 text-2xl font-bold text-[#004d73]">
                   {formatInr(pkg.price)}
                 </p>
                 <ul className="mt-6 flex-1 space-y-3">
-                  {pkg.features.map((item) => (
+                  {(pkg.metadata?.features || pkg.features || []).map((item: string) => (
                     <li key={item} className="flex items-start gap-2 text-sm text-[#616C74]">
                       <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" strokeWidth={2.5} />
                       <span>{item}</span>
@@ -478,7 +599,7 @@ export default function PackagesPageClient() {
           />
 
           <div className="mx-auto max-w-md rounded-2xl border border-[#e5e9ef] bg-white p-8 text-center shadow-sm">
-            {RECRUITMENT_PACKAGES.map((pkg) => (
+            {recruitmentPackages.map((pkg: any) => (
               <div key={pkg.id}>
                 <h3 className="text-xl font-semibold text-[#121213]">{pkg.name}</h3>
                 <p className="mt-2 text-sm text-[#616C74]">

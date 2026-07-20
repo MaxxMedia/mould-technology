@@ -82,15 +82,46 @@ export default function SubscribersPage() {
         cache: "no-store",
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        throw new Error(data.error || `Failed with status: ${res.status}`);
+        if (res.status === 401) {
+          localStorage.removeItem("token");
+          setError("❌ Session expired. Please login again.");
+          setLoading(false);
+          return;
+        }
+        throw new Error(`Failed with status: ${res.status}`);
       }
 
-      const subscribersData = Array.isArray(data) ? data : data.subscribers || [];
+      const data = await res.json();
+      console.log("📊 API Response:", data); // Debug log
+
+      // ✅ FIX: Handle the correct response format
+      // The API returns { subscribers: [...] } or { data: [...] }
+      let subscribersData = [];
+      
+      if (data.subscribers) {
+        // API returns { subscribers: [...] }
+        subscribersData = data.subscribers;
+      } else if (data.data) {
+        // Alternative format { data: [...] }
+        subscribersData = data.data;
+      } else if (Array.isArray(data)) {
+        // Direct array
+        subscribersData = data;
+      } else {
+        // Fallback - try to find any array property
+        const firstArrayKey = Object.keys(data).find(key => Array.isArray(data[key]));
+        if (firstArrayKey) {
+          subscribersData = data[firstArrayKey];
+        } else {
+          subscribersData = [];
+        }
+      }
+
+      console.log("📊 Subscribers data:", subscribersData); // Debug log
       setSubscribers(subscribersData);
     } catch (err: any) {
+      console.error("❌ Load error:", err);
       setError(err.message || "Failed to load subscribers");
     } finally {
       setLoading(false);
@@ -179,7 +210,7 @@ export default function SubscribersPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             Newsletter Subscribers
@@ -192,7 +223,7 @@ export default function SubscribersPage() {
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           <button
             onClick={loadSubscribers}
             className="border px-4 py-2 rounded-lg hover:bg-gray-50 transition flex items-center gap-2"
@@ -230,7 +261,7 @@ export default function SubscribersPage() {
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <input
             className="border rounded-lg px-4 h-11 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10"
@@ -312,6 +343,7 @@ export default function SubscribersPage() {
                     <div className="space-y-2">
                       <div className="text-4xl">📭</div>
                       <p>No subscribers found</p>
+                      <p className="text-sm">Subscribers will appear here once they sign up</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -357,12 +389,12 @@ export default function SubscribersPage() {
                   <td className="p-3 whitespace-nowrap">
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full capitalize border ${
                       item.plan === "enterprise"
-                        ? "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800"
+                        ? "bg-purple-100 text-purple-700 border-purple-200"
                         : item.plan === "professional"
-                        ? "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800"
+                        ? "bg-indigo-100 text-indigo-700 border-indigo-200"
                         : item.plan === "basic"
-                        ? "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
-                        : "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700"
+                        ? "bg-blue-100 text-blue-700 border-blue-200"
+                        : "bg-gray-100 text-gray-700 border-gray-200"
                     }`}>
                       {item.plan || "free"}
                     </span>
@@ -428,7 +460,7 @@ export default function SubscribersPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between text-sm text-gray-500">
+      <div className="flex items-center justify-between text-sm text-gray-500 flex-wrap gap-2">
         <div>
           Showing {filtered.length} of {subscribers.length} subscribers
         </div>
