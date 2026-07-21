@@ -16,10 +16,7 @@ export type JobPostingEligibility = {
 // 🔹 Backend now returns both quotas in one response:
 // top-level fields = job eligibility (kept for backward compatibility),
 // plus explicit `.job` and `.internship` breakdowns.
-export type JobPostingEligibilityResponse = JobPostingEligibility & {
-  job: JobPostingEligibility;
-  internship: JobPostingEligibility;
-};
+
 
 export type JobPostingEligibilityResponse = JobPostingEligibility & {
   job: JobPostingEligibility;
