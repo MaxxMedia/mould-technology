@@ -22,6 +22,8 @@ export default function CreateCoverStoryPage() {
 
   const [authors, setAuthors] = useState<Author[]>([])
   const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const [form, setForm] = useState({
     title: "",
@@ -30,6 +32,7 @@ export default function CreateCoverStoryPage() {
     fullDescription: "",
     badge: "",
     imageBrief: "",
+    keyCategories: "",
     coverImageUrl: "",
     slugImageUrls: [] as string[],
     authorId: "",
@@ -40,14 +43,25 @@ export default function CreateCoverStoryPage() {
   useEffect(() => {
     const token = localStorage.getItem("token")
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/magazines/creation-data`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/magazines/authors`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     })
-      .then(res => res.json())
-      .then(data => {
-        setAuthors(Array.isArray(data.authors) ? data.authors : [])
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = await res.text()
+          console.error("Authors fetch failed:", res.status, body)
+          setLoadError(`Authors fetch failed (${res.status}): ${body}`)
+          return
+        }
+        const data = await res.json()
+        console.log("Authors loaded:", data)
+        setAuthors(Array.isArray(data) ? data : [])
+      })
+      .catch((err) => {
+        console.error("Authors fetch error:", err)
+        setLoadError(`Network error: ${err.message}`)
       })
   }, [])
 
@@ -97,22 +111,57 @@ export default function CreateCoverStoryPage() {
   /* ================= SUBMIT ================= */
 
   async function handleSubmit() {
+    setSubmitError(null)
+
+    // Frontend validation — catch missing required fields before hitting the API
+    if (!form.title.trim()) {
+      setSubmitError("Title is required.")
+      return
+    }
+    if (!form.fullDescription.trim()) {
+      setSubmitError("Full Description is required.")
+      return
+    }
+
     setLoading(true)
     const token = localStorage.getItem("token")
 
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/magazines/cover-stories`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        ...form,
-        authorId: Number(form.authorId),
-      }),
-    })
+    // Convert authorId safely — avoid sending NaN to backend
+    const authorIdNum = form.authorId ? Number(form.authorId) : null
 
-    router.push("/admin/magazines")
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/magazines/cover-stories`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...form,
+          authorId: authorIdNum,
+        }),
+      })
+
+      if (!res.ok) {
+        let message = `Request failed (${res.status})`
+        try {
+          const json = await res.json()
+          message = json.error ?? message
+        } catch {
+          message = (await res.text()) || message
+        }
+        console.error("Submit failed:", res.status, message)
+        setSubmitError(message)
+        setLoading(false)
+        return
+      }
+
+      router.push("/admin/magazines")
+    } catch (err: any) {
+      console.error("Submit error:", err)
+      setSubmitError(`Network error: ${err.message}`)
+      setLoading(false)
+    }
   }
 
   /* ================= UI ================= */
@@ -120,6 +169,13 @@ export default function CreateCoverStoryPage() {
   return (
     <div className="max-w-5xl mx-auto p-10 space-y-8">
       <h1 className="text-3xl font-bold">Create Cover Story</h1>
+
+      {/* LOAD ERROR */}
+      {loadError && (
+        <div className="bg-red-50 border border-red-300 text-red-800 text-sm p-3 rounded">
+          ⚠️ {loadError}
+        </div>
+      )}
 
       {/* TITLE */}
       <input
@@ -150,6 +206,7 @@ export default function CreateCoverStoryPage() {
       <textarea
         placeholder="Short Description"
         className="w-full border p-3 rounded"
+        value={form.shortDescription}
         onChange={(e) =>
           setForm({ ...form, shortDescription: e.target.value })
         }
@@ -160,6 +217,7 @@ export default function CreateCoverStoryPage() {
         placeholder="Full Description"
         rows={6}
         className="w-full border p-3 rounded"
+        value={form.fullDescription}
         onChange={(e) =>
           setForm({ ...form, fullDescription: e.target.value })
         }
@@ -167,10 +225,31 @@ export default function CreateCoverStoryPage() {
 
       {/* BADGE */}
       <input
-        placeholder="Badge"
+        placeholder="Badge (e.g. Exclusive, New)"
         className="w-full border p-3 rounded"
+        value={form.badge}
         onChange={(e) =>
           setForm({ ...form, badge: e.target.value })
+        }
+      />
+
+      {/* IMAGE BRIEF */}
+      <input
+        placeholder="Image Brief"
+        className="w-full border p-3 rounded"
+        value={form.imageBrief}
+        onChange={(e) =>
+          setForm({ ...form, imageBrief: e.target.value })
+        }
+      />
+
+      {/* KEY CATEGORIES */}
+      <input
+        placeholder="Key Categories (comma separated)"
+        className="w-full border p-3 rounded"
+        value={form.keyCategories}
+        onChange={(e) =>
+          setForm({ ...form, keyCategories: e.target.value })
         }
       />
 
@@ -232,10 +311,18 @@ export default function CreateCoverStoryPage() {
       {/* SUBMIT */}
       <button
         onClick={handleSubmit}
-        className="bg-black text-white px-6 py-2 rounded"
+        disabled={loading}
+        className="bg-black text-white px-6 py-2 rounded disabled:opacity-50"
       >
         {loading ? "Creating..." : "Create Cover Story"}
       </button>
+
+      {/* SUBMIT ERROR */}
+      {submitError && (
+        <div className="bg-red-50 border border-red-300 text-red-800 text-sm p-3 rounded">
+          ⚠️ {submitError}
+        </div>
+      )}
     </div>
   )
 }

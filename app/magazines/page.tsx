@@ -16,14 +16,23 @@ import type { Post } from "@/types/Post"
 
 export default async function MagazinesPage() {
 
-  /* FETCH POSTS */
+  /* FETCH ISSUE POSTS DIRECTLY */
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/posts?limit=50`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/posts?category=in-this-issue&limit=100`,
     { cache: "no-store" }
   )
 
   const data = await res.json()
-  const posts: Post[] = data.data || data
+  const postsSource: Post[] = Array.isArray(data?.data)
+    ? data.data
+    : Array.isArray(data)
+      ? data
+      : []
+  const posts = postsSource.sort((a: Post, b: Post) => {
+    const aTime = new Date(a.createdAt || 0).getTime()
+    const bTime = new Date(b.createdAt || 0).getTime()
+    return bTime - aTime
+  })
 
   return (
     <>

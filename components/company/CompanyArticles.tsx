@@ -8,6 +8,7 @@ import type { Post } from "@/types/Post"
 /* ================= CONFIG ================= */
 
 const ROTATE_INTERVAL = 5000 // 5 seconds
+const FADE_DURATION = 500    // must match the CSS transition duration below
 
 const BADGE_COLORS: Record<string, string> = {
   FEATURED: "bg-[#E11D48]",
@@ -33,7 +34,7 @@ export default function CompanyArticles() {
   /* ================= FETCH APPROVED ARTICLES ================= */
 
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/articles/approved`
@@ -46,14 +47,18 @@ export default function CompanyArticles() {
     })()
   }, [])
 
-  /* ================= ALWAYS 3 ARTICLES (SLIDING WINDOW) ================= */
+  /* ================= UP TO 3 UNIQUE ARTICLES (SLIDING WINDOW) ================= */
 
   const visiblePosts = useMemo(() => {
     if (allPosts.length === 0) return []
 
+    // Cap the window at however many unique posts actually exist —
+    // this is what was causing duplicate keys / a post silently
+    // disappearing when allPosts.length was less than 3.
+    const windowSize = Math.min(3, allPosts.length)
     const result: Post[] = []
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < windowSize; i++) {
       result.push(allPosts[(index + i) % allPosts.length])
     }
 
@@ -63,6 +68,7 @@ export default function CompanyArticles() {
   /* ================= ROTATION ================= */
 
   useEffect(() => {
+    // Nothing to rotate in if we're already showing everything we have.
     if (allPosts.length <= 3) return
 
     const timer = setInterval(() => {
@@ -71,7 +77,7 @@ export default function CompanyArticles() {
       setTimeout(() => {
         setIndex((prev) => (prev + 1) % allPosts.length)
         setFade(true)
-      }, 300)
+      }, FADE_DURATION)
     }, ROTATE_INTERVAL)
 
     return () => clearInterval(timer)
@@ -104,7 +110,7 @@ export default function CompanyArticles() {
 
           {/* POSTS GRID */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
-            {visiblePosts.map((post) => {
+            {visiblePosts.map((post, i) => {
               const slug =
                 typeof post.category === "object"
                   ? post.category?.slug || ""
@@ -132,7 +138,11 @@ export default function CompanyArticles() {
 
               return (
                 <div
-                  key={post.id}
+                  // index in the key forces React to remount the DOM node
+                  // per *slot* on rotation, which is what actually makes
+                  // the fade/slide transition play instead of getting
+                  // skipped as an in-place update.
+                  key={`${post.id}-${i}`}
                   className="bg-white rounded-md p-4 sm:p-5 flex gap-4 h-[140px] sm:h-[160px] overflow-hidden"
                 >
                   {/* thumbnail */}
@@ -148,19 +158,19 @@ export default function CompanyArticles() {
                       }
                       alt={post.title.slice(0, 20)}
                       fill
-                      className={`object-cover transition-all duration-500 ${
-                        fade ? "opacity-100 scale-100" : "opacity-0 scale-95"
-                      }`}
+                      className={`object-cover transition-all duration-500 ease-in-out ${fade
+                          ? "opacity-100 scale-100 translate-x-0"
+                          : "opacity-0 scale-95 -translate-x-2"
+                        }`}
                     />
                   </Link>
 
                   {/* content */}
                   <div
-                    className={`flex flex-col gap-2 min-w-0 transition-all duration-500 ${
-                      fade
+                    className={`flex flex-col gap-2 min-w-0 transition-all duration-500 ease-in-out ${fade
                         ? "translate-y-0 opacity-100"
                         : "translate-y-2 opacity-0"
-                    }`}
+                      }`}
                   >
                     {tagText && (
                       <span

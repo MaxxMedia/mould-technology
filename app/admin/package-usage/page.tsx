@@ -130,25 +130,306 @@ export default function AdminRecruiterUsagePage() {
     useEffect(() => {
         fetchData();
     }, []);
-
     async function fetchData() {
         try {
             const token = localStorage.getItem("token");
+
+            // Use the correct endpoint
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/package/companies`,
-                { headers: { Authorization: `Bearer ${token}` } }
+                `${process.env.NEXT_PUBLIC_API_URL}/api/companies/admin/list`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
             );
+
+            console.log("Status:", res.status);
+            console.log("Content-Type:", res.headers.get("content-type"));
+
+            if (!res.ok) {
+                throw new Error(`Request failed: ${res.status}`);
+            }
+
             const data = await res.json();
-            // Backend now returns one row per recruiter (with their real
-            // inherited plan and their own submission counts), so no
-            // client-side filtering is needed here anymore.
-            setRecruiters(data.companies || []);
-            setStats(data.stats || null);
+            console.log("Response:", data);
+
+            // The API returns an array directly
+            const companies = Array.isArray(data) ? data : (data.companies || data.data || []);
+
+            // Transform the data to match the expected structure
+            const transformedCompanies = companies.map((company: any) => ({
+                id: company.id,
+                name: company.name,
+                slug: company.slug,
+                location: company.location || "",
+                website: company.website || "",
+                isVerified: company.isVerified || false,
+                createdAt: company.createdAt || new Date().toISOString(),
+                type: "company",
+                hasCompany: true,
+                companyName: company.name,
+                email: company.email || "N/A",
+                username: company.username || company.slug || "N/A",
+                fullName: company.fullName || company.name,
+                subscriptionPlan: company.plan || company.subscriptionPlan || "free",
+                planLabel: company.planLabel || getPlanLabel(company.plan || company.subscriptionPlan || "free"),
+                subscriptionExpiresAt: company.subscriptionExpiresAt || null,
+                isActiveSubscription: !!company.subscriptionExpiresAt && new Date(company.subscriptionExpiresAt) > new Date(),
+                totalSpent: company.totalSpent || 0,
+                latestPurchase: company.latestPurchase || null,
+                users: company.users || [],
+                usage: {
+                    directories: {
+                        active: company.directoriesActive || 0,
+                        pending: company.directoriesPending || 0,
+                        total: (company.directoriesActive || 0) + (company.directoriesPending || 0),
+                        limit: company.directoriesLimit || getPlanLimit(company.plan || "free", "directories"),
+                        isUnlimited: company.directoriesLimit === -1 || company.directoriesLimit === "unlimited",
+                        remaining: company.directoriesRemaining || 0
+                    },
+                    articles: {
+                        active: company.articlesActive || 0,
+                        pending: company.articlesPending || 0,
+                        total: (company.articlesActive || 0) + (company.articlesPending || 0),
+                        limit: company.articlesLimit || getPlanLimit(company.plan || "free", "articles"),
+                        isUnlimited: company.articlesLimit === -1 || company.articlesLimit === "unlimited",
+                        remaining: company.articlesRemaining || 0
+                    },
+                    teamMembers: {
+                        active: company.teamMembersActive || 0,
+                        limit: company.teamMembersLimit || getPlanLimit(company.plan || "free", "teamMembers"),
+                        isUnlimited: company.teamMembersLimit === -1 || company.teamMembersLimit === "unlimited",
+                        remaining: company.teamMembersRemaining || 0
+                    },
+                    productSupplies: {
+                        count: company.productSuppliesCount || 0,
+                        limit: company.productSuppliesLimit || getPlanLimit(company.plan || "free", "productSupplies"),
+                        isUnlimited: company.productSuppliesLimit === -1 || company.productSuppliesLimit === "unlimited"
+                    },
+                    coverImages: {
+                        count: company.coverImagesCount || 0,
+                        limit: company.coverImagesLimit || getPlanLimit(company.plan || "free", "coverImages"),
+                        isUnlimited: company.coverImagesLimit === -1 || company.coverImagesLimit === "unlimited",
+                        remaining: company.coverImagesRemaining || 0
+                    },
+                    productImages: {
+                        count: company.productImagesCount || 0,
+                        limit: company.productImagesLimit || getPlanLimit(company.plan || "free", "productImages"),
+                        isUnlimited: company.productImagesLimit === -1 || company.productImagesLimit === "unlimited",
+                        remaining: company.productImagesRemaining || 0
+                    },
+                    companyGallery: {
+                        count: company.companyGalleryCount || 0,
+                        limit: company.companyGalleryLimit || getPlanLimit(company.plan || "free", "companyGallery"),
+                        isUnlimited: company.companyGalleryLimit === -1 || company.companyGalleryLimit === "unlimited",
+                        remaining: company.companyGalleryRemaining || 0
+                    },
+                    factoryGallery: {
+                        count: company.factoryGalleryCount || 0,
+                        limit: company.factoryGalleryLimit || getPlanLimit(company.plan || "free", "factoryGallery"),
+                        isUnlimited: company.factoryGalleryLimit === -1 || company.factoryGalleryLimit === "unlimited",
+                        remaining: company.factoryGalleryRemaining || 0
+                    },
+                    productCatalogues: {
+                        count: company.productCataloguesCount || 0,
+                        limit: company.productCataloguesLimit || getPlanLimit(company.plan || "free", "productCatalogues"),
+                        isUnlimited: company.productCataloguesLimit === -1 || company.productCataloguesLimit === "unlimited",
+                        remaining: company.productCataloguesRemaining || 0
+                    },
+                    productVideos: {
+                        count: company.productVideosCount || 0,
+                        limit: company.productVideosLimit || getPlanLimit(company.plan || "free", "productVideos"),
+                        isUnlimited: company.productVideosLimit === -1 || company.productVideosLimit === "unlimited",
+                        remaining: company.productVideosRemaining || 0
+                    },
+                    brands: {
+                        count: company.brandsCount || 0,
+                        limit: company.brandsLimit || getPlanLimit(company.plan || "free", "brands"),
+                        isUnlimited: company.brandsLimit === -1 || company.brandsLimit === "unlimited",
+                        remaining: company.brandsRemaining || 0
+                    },
+                    industriesServed: {
+                        count: company.industriesServedCount || 0,
+                        limit: company.industriesServedLimit || getPlanLimit(company.plan || "free", "industriesServed"),
+                        isUnlimited: company.industriesServedLimit === -1 || company.industriesServedLimit === "unlimited",
+                        remaining: company.industriesServedRemaining || 0
+                    },
+                    exportMarkets: {
+                        count: company.exportMarketsCount || 0,
+                        allowed: company.exportMarketsAllowed || getPlanFeature(company.plan || "free", "exportMarkets")
+                    },
+                    certifications: {
+                        count: company.certificationsCount || 0,
+                        allowed: company.certificationsAllowed || getPlanFeature(company.plan || "free", "certifications")
+                    },
+                    brochures: {
+                        count: company.brochuresCount || 0,
+                        allowed: company.brochuresAllowed || getPlanFeature(company.plan || "free", "brochures")
+                    },
+                    manufacturingCapabilities: {
+                        allowed: company.manufacturingCapabilitiesAllowed || getPlanFeature(company.plan || "free", "manufacturingCapabilities"),
+                        tier: company.manufacturingCapabilitiesTier || false
+                    },
+                    machineryList: {
+                        allowed: company.machineryListAllowed || getPlanFeature(company.plan || "free", "machineryList"),
+                        tier: company.machineryListTier || false
+                    },
+                    qualityStandards: {
+                        allowed: company.qualityStandardsAllowed || getPlanFeature(company.plan || "free", "qualityStandards")
+                    },
+                    googleMap: {
+                        allowed: company.googleMapAllowed || getPlanFeature(company.plan || "free", "googleMap")
+                    },
+                    whatsapp: {
+                        allowed: company.whatsappAllowed || getPlanFeature(company.plan || "free", "whatsapp")
+                    },
+                    description: {
+                        limit: company.descriptionLimit || 0
+                    }
+                }
+            }));
+
+            // Calculate stats
+            const stats = {
+                totalRecruiters: transformedCompanies.length,
+                totalPaidCompanies: transformedCompanies.filter((c: any) => c.subscriptionPlan !== "free").length,
+                totalFreeCompanies: transformedCompanies.filter((c: any) => c.subscriptionPlan === "free").length,
+                totalPendingDirectories: transformedCompanies.reduce((acc: number, c: any) => acc + c.usage.directories.pending, 0),
+                totalPendingArticles: transformedCompanies.reduce((acc: number, c: any) => acc + c.usage.articles.pending, 0),
+                totalTeamMembers: transformedCompanies.reduce((acc: number, c: any) => acc + c.usage.teamMembers.active, 0),
+                totalSupplierDirectories: transformedCompanies.reduce((acc: number, c: any) => acc + c.usage.directories.active, 0),
+                totalArticles: transformedCompanies.reduce((acc: number, c: any) => acc + c.usage.articles.active, 0)
+            };
+
+            setRecruiters(transformedCompanies);
+            setStats(stats);
         } catch (error) {
             console.error("Failed to fetch recruiter usage data:", error);
         } finally {
             setLoading(false);
         }
+    }
+
+    // Helper function to get plan labels
+    function getPlanLabel(plan: string): string {
+        const labels: Record<string, string> = {
+            free: "Free",
+            basic: "Basic",
+            professional: "Professional",
+            enterprise: "Enterprise"
+        };
+        return labels[plan] || "Free";
+    }
+
+    // Helper function to get plan limits
+    function getPlanLimit(plan: string, feature: string): number | string {
+        const limits: Record<string, any> = {
+            free: {
+                directories: 1,
+                articles: 0,
+                teamMembers: 1,
+                productSupplies: 0,
+                coverImages: 0,
+                productImages: 0,
+                companyGallery: 0,
+                factoryGallery: 0,
+                productCatalogues: 0,
+                productVideos: 0,
+                brands: 0,
+                industriesServed: 0
+            },
+            basic: {
+                directories: 5,
+                articles: 2,
+                teamMembers: 3,
+                productSupplies: 10,
+                coverImages: 3,
+                productImages: 10,
+                companyGallery: 5,
+                factoryGallery: 5,
+                productCatalogues: 5,
+                productVideos: 3,
+                brands: 5,
+                industriesServed: 5
+            },
+            professional: {
+                directories: 20,
+                articles: 10,
+                teamMembers: 10,
+                productSupplies: 50,
+                coverImages: 10,
+                productImages: 50,
+                companyGallery: 20,
+                factoryGallery: 20,
+                productCatalogues: 20,
+                productVideos: 10,
+                brands: 20,
+                industriesServed: 20
+            },
+            enterprise: {
+                directories: "Unlimited",
+                articles: "Unlimited",
+                teamMembers: "Unlimited",
+                productSupplies: "Unlimited",
+                coverImages: "Unlimited",
+                productImages: "Unlimited",
+                companyGallery: "Unlimited",
+                factoryGallery: "Unlimited",
+                productCatalogues: "Unlimited",
+                productVideos: "Unlimited",
+                brands: "Unlimited",
+                industriesServed: "Unlimited"
+            }
+        };
+        return limits[plan]?.[feature] || 0;
+    }
+
+    // Helper function to get plan features
+    function getPlanFeature(plan: string, feature: string): boolean {
+        const features: Record<string, any> = {
+            free: {
+                exportMarkets: false,
+                certifications: false,
+                brochures: false,
+                manufacturingCapabilities: false,
+                machineryList: false,
+                qualityStandards: false,
+                googleMap: false,
+                whatsapp: false
+            },
+            basic: {
+                exportMarkets: false,
+                certifications: false,
+                brochures: false,
+                manufacturingCapabilities: false,
+                machineryList: false,
+                qualityStandards: false,
+                googleMap: false,
+                whatsapp: false
+            },
+            professional: {
+                exportMarkets: true,
+                certifications: true,
+                brochures: true,
+                manufacturingCapabilities: true,
+                machineryList: true,
+                qualityStandards: true,
+                googleMap: true,
+                whatsapp: true
+            },
+            enterprise: {
+                exportMarkets: true,
+                certifications: true,
+                brochures: true,
+                manufacturingCapabilities: true,
+                machineryList: true,
+                qualityStandards: true,
+                googleMap: true,
+                whatsapp: true
+            }
+        };
+        return features[plan]?.[feature] || false;
     }
 
     const planCounts = useMemo(() => {
