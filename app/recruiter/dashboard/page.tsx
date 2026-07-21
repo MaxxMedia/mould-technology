@@ -140,7 +140,6 @@ function formatProductQuickDesc(eligibility?: ContentLimitEligibility | null) {
   return `${eligibility.remaining ?? 0} directory slots left`
 }
 
-
 function formatLimitValue(
   eligibility: ContentLimitEligibility | null | undefined,
   remainingKey: "remaining" = "remaining"
@@ -148,6 +147,24 @@ function formatLimitValue(
   if (!eligibility) return "—"
   if (eligibility.isUnlimited) return "Unlimited"
   return eligibility[remainingKey] ?? 0
+}
+
+/* ================= HELPER FUNCTIONS ================= */
+
+// Helper function to get initials from name
+function getInitials(name: string): string {
+  if (!name) return "U"
+
+  const parts = name.trim().split(" ")
+  if (parts.length === 1) {
+    return parts[0].charAt(0).toUpperCase()
+  }
+
+  // Get first letter of first and last name
+  const firstInitial = parts[0].charAt(0)
+  const lastInitial = parts[parts.length - 1].charAt(0)
+
+  return (firstInitial + lastInitial).toUpperCase()
 }
 
 /* ================= PAGE ================= */
@@ -254,7 +271,6 @@ export default function RecruiterDashboard() {
     }
 
   }, [allowed])
-
 
   /* ================= RENDER GUARDS ================= */
 
@@ -604,14 +620,20 @@ export default function RecruiterDashboard() {
           {/* PROFILE CARD */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
             <div className="relative inline-block mb-4">
-              <div className="w-20 h-20 rounded-full overflow-hidden mx-auto ring-4 ring-gray-50">
-                <Image
-                  src={recruiter?.avatarUrl || "https://i.pravatar.cc/100"}
-                  alt="Profile"
-                  width={80}
-                  height={80}
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-20 h-20 rounded-full overflow-hidden mx-auto ring-4 ring-gray-50 bg-gray-100 flex items-center justify-center">
+                {recruiter?.avatarUrl ? (
+                  <Image
+                    src={recruiter.avatarUrl}
+                    alt="Profile"
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-2xl font-semibold text-gray-600">
+                    {getInitials(recruiter?.fullName || recruiter?.username || "U")}
+                  </span>
+                )}
               </div>
               <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
             </div>
@@ -871,10 +893,10 @@ function Table({
               <th
                 key={h}
                 className={`px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide ${i === head.length - 1 && alignLast === "right"
-                    ? "text-right"
-                    : center.includes(i)
-                      ? "text-center"
-                      : "text-left"
+                  ? "text-right"
+                  : center.includes(i)
+                    ? "text-center"
+                    : "text-left"
                   }`}
               >
                 {h}
@@ -889,10 +911,10 @@ function Table({
                 <td
                   key={ci}
                   className={`px-4 py-4 ${ci === row.length - 1 && alignLast === "right"
-                      ? "text-right"
-                      : center.includes(ci)
-                        ? "text-center"
-                        : "text-left"
+                    ? "text-right"
+                    : center.includes(ci)
+                      ? "text-center"
+                      : "text-left"
                     }`}
                 >
                   {cell}
