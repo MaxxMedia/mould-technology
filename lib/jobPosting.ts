@@ -12,9 +12,14 @@ export type JobPostingEligibility = {
   message?: string;
 };
 
+export type JobPostingEligibilityResponse = JobPostingEligibility & {
+  job: JobPostingEligibility;
+  internship: JobPostingEligibility;
+};
+
 export async function fetchJobPostingEligibility(
   token: string
-): Promise<JobPostingEligibility> {
+): Promise<JobPostingEligibilityResponse> {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/jobs/recruiter/posting-eligibility`,
     {
