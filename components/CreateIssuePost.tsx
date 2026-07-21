@@ -25,6 +25,18 @@ export default function CreateIssuePost() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  const normalizeCategoryKey = (value: unknown) =>
+    String(value ?? "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "");
+
+  const getCategoryList = (payload: any) => {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    if (Array.isArray(payload?.categories)) return payload.categories;
+    return [];
+  };
+
   /* ================= FETCH DATA ================= */
   useEffect(() => {
     Promise.all([
@@ -34,13 +46,14 @@ export default function CreateIssuePost() {
       .then(([a, c]) => {
         setAuthors(a.data || a);
 
-        const allowedCategories = [ "inthisissue", "whatsnew"];
+        const allCategories = getCategoryList(c);
+        const issueCategories = allCategories.filter((cat: any) => {
+          const slugKey = normalizeCategoryKey(cat?.slug);
+          const nameKey = normalizeCategoryKey(cat?.name);
+          return slugKey === "inthisissue" || nameKey === "inthisissue";
+        });
 
-        const filtered = (c.data || c).filter((cat: any) =>
-          allowedCategories.includes(cat.slug?.toLowerCase())
-        );
-
-        setCategories(filtered);
+        setCategories(issueCategories.length > 0 ? issueCategories : allCategories);
       })
       .catch(() => {
         setAuthors([]);
