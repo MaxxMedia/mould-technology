@@ -1,4 +1,5 @@
 "use client"
+
 import dynamic from "next/dynamic"
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -17,7 +18,8 @@ const ReactQuill = dynamic(() => import("react-quill-new"), {
 
 function getFeaturedJobEligibility(plan?: string, planLabel?: string) {
   const normalizedPlan = (plan || "").toLowerCase()
-  const canFeature = normalizedPlan === "professional" || normalizedPlan === "enterprise"
+  const canFeature =
+    normalizedPlan === "professional" || normalizedPlan === "enterprise"
 
   if (normalizedPlan === "professional") {
     return {
@@ -44,7 +46,8 @@ function getFeaturedJobEligibility(plan?: string, planLabel?: string) {
     plan,
     planLabel,
     durationDays: null,
-    message: "Featured Job is available only on Professional and Enterprise plans.",
+    message:
+      "Featured Job is available only on Professional and Enterprise plans.",
   }
 }
 
@@ -224,7 +227,7 @@ export default function CreateJobPage() {
                   featuredJob: checked,
                 }))
               }
-              className="h-8 w-14 bg-slate-500 data-[state=checked]:bg-slate-800 data-[state=unchecked]:bg-slate-500"
+              className="h-7 w-12"
             />
           </div>
         )}
@@ -285,8 +288,7 @@ export default function CreateJobPage() {
             onChange={handleChange}
           />
 
-
-                   <input
+          <input
             name="location"
             required
             placeholder="Location"
@@ -334,7 +336,7 @@ export default function CreateJobPage() {
             <div className="flex justify-start pt-2">
               <button
                 disabled={loading || !form.acceptedPolicy || blockedByLimit}
-                className="w-full max-w-[220px] rounded-xl bg-blue-600 px-8 py-4 text-[16px] font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+                className="w-full max-w-55 rounded-xl bg-blue-600 px-8 py-4 text-[16px] font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
               >
                 {loading
                   ? "Publishing..."

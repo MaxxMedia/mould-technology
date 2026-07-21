@@ -44,6 +44,48 @@ function getYoutubeEmbed(url?: string) {
   return `https://www.youtube.com/embed/${videoId}?&rel=0`;
 }
 
+/**
+ * Renders the real avatar image when one exists, otherwise falls back to
+ * a generated initials circle instead of a static placeholder file —
+ * this can never 404 / show a broken-image icon.
+ */
+function AuthorAvatar({
+  name,
+  avatarUrl,
+  size,
+}: {
+  name?: string | null;
+  avatarUrl?: string | null;
+  size: number;
+}) {
+  const displayName = name?.trim() || "rstheme";
+
+  if (avatarUrl) {
+    return (
+      <div className="relative shrink-0" style={{ width: size, height: size }}>
+        <Image
+          src={avatarUrl}
+          alt={displayName}
+          fill
+          sizes={`${size}px`}
+          className="rounded-full object-cover border border-white/30"
+        />
+      </div>
+    );
+  }
+
+  const initial = displayName.charAt(0).toUpperCase();
+
+  return (
+    <span
+      style={{ width: size, height: size }}
+      className="rounded-full bg-[#0073ff] text-white flex items-center justify-center font-semibold shrink-0 border border-white/30"
+    >
+      <span style={{ fontSize: Math.max(10, size * 0.45) }}>{initial}</span>
+    </span>
+  );
+}
+
 export default function VideosSection({ posts }: Props) {
   /* ================= FILTER VIDEOS ================= */
   const videos = useMemo(() => {
@@ -96,21 +138,18 @@ export default function VideosSection({ posts }: Props) {
 
   /* ================= AUTHOR META ================= */
 
-  const AuthorMeta = ({ video }: { video?: VideoPost }) =>
-    video?.author ? (
-      <span className="flex items-center gap-2">
-        <div className="relative w-6 h-6">
-          <Image
-            src={video.author.avatarUrl || "/avatar-placeholder.png"}
-            alt={video.author.name}
-            fill
-            sizes="24px"
-            className="rounded-full object-cover border border-white/30"
-          />
-        </div>
-        {video.author.name}
-      </span>
-    ) : null;
+  // Always renders — falls back to "rstheme" + an initials avatar
+  // instead of disappearing entirely when a video has no author.
+  const AuthorMeta = ({ video }: { video?: VideoPost }) => (
+    <span className="flex items-center gap-2">
+      <AuthorAvatar
+        name={video?.author?.name}
+        avatarUrl={video?.author?.avatarUrl}
+        size={24}
+      />
+      {video?.author?.name || "rstheme"}
+    </span>
+  );
 
   /* ================= TAG HELPERS ================= */
 

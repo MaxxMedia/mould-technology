@@ -24,6 +24,19 @@ const CATEGORY_COLORS: Record<string, string> = {
   engineering: "bg-[#2563EB]",
 }
 
+// Explicit badge values (e.g. post.badge === "LEADERSHIP") get their own
+// colors instead of falling through to the generic category color.
+const BADGE_COLORS: Record<string, string> = {
+  FEATURED: "bg-[#E11D48]",
+  LEADERSHIP: "bg-[#7C3AED]",
+  AI: "bg-[#059669]",
+  MANUFACTUR: "bg-[#F97316]",
+  WEBINAR: "bg-[#7C3AED]",
+  EVENT: "bg-[#0EA5E9]",
+  TRENDING: "bg-[#F97316]",
+  EXCLUSIVE: "bg-[#059669]",
+}
+
 /* ================= HELPERS ================= */
 
 function getSlug(p: Post) {
@@ -39,6 +52,46 @@ function getRecency(p: Post) {
 
 function sortByRecency(a: Post, b: Post) {
   return getRecency(b) - getRecency(a)
+}
+
+/**
+ * Renders the real avatar image when one exists, otherwise falls back to
+ * a generated initials circle instead of a static placeholder file —
+ * this can never 404 / show a broken-image icon.
+ */
+function AuthorAvatar({
+  name,
+  avatarUrl,
+  size,
+}: {
+  name?: string | null
+  avatarUrl?: string | null
+  size: number
+}) {
+  const displayName = name?.trim() || "rstheme"
+
+  if (avatarUrl) {
+    return (
+      <Image
+        src={avatarUrl}
+        alt={displayName}
+        width={size}
+        height={size}
+        className="rounded-full object-cover shrink-0"
+      />
+    )
+  }
+
+  const initial = displayName.charAt(0).toUpperCase()
+
+  return (
+    <span
+      style={{ width: size, height: size }}
+      className="rounded-full bg-[#0073ff] text-white flex items-center justify-center font-semibold shrink-0"
+    >
+      <span style={{ fontSize: Math.max(10, size * 0.45) }}>{initial}</span>
+    </span>
+  )
 }
 
 /**
@@ -122,22 +175,37 @@ export default function LatestHero({ post, posts }: LatestHeroProps) {
     })
     : "Today"
 
+  /**
+   * Tag priority: an explicit `badge` string wins if present (e.g.
+   * "FEATURED", "LEADERSHIP"); otherwise fall back to the post's
+   * CATEGORY name. This was previously reading `item.badge` twice
+   * (once as the badge, once mistakenly as the "category" fallback),
+   * so whenever badge was empty, the tag silently came out blank
+   * instead of showing the category. Fixed to read `item.category`.
+   */
   const getTag = (item: Post) => {
-    const badge = item?.badge?.trim()
+    const badge = typeof item?.badge === "string" ? item.badge.trim() : ""
 
     const slug = getSlug(item)
 
     const categoryName =
-      typeof item.category === "object"
+      typeof item.category === "object" && item.category !== null
         ? item.category?.name || ""
         : String(item.category || "")
 
     const text = badge || categoryName
 
+    if (badge) {
+      // Badge present (e.g. "LEADERSHIP", "AI", "MANUFACTUR") — color by
+      // badge value, falling back to a neutral gray for unrecognized ones.
+      const color = BADGE_COLORS[badge.toUpperCase()] || "bg-[#6B7280]"
+      return { text, color }
+    }
+
+    // No badge — fall back to coloring by category slug.
     const matchedKey = Object.keys(CATEGORY_COLORS).find((key) =>
       slug.includes(key)
     )
-
     const color = matchedKey ? CATEGORY_COLORS[matchedKey] : "bg-[#0073ff]"
 
     return { text, color }
@@ -192,18 +260,14 @@ export default function LatestHero({ post, posts }: LatestHeroProps) {
               </h1>
 
               <div className="flex items-center gap-4 text-sm text-gray-300">
-                {heroPost.author?.name && (
-                  <span className="flex items-center gap-2">
-                    <Image
-                      src={heroPost.author.avatarUrl || "/avatar-placeholder.png"}
-                      alt={heroPost.author.name}
-                      width={24}
-                      height={24}
-                      className="rounded-full border border-white/30"
-                    />
-                    <span>By {heroPost.author.name}</span>
-                  </span>
-                )}
+                <span className="flex items-center gap-2">
+                  <AuthorAvatar
+                    name={heroPost.author?.name}
+                    avatarUrl={heroPost.author?.avatarUrl}
+                    size={24}
+                  />
+                  <span>By {heroPost.author?.name || "rstheme"}</span>
+                </span>
 
                 {typeof heroPost.views === "number" && (
                   <span>{heroPost.views.toLocaleString()} Views</span>
@@ -238,8 +302,8 @@ export default function LatestHero({ post, posts }: LatestHeroProps) {
                   key={`${item.id}-${i}`}
                   href={`/post/${item.slug}`}
                   className={`flex gap-4 items-start border-b border-gray-200 pb-6 group transition-all duration-500 ease-in-out ${fade
-                      ? "translate-y-0 opacity-100"
-                      : "translate-y-2 opacity-0"
+                    ? "translate-y-0 opacity-100"
+                    : "translate-y-2 opacity-0"
                     }`}
                 >
                   <div className="relative w-[88px] h-[88px] rounded-md overflow-hidden shrink-0">
@@ -270,21 +334,14 @@ export default function LatestHero({ post, posts }: LatestHeroProps) {
                     </h3>
 
                     <div className="flex items-center gap-3 text-xs text-gray-400 mt-2">
-                      {item.author?.name && (
-                        <span className="flex items-center gap-1">
-                          <Image
-                            src={
-                              item.author.avatarUrl ||
-                              "/avatar-placeholder.png"
-                            }
-                            alt={item.author.name}
-                            width={20}
-                            height={20}
-                            className="rounded-full"
-                          />
-                          <span>{item.author.name}</span>
-                        </span>
-                      )}
+                      <span className="flex items-center gap-1">
+                        <AuthorAvatar
+                          name={item.author?.name}
+                          avatarUrl={item.author?.avatarUrl}
+                          size={20}
+                        />
+                        <span>{item.author?.name || "rstheme"}</span>
+                      </span>
 
                       {typeof item.views === "number" && (
                         <span>{item.views.toLocaleString()} Views</span>
