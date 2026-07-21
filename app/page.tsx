@@ -308,7 +308,7 @@ export default async function Home() {
   const latestPost = latestPosts[0]
 
   return (
-    <div className="flex flex-col gap-10 md:gap-14">
+    <div className="flex flex-col gap-6 md:gap-10">
       {/* ================= HOME TOP BANNER ================= */}
       <Banner placement="HOME_TOP" />
 
