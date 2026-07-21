@@ -308,21 +308,15 @@ export default async function Home() {
   const latestPost = latestPosts[0]
 
   return (
-    <>
-       {/* ================= HOME TOP BANNER ================= */}
-       <br />
+    <div className="flex flex-col gap-10 md:gap-14">
+      {/* ================= HOME TOP BANNER ================= */}
       <Banner placement="HOME_TOP" />
 
       {/* 🏢 Company Articles */}
-      <CompanyArticles  />
+      <CompanyArticles />
 
       {/* 📰 Latest Hero */}
-      {latestPost && (
-        <LatestHero post={latestPost} posts={posts} />  
-      )}
-
-      {/* 🔥 Advertisement
-      {banner && <TrendingAd banner={banner} />} */}
+      {latestPost && <LatestHero post={latestPost} posts={posts} />}
 
       {/* 📈 Trending */}
       <TrendingSection posts={posts} />
@@ -330,22 +324,19 @@ export default async function Home() {
       {/* 📘 Basics */}
       <BasicsSection posts={posts} />
 
-         {/* ================= HOME MIDDLE BANNER ================= */}
+      {/* ================= HOME MIDDLE BANNER ================= */}
       <Banner placement="HOME_MIDDLE" />
 
       {/* 🎥 Videos */}
       <VideosSection posts={posts} />
 
-      {/* 🏭 Manufacturing */}
-      {/* <ManufacturingConnected
-        posts={manufacturingPosts.slice(0, 4)}
-      /> */}
-
+      {/* 🏭 Manufacturing (currently disabled) */}
+      {/* <ManufacturingConnected posts={manufacturingPosts.slice(0, 4)} /> */}
 
       <HomeCompanyArticles posts={posts} />
 
-        {/* ================= HOME BOTTOM BANNER ================= */}
+      {/* ================= HOME BOTTOM BANNER ================= */}
       <Banner placement="HOME_BOTTOM" />
-    </>
+    </div>
   )
 }
