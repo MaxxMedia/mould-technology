@@ -21,6 +21,11 @@ export type JobPostingEligibilityResponse = JobPostingEligibility & {
   internship: JobPostingEligibility;
 };
 
+export type JobPostingEligibilityResponse = JobPostingEligibility & {
+  job: JobPostingEligibility;
+  internship: JobPostingEligibility;
+};
+
 export async function fetchJobPostingEligibility(
   token: string
 ): Promise<JobPostingEligibilityResponse> {
