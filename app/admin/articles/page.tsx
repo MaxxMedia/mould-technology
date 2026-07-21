@@ -8,6 +8,17 @@ import { FileText, Eye, Share2, Check, X } from "lucide-react"
 type Company = {
   id: number
   name: string
+  eligibility?: {
+    canCreate?: boolean
+    plan?: string
+    planLabel?: string
+    articlesThisYear?: number
+    effectiveLimit?: number | "Unlimited"
+    remaining?: number | null
+    isUnlimited?: boolean
+    periodLabel?: string
+    message?: string
+  } | null
 }
 
 type Article = {
@@ -15,10 +26,7 @@ type Article = {
   title: string
   views: number
   shares: number
-  Company?: {
-    id: number
-    name: string
-  }
+  Company?: Company
 }
 
 /* ================= PAGE ================= */
@@ -209,15 +217,30 @@ export default function AdminArticlesPage() {
               <li
                 key={company.id}
                 onClick={() => setSelectedCompanyId(company.id)}
-                className={`p-3 rounded-md cursor-pointer flex justify-between items-center transition
+                className={`p-3 rounded-md cursor-pointer flex flex-col justify-between transition gap-1
                   ${
                     selectedCompanyId === company.id
                       ? "bg-blue-50 text-[#0A2B57] font-medium"
                       : "hover:bg-gray-100 text-gray-700"
                   }`}
               >
-                <span>{company.name}</span>
-                <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">{count}</span>
+                <div className="flex justify-between items-center w-full">
+                  <span>{company.name}</span>
+                  <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">{count}</span>
+                </div>
+                {company.eligibility && (
+                  <div className="text-[11px] text-gray-500 font-normal mt-0.5 flex flex-wrap gap-x-2">
+                    <span className="font-semibold text-indigo-600 capitalize">
+                      {company.eligibility.planLabel || company.eligibility.plan}
+                    </span>
+                    <span>•</span>
+                    <span>
+                      {company.eligibility.isUnlimited
+                        ? "Unlimited"
+                        : `${company.eligibility.articlesThisYear ?? 0}/${company.eligibility.effectiveLimit ?? 0} used`}
+                    </span>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -229,6 +252,34 @@ export default function AdminArticlesPage() {
 
           {!selectedCompanyId && !loading && (
             <p className="text-gray-500">Select a company to view articles</p>
+          )}
+
+          {selectedCompanyId && !loading && (
+            (() => {
+              const selectedComp = companies.find(c => c.company.id === selectedCompanyId)?.company
+              if (!selectedComp || !selectedComp.eligibility) return null
+              const elig = selectedComp.eligibility
+              return (
+                <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-bold text-[#0A2B57] text-lg">
+                      {selectedComp.name}
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Subscription Plan: <span className="font-semibold text-indigo-700 capitalize">{elig.planLabel || elig.plan}</span>
+                    </p>
+                  </div>
+                  <div className="bg-white/90 px-4 py-2 rounded-lg border border-blue-150 shadow-sm text-right">
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Article Limit Usage (Yearly)</p>
+                    <p className="text-lg font-bold text-indigo-900 mt-0.5">
+                      {elig.isUnlimited 
+                        ? "Unlimited" 
+                        : `${elig.articlesThisYear ?? 0} of ${elig.effectiveLimit ?? 0} articles used`}
+                    </p>
+                  </div>
+                </div>
+              )
+            })()
           )}
 
           <ul className="space-y-4">

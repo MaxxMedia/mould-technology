@@ -1,4 +1,7 @@
-type CandidateProfile = {
+// lib/candidateProfile.ts
+
+export type CandidateProfile = {
+  id?: number;
   email: string;
   username: string;
   fullName?: string;
@@ -7,6 +10,24 @@ type CandidateProfile = {
   location?: string;
   avatarUrl?: string;
   websiteUrl?: string;
+  companyId?: number;
+  // Support both lowercase and capitalized versions
+  company?: {
+    id: number;
+    name: string;
+    slug: string;
+    logoUrl?: string;
+    tagline?: string;
+    description?: string;
+  };
+  Company?: {
+    id: number;
+    name: string;
+    slug: string;
+    logoUrl?: string;
+    tagline?: string;
+    description?: string;
+  };
 };
 
 export async function uploadCandidateImage(file: File): Promise<string> {
@@ -37,7 +58,14 @@ export async function fetchMyCandidateProfile(): Promise<CandidateProfile> {
     throw new Error("Failed to load profile");
   }
 
-  return res.json();
+  const data = await res.json();
+
+  // Normalize the data - if company exists but Company doesn't, copy it
+  if (data.company && !data.Company) {
+    data.Company = data.company;
+  }
+
+  return data;
 }
 
 export async function updateMyCandidateProfile(
@@ -79,5 +107,3 @@ export function syncCandidateUserInStorage(profile: CandidateProfile) {
   );
   window.dispatchEvent(new Event("userChanged"));
 }
-
-export type { CandidateProfile };

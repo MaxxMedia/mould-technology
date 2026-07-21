@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
-import { useMemo, useState } from "react"
-import type { Post } from "../types/Post"
+import Image from "next/image";
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import type { Post } from "../types/Post";
 
-type VideoPost = Post
+type VideoPost = Post;
 
 /* ================= COLOR CONFIG ================= */
 
@@ -15,17 +15,18 @@ const BADGE_COLORS: Record<string, string> = {
   EVENT: "bg-[#0EA5E9]",
   TRENDING: "bg-[#F97316]",
   EXCLUSIVE: "bg-[#059669]",
-}
+};
 
 const CATEGORY_COLORS: Record<string, string> = {
   video: "bg-[#F69C00]",
+  "header-videos": "bg-[#EF4444]",
   latest: "bg-[#F69C00]",
   engineering: "bg-[#0072BC]",
-}
+};
 
 type Props = {
-  posts: Post[]
-}
+  posts: Post[];
+};
 
 function getYoutubeEmbed(url?: string) {
   if (!url) return "";
@@ -44,38 +45,54 @@ function getYoutubeEmbed(url?: string) {
 }
 
 export default function VideosSection({ posts }: Props) {
-
   /* ================= FILTER VIDEOS ================= */
-
   const videos = useMemo(() => {
     return posts
-      .filter((post) => post.youtubeUrl && post.youtubeUrl.trim() !== "")
+      .filter((post) => {
+        const slug =
+          typeof post.category === "object"
+            ? post.category?.slug?.toLowerCase() || ""
+            : String(post.category || "").toLowerCase();
+
+        // Check for header-videos category
+        return slug === "header-videos" || slug.includes("video");
+      })
       .slice(0, 4);
   }, [posts]);
 
-  if (!videos.length) return null
+  // MOVED useState BEFORE the early return
+  // Use a safe default value
+  const [selectedVideo, setSelectedVideo] = useState<VideoPost | undefined>(videos[0]);
 
-  const [selectedVideo, setSelectedVideo] = useState(videos[0])
+  // If no videos found, return null (but after all hooks)
+  if (!videos.length) {
+    console.log("⚠️ No videos found");
+    return null;
+  }
 
-  const sideVideos = videos.filter(
-    (v) => v.id !== selectedVideo?.id
-  )
+  // Update selected video if it becomes undefined or if videos change
+  // But only if videos has data
+  if (!selectedVideo && videos.length > 0) {
+    setSelectedVideo(videos[0]);
+  }
+
+  const sideVideos = videos.filter((v) => v.id !== selectedVideo?.id);
 
   const imageUrl = (v?: VideoPost) =>
     v?.imageUrl?.startsWith("http")
       ? v.imageUrl
       : v?.imageUrl
-      ? `${process.env.NEXT_PUBLIC_API_URL}${v.imageUrl}`
-      : "/placeholder.jpg"
+        ? `${process.env.NEXT_PUBLIC_API_URL}${v.imageUrl}`
+        : "/placeholder.jpg";
 
   const date = (d?: string | null) =>
     d
       ? new Date(d).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })
-      : ""
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+      : "";
 
   /* ================= AUTHOR META ================= */
 
@@ -93,79 +110,74 @@ export default function VideosSection({ posts }: Props) {
         </div>
         {video.author.name}
       </span>
-    ) : null
+    ) : null;
 
   /* ================= TAG HELPERS ================= */
 
   const getTag = (post?: VideoPost) => {
-    const badge = post?.badge?.trim()
+    const badge = post?.badge?.trim();
     const slug =
       typeof post?.category === "object"
         ? post?.category?.slug?.toLowerCase() || ""
-        : String(post?.category || "").toLowerCase()
+        : String(post?.category || "").toLowerCase();
 
     const categoryName =
       typeof post?.category === "object"
         ? post?.category?.name || ""
-        : String(post?.category || "")
+        : String(post?.category || "");
 
-    const text = badge ? badge : categoryName
+    const text = badge ? badge : categoryName;
 
-    let color = "bg-[#9CA3AF]"
+    let color = "bg-[#9CA3AF]";
 
     if (badge) {
-      color = BADGE_COLORS[badge.toUpperCase()] || "bg-[#6B7280]"
+      color = BADGE_COLORS[badge.toUpperCase()] || "bg-[#6B7280]";
     } else {
       const match = Object.keys(CATEGORY_COLORS).find((k) =>
         slug.includes(k)
-      )
-      if (match) color = CATEGORY_COLORS[match]
+      );
+      if (match) color = CATEGORY_COLORS[match];
     }
 
-    return { text, color }
-  }
+    return { text, color };
+  };
 
-  const featuredTag = getTag(selectedVideo)
+  const featuredTag = getTag(selectedVideo);
 
   /* ================= RENDER ================= */
 
   return (
     <section className="bg-[#171A1E] pt-[70px] pb-[80px] text-white">
       <div className="max-w-[1320px] mx-auto px-[15px]">
-
         {/* HEADER */}
         <div className="flex items-center justify-between mb-12">
-          <h2 className="text-[36px] font-semibold">Profile Updates</h2>
+          <h2 className="text-[36px] font-semibold">Featured Videos</h2>
 
           <Link
             href="/videos"
-            className="text-sm font-medium flex items-center gap-2"
+            className="text-sm font-medium flex items-center gap-2 hover:underline"
           >
             View All →
           </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[8fr_4fr] gap-8">
-
           {/* FEATURED VIDEO */}
           <div className="relative h-[460px] rounded-md overflow-hidden bg-black">
-
-            {selectedVideo.youtubeUrl ? (
-              <>
-                <iframe
-                  key={selectedVideo.id}
-                  src={getYoutubeEmbed(selectedVideo.youtubeUrl)}
-                  title={selectedVideo.title}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </>
+            {selectedVideo?.youtubeUrl ? (
+              <iframe
+                key={selectedVideo.id}
+                src={getYoutubeEmbed(selectedVideo.youtubeUrl)}
+                title={selectedVideo.title}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             ) : (
               <>
                 <Image
                   src={imageUrl(selectedVideo)}
-                  alt={selectedVideo.title}
+                  alt={selectedVideo?.title || "Video"}
                   fill
                   priority
                   className="object-cover"
@@ -198,79 +210,36 @@ export default function VideosSection({ posts }: Props) {
                     </svg>
                   </div>
                 </div>
+
+                <div className="absolute bottom-6 left-6 max-w-[85%]">
+                  {featuredTag?.text && (
+                    <span
+                      className={`${featuredTag.color} text-xs font-bold px-3 py-1 rounded`}
+                    >
+                      {featuredTag.text}
+                    </span>
+                  )}
+
+                  <h3 className="text-[28px] font-semibold mt-4 leading-snug">
+                    {selectedVideo?.title}
+                  </h3>
+
+                  <div className="flex items-center gap-4 text-sm text-gray-300 mt-3">
+                    <AuthorMeta video={selectedVideo} />
+                    <span>{date(selectedVideo?.createdAt)}</span>
+                    {selectedVideo?.views && (
+                      <span>{selectedVideo.views.toLocaleString()} Views</span>
+                    )}
+                  </div>
+                </div>
               </>
             )}
-
-            {!selectedVideo.youtubeUrl && (
-              <div className="absolute bottom-6 left-6 max-w-[85%]">
-
-                {featuredTag.text && (
-                  <span
-                    className={`${featuredTag.color} text-xs font-bold px-3 py-1 rounded`}
-                  >
-                    {featuredTag.text}
-                  </span>
-                )}
-
-                <h3 className="text-[28px] font-semibold mt-4 leading-snug">
-                  {selectedVideo.title}
-                </h3>
-
-                <div className="flex items-center gap-4 text-sm text-gray-300 mt-3">
-                  <AuthorMeta video={selectedVideo} />
-                  <span>{date(selectedVideo.publishedAt)}</span>
-
-                  {selectedVideo.views && (
-                    <span>{selectedVideo.views.toLocaleString()} Views</span>
-                  )}
-                </div>
-
-              </div>
-            )}
           </div>
-            {/* <Image
-              src={imageUrl(featured)}
-              alt={featured.title}
-              fill
-              sizes="(max-width:1024px) 100vw, 800px"
-              quality={75}
-              priority
-              className="object-cover"
-            /> */}
-
-            {/* <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-red-600 rounded-full p-5">▶</div>
-            </div>
-
-            <div className="absolute bottom-6 left-6 max-w-[85%]">
-              {featuredTag.text && (
-                <span
-                  className={`${featuredTag.color} text-xs font-bold px-3 py-1 rounded`}
-                >
-                  {featuredTag.text}
-                </span>
-              )}
-
-              <h3 className="text-[28px] font-semibold mt-4 leading-snug">
-                {featured.title}
-              </h3>
-
-              <div className="flex items-center gap-4 text-sm text-gray-300 mt-3">
-                <AuthorMeta video={featured} />
-                <span>{date(featured.publishedAt)}</span>
-                {featured.views && (
-                  <span>{featured.views.toLocaleString()} Views</span>
-                )}
-              </div>
-            </div>
-          </Link> */}
 
           {/* SIDE VIDEOS */}
           <div className="space-y-6">
             {sideVideos.map((video) => {
-              const tag = getTag(video)
+              const tag = getTag(video);
 
               return (
                 <button
@@ -336,12 +305,11 @@ export default function VideosSection({ posts }: Props) {
                     </div>
                   </div>
                 </button>
-              )
+              );
             })}
           </div>
-
         </div>
       </div>
     </section>
-  )
+  );
 }

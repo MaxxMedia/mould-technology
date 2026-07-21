@@ -37,6 +37,7 @@ export default function AdminContactPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'unsolved' | 'solved'>('all');
+  const [planFilter, setPlanFilter] = useState<'all' | 'free' | 'basic' | 'professional' | 'enterprise'>('all');
 
   useEffect(() => {
     fetchContacts();
@@ -74,14 +75,24 @@ export default function AdminContactPage() {
 
   // Filter logic
   const getFilteredContacts = () => {
-    if (filter === 'all') return contacts;
+    let result = contacts;
+
+    // Apply status filter
     if (filter === 'unsolved') {
-      return contacts.filter(c => c.status === 'NEW' || c.status === 'IN_PROGRESS');
+      result = result.filter(c => c.status === 'NEW' || c.status === 'IN_PROGRESS');
+    } else if (filter === 'solved') {
+      result = result.filter(c => c.status === 'RESOLVED');
     }
-    if (filter === 'solved') {
-      return contacts.filter(c => c.status === 'RESOLVED');
+
+    // Apply plan filter
+    if (planFilter !== 'all') {
+      result = result.filter(c => {
+        const p = c.plan || 'free';
+        return p.toLowerCase() === planFilter.toLowerCase();
+      });
     }
-    return contacts;
+
+    return result;
   };
 
   const getCounts = () => {
@@ -165,6 +176,22 @@ export default function AdminContactPage() {
         >
           ✅ Solved ({counts.solved})
         </button>
+
+        {/* Plan Filter Dropdown */}
+        <div className="flex items-center gap-2 md:ml-4">
+          <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Plan:</span>
+          <select
+            value={planFilter}
+            onChange={(e) => setPlanFilter(e.target.value as any)}
+            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+          >
+            <option value="all">All Plans</option>
+            <option value="free">Free</option>
+            <option value="basic">Basic</option>
+            <option value="professional">Professional</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
+        </div>
 
         <button
           onClick={fetchContacts}

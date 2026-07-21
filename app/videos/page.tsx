@@ -56,6 +56,7 @@ export default async function VideosPage({
     `${process.env.NEXT_PUBLIC_API_URL}/api/posts?category=${VIDEO_CATEGORY_SLUG}&page=${page}&limit=${VIDEOS_PER_PAGE}`,
     { cache: "no-store" }
   )
+  
 
   if (!videosRes.ok) {
     throw new Error(`Failed to fetch videos: ${videosRes.status}`)

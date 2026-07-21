@@ -59,21 +59,40 @@ export default function CreateMagazinePage() {
   /* ================= FILE UPLOAD ================= */
 
   async function uploadFile(file: File, field: string) {
-    const data = new FormData()
-    data.append("image", file)
+  const data = new FormData();
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, {
+  let endpoint = "/api/upload";
+
+  if (file.type === "application/pdf") {
+    endpoint = "/api/upload/document";
+    data.append("document", file);   // <-- matches backend
+  } else {
+    data.append("image", file);      // <-- matches backend
+  }
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}${endpoint}`,
+    {
       method: "POST",
       body: data,
-    })
+    }
+  );
 
-    const result = await res.json()
-
-    setForm((prev: any) => ({
-      ...prev,
-      [field]: result.imageUrl,
-    }))
+  if (!res.ok) {
+    const error = await res.text();
+    console.error(error);
+    throw new Error(error);
   }
+
+  const result = await res.json();
+
+  setForm((prev: any) => ({
+    ...prev,
+    [field]:
+      result.imageUrl ||
+      result.documentUrl,
+  }));
+}
 
   /* ================= MULTIPLE PAGE UPLOAD ================= */
 

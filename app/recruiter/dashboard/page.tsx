@@ -13,6 +13,10 @@ import {
   FolderOpen,
   Crown,
   CreditCard,
+  Megaphone,
+  Inbox,
+  ArrowUpRight,
+  BadgeCheck,
 } from "lucide-react"
 import { useRecruiterGuard } from "@/lib/useRecruiterGuard"
 import Image from "next/image"
@@ -23,6 +27,7 @@ import RecruiterAnalyticsCharts, {
 } from "@/components/recruiter/RecruiterAnalyticsCharts"
 import type { JobPostingEligibility } from "@/lib/jobPosting"
 import type { ContentLimitEligibility } from "@/lib/packageLimits"
+import TeamManagementTab from "@/components/recruiter/TeamManagementTab"
 
 /* ================= TYPES ================= */
 
@@ -83,6 +88,7 @@ type DashboardData = {
   jobPosting?: JobPostingEligibility
   articlePosting?: ContentLimitEligibility
   productListings?: ContentLimitEligibility
+  homepageFeaturedAd?: ContentLimitEligibility
   analytics?: RecruiterAnalytics
 }
 
@@ -113,17 +119,10 @@ const ACTIVITY_DOT_COLORS: Record<RecentActivity["color"], string> = {
   red: "bg-red-400",
 }
 
-function articleLimitLabel(eligibility?: ContentLimitEligibility | null) {
-  if (!eligibility) return "Manage content"
-  if (eligibility.isUnlimited) return "Unlimited this year"
-  if (eligibility.plan === "free" && !eligibility.canCreate) return "Upgrade to publish"
-  return `${eligibility.remaining ?? 0} left this year`
-}
-
-function productLimitLabel(eligibility?: ContentLimitEligibility | null) {
-  if (!eligibility) return "Manage listings"
-  if (eligibility.isUnlimited) return "Unlimited listings"
-  return `${eligibility.remaining ?? 0} of ${eligibility.effectiveLimit ?? 0} left`
+const STATUS_BADGE: Record<string, string> = {
+  APPROVED: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20",
+  PENDING: "bg-amber-50 text-amber-700 ring-1 ring-amber-600/20",
+  REJECTED: "bg-rose-50 text-rose-700 ring-1 ring-rose-600/20",
 }
 
 function formatArticleQuickDesc(eligibility?: ContentLimitEligibility | null) {
@@ -146,8 +145,26 @@ function formatLimitValue(
   remainingKey: "remaining" = "remaining"
 ) {
   if (!eligibility) return "—"
-  if (eligibility.isUnlimited) return "∞"
+  if (eligibility.isUnlimited) return "Unlimited"
   return eligibility[remainingKey] ?? 0
+}
+
+/* ================= HELPER FUNCTIONS ================= */
+
+// Helper function to get initials from name
+function getInitials(name: string): string {
+  if (!name) return "U"
+
+  const parts = name.trim().split(" ")
+  if (parts.length === 1) {
+    return parts[0].charAt(0).toUpperCase()
+  }
+
+  // Get first letter of first and last name
+  const firstInitial = parts[0].charAt(0)
+  const lastInitial = parts[parts.length - 1].charAt(0)
+
+  return (firstInitial + lastInitial).toUpperCase()
 }
 
 /* ================= PAGE ================= */
@@ -167,166 +184,175 @@ export default function RecruiterDashboard() {
   const [recruiter, setRecruiter] = useState<Recruiter | null>(null)
   const [loading, setLoading] = useState(true)
 
-useEffect(() => {
-  if (!allowed) return
+  useEffect(() => {
+    if (!allowed) return
 
-  async function loadAll() {
-    try {
-      const token = localStorage.getItem("token")
+    async function loadAll() {
+      try {
+        const token = localStorage.getItem("token")
 
-      /* DASHBOARD */
-      const dashboardRes = await fetch(
-  `${process.env.NEXT_PUBLIC_API_URL}/api/recruiters/dashboard`,
-  {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Cache-Control": "no-cache",
-    },
-    cache: "no-store",
-  }
-)
+        /* DASHBOARD */
+        const dashboardRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/recruiters/dashboard`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Cache-Control": "no-cache",
+            },
+            cache: "no-store",
+          }
+        )
 
-      if (!dashboardRes.ok) {
-        const errData = await dashboardRes.json().catch(() => ({}))
-        throw new Error(errData.error || "Failed to load dashboard")
-      }
-
-      const dashboardData = await dashboardRes.json()
-      console.log("DASHBOARD RESPONSE:", dashboardData)
-      console.log("ARTICLES:", dashboardData.articles)
-
-      setDashboard({
-        jobsCount: dashboardData.jobsCount ?? 0,
-        applicationsCount: dashboardData.applicationsCount ?? 0,
-        shortlistedCount: dashboardData.shortlistedCount ?? 0,
-        recentJobs: dashboardData.recentJobs ?? [],
-        directories: dashboardData.directories ?? [],
-        articles: dashboardData.articles ?? [],
-        recentActivity: dashboardData.recentActivity ?? [],
-        subscription: dashboardData.subscription ?? undefined,
-        recentPurchases: dashboardData.recentPurchases ?? [],
-        jobPosting: dashboardData.jobPosting ?? undefined,
-        articlePosting: dashboardData.articlePosting ?? undefined,
-        productListings: dashboardData.productListings ?? undefined,
-        analytics: dashboardData.analytics ?? undefined,
-      })
-
-      /* PROFILE */
-      const profileRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/recruiters/me`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
+        if (!dashboardRes.ok) {
+          const errData = await dashboardRes.json().catch(() => ({}))
+          throw new Error(errData.error || "Failed to load dashboard")
         }
-      )
 
-      const recruiterData = await profileRes.json()
-      setRecruiter(recruiterData)
+        const dashboardData = await dashboardRes.json()
 
-      // 🔥 ADD THIS BLOCK RIGHT HERE
-const stored = localStorage.getItem("user")
+        setDashboard({
+          jobsCount: dashboardData.jobsCount ?? 0,
+          applicationsCount: dashboardData.applicationsCount ?? 0,
+          shortlistedCount: dashboardData.shortlistedCount ?? 0,
+          recentJobs: dashboardData.recentJobs ?? [],
+          directories: dashboardData.directories ?? [],
+          articles: dashboardData.articles ?? [],
+          recentActivity: dashboardData.recentActivity ?? [],
+          subscription: dashboardData.subscription ?? undefined,
+          recentPurchases: dashboardData.recentPurchases ?? [],
+          jobPosting: dashboardData.jobPosting ?? undefined,
+          articlePosting: dashboardData.articlePosting ?? undefined,
+          productListings: dashboardData.productListings ?? undefined,
+          homepageFeaturedAd: dashboardData.homepageFeaturedAd ?? undefined,
+          analytics: dashboardData.analytics ?? undefined,
+        })
 
-if (stored) {
-  const existing = JSON.parse(stored)
+        /* PROFILE */
+        const profileRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/recruiters/me`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        )
 
-  localStorage.setItem(
-    "user",
-    JSON.stringify({
-      ...existing,
-      avatarUrl: recruiterData.avatarUrl,
-    })
-  )
+        const recruiterData = await profileRes.json()
+        setRecruiter(recruiterData)
 
-  window.dispatchEvent(new Event("userChanged"))
-}
+        const stored = localStorage.getItem("user")
 
+        if (stored) {
+          const existing = JSON.parse(stored)
 
-    } catch (err) {
-      console.error("Dashboard load error:", err)
-    } finally {
-      setLoading(false)
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              ...existing,
+              avatarUrl: recruiterData.avatarUrl,
+            })
+          )
+
+          window.dispatchEvent(new Event("userChanged"))
+        }
+
+      } catch (err) {
+        console.error("Dashboard load error:", err)
+      } finally {
+        setLoading(false)
+      }
     }
-  }
 
-  loadAll()
+    loadAll()
 
-  // 🔥 AUTO REFRESH WHEN PAGE FOCUSES
-  const handleFocus = () => loadAll()
-  window.addEventListener("focus", handleFocus)
+    const handleFocus = () => loadAll()
+    window.addEventListener("focus", handleFocus)
 
-  return () => {
-    window.removeEventListener("focus", handleFocus)
-  }
+    return () => {
+      window.removeEventListener("focus", handleFocus)
+    }
 
-}, [allowed])
-
+  }, [allowed])
 
   /* ================= RENDER GUARDS ================= */
 
   if (!allowed) return null
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f6f8fc] flex items-center justify-center">
+      <div className="min-h-screen bg-[#f6f8fb] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
+          <div className="w-10 h-10 border-[3px] border- border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-sm text-gray-500">Loading dashboard…</p>
         </div>
       </div>
     )
   }
 
+  const planLabel = dashboard.subscription?.displayPlanLabel ?? dashboard.subscription?.planLabel ?? "Free"
+  const isFreePlan = !dashboard.subscription || dashboard.subscription.plan === "free"
+
   /* ================= UI ================= */
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 px-6 py-10">
-      <div className="max-w-[1400px] mx-auto grid grid-cols-12 gap-8">
+    <div className="min-h-screen bg-[#f6f8fb] px-4 sm:px-6 py-8">
+      <div className="max-w-[1400px] mx-auto grid grid-cols-12 gap-6">
         {/* ================= MAIN ================= */}
-        <main className="col-span-12 xl:col-span-9 space-y-8">
+        <main className="col-span-12 xl:col-span-9 space-y-6">
           {/* HEADER */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Welcome back{recruiter?.fullName ? `, ${recruiter.fullName}` : ""}!
+              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                Welcome back{recruiter?.fullName ? `, ${recruiter.fullName.split(" ")[0]}` : ""}!
               </h1>
               <p className="text-sm text-gray-500 mt-1">
                 Here's what's happening with your recruitment today
               </p>
             </div>
-            <span className="text-sm text-gray-500 bg-white px-4 py-2 rounded-lg shadow-sm">
-              {new Date().toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+            <span className="text-xs font-medium text-gray-500 bg-white px-3.5 py-2 rounded-lg border border-gray-100 shadow-sm">
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
               })}
             </span>
           </div>
 
+          {/* PLAN HERO CARD */}
+          <div className="bg-gradient-to-r from-blue-800 to-blue-700 rounded-2xl p-6 text-white flex flex-wrap items-center justify-between gap-4 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                <Crown className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-indigo-100 uppercase tracking-wide">Current Plan</p>
+                <p className="text-xl font-bold mt-0.5">{planLabel}</p>
+                <p className="text-xs text-indigo-100 mt-1">
+                  {dashboard.subscription?.recruitmentExpiresAt
+                    ? `Recruitment expires ${new Date(dashboard.subscription.recruitmentExpiresAt).toLocaleDateString()} · Base: ${dashboard.subscription.basePlanLabel ?? "Free"}`
+                    : dashboard.subscription?.expiresAt
+                      ? `Expires ${new Date(dashboard.subscription.expiresAt).toLocaleDateString()}`
+                      : isFreePlan
+                        ? "Free tier"
+                        : "Active"}
+                </p>
+              </div>
+            </div>
+            {isFreePlan && (
+              <Link
+                href="/packages"
+                className="inline-flex items-center gap-1.5 bg-white text-indigo-600 text-sm font-semibold px-4 py-2.5 rounded-lg hover:bg-indigo-50 transition-colors"
+              >
+                Upgrade Plan <ArrowUpRight className="w-4 h-4" />
+              </Link>
+            )}
+          </div>
+
           {/* KPI CARDS */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-            <KpiCard
-              title="Current Plan"
-              value={dashboard.subscription?.displayPlanLabel ?? dashboard.subscription?.planLabel ?? "Free"}
-              icon={<Crown />}
-              color="bg-gradient-to-br from-indigo-500 to-indigo-600"
-              subtitle={
-                dashboard.subscription?.recruitmentExpiresAt
-                  ? `Recruitment expires ${new Date(dashboard.subscription.recruitmentExpiresAt).toLocaleDateString()} · Base: ${dashboard.subscription.basePlanLabel ?? "Free"}`
-                  : dashboard.subscription?.expiresAt
-                    ? `Expires ${new Date(dashboard.subscription.expiresAt).toLocaleDateString()}`
-                    : dashboard.subscription?.plan === "free"
-                      ? "Free tier"
-                      : "Active"
-              }
-            />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             <KpiCard
               title="Job Slots Left"
-              value={
-                dashboard.jobPosting?.isUnlimited
-                  ? "∞"
-                  : dashboard.jobPosting?.remaining ?? 0
-              }
-              icon={<CreditCard />}
-              color="bg-gradient-to-br from-emerald-500 to-emerald-600"
+              value={dashboard.jobPosting?.isUnlimited ? "Unlimited" : dashboard.jobPosting?.remaining ?? 0}
+              icon={<CreditCard className="w-4 h-4" />}
+              accent="bg-emerald-500"
               subtitle={
                 dashboard.jobPosting?.isUnlimited
                   ? "Unlimited postings"
@@ -336,8 +362,8 @@ if (stored) {
             <KpiCard
               title="Articles Left"
               value={formatLimitValue(dashboard.articlePosting)}
-              icon={<FileText />}
-              color="bg-gradient-to-br from-indigo-400 to-indigo-500"
+              icon={<FileText className="w-4 h-4" />}
+              accent="bg-indigo-500"
               subtitle={
                 !dashboard.articlePosting
                   ? "Loading plan limits"
@@ -351,27 +377,43 @@ if (stored) {
             <KpiCard
               title="Directory Slots Left"
               value={formatLimitValue(dashboard.productListings)}
-              icon={<FolderOpen />}
-              color="bg-gradient-to-br from-amber-400 to-amber-500"
+              icon={<FolderOpen className="w-4 h-4" />}
+              accent="bg-amber-500"
               subtitle={
                 !dashboard.productListings
                   ? "Loading plan limits"
                   : dashboard.productListings.isUnlimited
                     ? "Unlimited directories"
-                    : `${dashboard.productListings.activeListings ?? 0} of ${dashboard.productListings.effectiveLimit} directories used`
+                    : `${dashboard.productListings.activeListings ?? 0} of ${dashboard.productListings.effectiveLimit} used`
+              }
+            />
+            <KpiCard
+              title="Homepage Featured Ads"
+              value={
+                dashboard.homepageFeaturedAd?.reason === "PLAN_NOT_ELIGIBLE"
+                  ? "🔒"
+                  : dashboard.homepageFeaturedAd?.remaining ?? 0
+              }
+              icon={<Megaphone className="w-4 h-4" />}
+              accent="bg-rose-500"
+              subtitle={
+                dashboard.homepageFeaturedAd?.reason === "PLAN_NOT_ELIGIBLE"
+                  ? "Upgrade to Professional or Enterprise"
+                  : `${dashboard.homepageFeaturedAd?.usedThisPeriod ?? 0} of ${dashboard.homepageFeaturedAd?.effectiveLimit ?? 0
+                  } used ${dashboard.homepageFeaturedAd?.periodLabel ?? ""}`
               }
             />
             <KpiCard
               title="Total Applications"
               value={dashboard.applicationsCount}
-              icon={<Users />}
-              color="bg-gradient-to-br from-purple-500 to-purple-600"
+              icon={<Users className="w-4 h-4" />}
+              accent="bg-purple-500"
             />
             <KpiCard
               title="Active Jobs"
               value={dashboard.jobsCount}
-              icon={<Clock />}
-              color="bg-gradient-to-br from-orange-400 to-orange-500"
+              icon={<Clock className="w-4 h-4" />}
+              accent="bg-orange-500"
             />
           </div>
 
@@ -385,14 +427,14 @@ if (stored) {
 
           {/* QUICK ACTIONS */}
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-            <div className="grid md:grid-cols-4 gap-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">Quick Actions</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               <Link
                 href="/recruiter/jobs"
-                className="group p-5 bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-blue-200"
+                className="group p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-blue-200"
               >
                 <ActionCard
-                  icon={<Briefcase className="text-blue-600 group-hover:scale-110 transition-transform" />}
+                  icon={<Briefcase className="text-blue-600 group-hover:scale-110 transition-transform" size={18} />}
                   title="Manage Jobs"
                   desc="View all jobs"
                 />
@@ -401,25 +443,21 @@ if (stored) {
               <PostJobButton
                 eligibility={dashboard.jobPosting}
                 variant="card"
-                className="group p-5 bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-green-200"
+                className="group p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-green-200"
               >
                 <ActionCard
-                  icon={<TrendingUp className="text-green-600 group-hover:scale-110 transition-transform" />}
+                  icon={<TrendingUp className="text-green-600 group-hover:scale-110 transition-transform" size={18} />}
                   title="Post a Job"
-                  desc={
-                    dashboard.jobPosting?.canPost
-                      ? "Create new listing"
-                      : "Upgrade to post more"
-                  }
+                  desc={dashboard.jobPosting?.canPost ? "Create new listing" : "Upgrade to post more"}
                 />
               </PostJobButton>
 
               <Link
                 href="/recruiter/articles"
-                className="group p-5 bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-indigo-200"
+                className="group p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-indigo-200"
               >
                 <ActionCard
-                  icon={<FileText className="text-indigo-600 group-hover:scale-110 transition-transform" />}
+                  icon={<FileText className="text-indigo-600 group-hover:scale-110 transition-transform" size={18} />}
                   title="Articles"
                   desc={formatArticleQuickDesc(dashboard.articlePosting)}
                 />
@@ -427,269 +465,193 @@ if (stored) {
 
               <Link
                 href="/recruiter/directories"
-                className="group p-5 bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-amber-200"
+                className="group p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-amber-200"
               >
                 <ActionCard
-                  icon={<FolderOpen className="text-amber-600 group-hover:scale-110 transition-transform" />}
+                  icon={<FolderOpen className="text-amber-600 group-hover:scale-110 transition-transform" size={18} />}
                   title="Directories"
                   desc={formatProductQuickDesc(dashboard.productListings)}
+                />
+              </Link>
+
+              <Link
+                href="/recruiter/leads"
+                className="group p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-purple-200"
+              >
+                <ActionCard
+                  icon={<Inbox className="text-purple-600 group-hover:scale-110 transition-transform" size={18} />}
+                  title="Leads"
+                  desc="View RFQ requests"
                 />
               </Link>
             </div>
           </div>
 
           {/* RECENT JOBS */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-semibold text-gray-900">Recent Job Posts</h2>
-              <Link
-                href="/recruiter/jobs"
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-              >
-                View all →
-              </Link>
-            </div>
-
+          <Panel title="Recent Job Posts" actionHref="/recruiter/jobs" actionLabel="View all">
             {dashboard.recentJobs.length === 0 ? (
-              <div className="text-center py-8">
-                <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-sm text-gray-500">No recent jobs found</p>
+              <EmptyState
+                icon={<Briefcase className="w-10 h-10 text-gray-300" />}
+                message="No recent jobs found"
+              >
                 <PostJobButton
                   eligibility={dashboard.jobPosting}
                   label="Post your first job"
                   className="inline-block mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium"
                 />
-              </div>
+              </EmptyState>
             ) : (
-              <div className="overflow-hidden rounded-lg border border-gray-200">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Job Title</th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Applications</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {dashboard.recentJobs.map((job) => (
-                      <tr key={job.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-4 font-medium text-gray-900">{job.title}</td>
-                        <td className="px-4 py-4 text-right">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {job.applications ?? 0} applicants
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                head={["Job Title", "Applications"]}
+                rows={dashboard.recentJobs.map((job) => [
+                  <span className="font-medium text-gray-900">{job.title}</span>,
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                    {job.applications ?? 0} applicants
+                  </span>,
+                ])}
+                alignLast="right"
+              />
             )}
+          </Panel>
+
+          {/* ================= TEAM MANAGEMENT ================= */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <TeamManagementTab />
           </div>
 
           {/* ================= ARTICLES ================= */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-xl font-semibold text-gray-900">My Articles</h2>
+          <Panel
+            title="My Articles"
+            action={
               <CreateArticleButton
                 eligibility={dashboard.articlePosting}
                 className="text-sm bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                 label="+ Create Article"
               />
-            </div>
-            {dashboard.articlePosting && (
-              <p className="text-sm text-gray-500 mb-5">
-                {dashboard.articlePosting.isUnlimited
+            }
+            subtitle={
+              dashboard.articlePosting
+                ? dashboard.articlePosting.isUnlimited
                   ? "Unlimited technical articles this year"
                   : dashboard.articlePosting.plan === "free"
                     ? "Technical articles require Basic plan or higher"
-                    : `${dashboard.articlePosting.remaining ?? 0} of ${dashboard.articlePosting.effectiveLimit ?? 0} articles remaining this year`}
-              </p>
-            )}
-
+                    : `${dashboard.articlePosting.remaining ?? 0} of ${dashboard.articlePosting.effectiveLimit ?? 0} articles remaining this year`
+                : undefined
+            }
+          >
             {!dashboard.articles || dashboard.articles.length === 0 ? (
-              <div className="text-center py-8">
-                <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-sm text-gray-500 mb-2">
-                  You haven't created any articles yet.
-                </p>
-                <Link
-                  href="/recruiter/articles/create"
-                  className="inline-block text-sm text-indigo-600 hover:text-indigo-700"
-                >
+              <EmptyState icon={<FileText className="w-10 h-10 text-gray-300" />} message="You haven't created any articles yet.">
+                <Link href="/recruiter/articles/create" className="inline-block text-sm text-indigo-600 hover:text-indigo-700 font-medium">
                   Write your first article
                 </Link>
-              </div>
+              </EmptyState>
             ) : (
-              <div className="overflow-hidden rounded-lg border border-gray-200">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Title</th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Status</th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {dashboard.articles.map((article) => (
-                      <tr key={article.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-4">
-                          <div className="font-medium text-gray-900">{article.title}</div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            Created {new Date(article.createdAt).toLocaleDateString()}
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          {article.status === "APPROVED" ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              Approved
-                            </span>
-                          ) : article.status === "PENDING" ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                              Pending
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                              {article.status}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-right">
-                          <Link
-                            href={`/recruiter/articles/${article.id}/edit`}
-                            className="text-blue-600 hover:text-blue-700 font-medium"
-                          >
-                            Edit
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                head={["Title", "Status", "Actions"]}
+                alignLast="right"
+                center={[1]}
+                rows={dashboard.articles.map((article) => [
+                  <div>
+                    <div className="font-medium text-gray-900">{article.title}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">
+                      Created {new Date(article.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>,
+                  <StatusBadge status={article.status} />,
+                  <Link href={`/recruiter/articles/${article.id}/edit`} className="text-blue-600 hover:text-blue-700 font-medium">
+                    Edit
+                  </Link>,
+                ])}
+              />
             )}
-          </div>
+          </Panel>
 
           {/* ================= DIRECTORIES ================= */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-xl font-semibold text-gray-900">My Directories</h2>
+          <Panel
+            title="My Directories"
+            action={
               <Link
                 href="/recruiter/directory/new"
                 className="text-sm bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
               >
                 + Add Directory
               </Link>
-            </div>
-            {dashboard.productListings && (
-              <p className="text-sm text-gray-500 mb-5">
-                {dashboard.productListings.isUnlimited
+            }
+            subtitle={
+              dashboard.productListings
+                ? dashboard.productListings.isUnlimited
                   ? "Unlimited supplier directories"
-                  : `${dashboard.productListings.remaining ?? 0} of ${dashboard.productListings.effectiveLimit ?? 0} directory slots remaining`}
-              </p>
-            )}
-
+                  : `${dashboard.productListings.remaining ?? 0} of ${dashboard.productListings.effectiveLimit ?? 0} directory slots remaining`
+                : undefined
+            }
+          >
             {!dashboard.directories || dashboard.directories.length === 0 ? (
-              <div className="text-center py-8">
-                <FolderOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-sm text-gray-500 mb-2">
-                  You haven't added any directories yet.
-                </p>
-                <Link
-                  href="/recruiter/directory/new"
-                  className="inline-block text-sm text-amber-600 hover:text-amber-700"
-                >
+              <EmptyState icon={<FolderOpen className="w-10 h-10 text-gray-300" />} message="You haven't added any directories yet.">
+                <Link href="/recruiter/directory/new" className="inline-block text-sm text-amber-600 hover:text-amber-700 font-medium">
                   Add your first directory
                 </Link>
-              </div>
+              </EmptyState>
             ) : (
-              <div className="overflow-hidden rounded-lg border border-gray-200">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Directory</th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Status</th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {dashboard.directories.map((dir) => (
-                      <tr key={dir.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-4">
-                          <div className="font-medium text-gray-900">{dir.name}</div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            /suppliers/{dir.slug}
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          {dir.status === "PENDING" && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                              Pending
-                            </span>
-                          )}
-                          {dir.status === "APPROVED" && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              Approved
-                            </span>
-                          )}
-                          {dir.status === "REJECTED" && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              Rejected
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-right">
-                          {dir.isLiveEditable ? (
-                            <Link
-                              href={`/recruiter/directory/${dir.id}/edit`}
-                              className="text-blue-600 hover:text-blue-700 font-medium"
-                            >
-                              Edit
-                            </Link>
-                          ) : (
-                            <span className="text-gray-400 text-xs">Not editable</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                head={["Directory", "Status", "Actions"]}
+                alignLast="right"
+                center={[1]}
+                rows={dashboard.directories.map((dir) => [
+                  <div>
+                    <div className="font-medium text-gray-900">{dir.name}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">/suppliers/{dir.slug}</div>
+                  </div>,
+                  <StatusBadge status={dir.status} />,
+                  dir.isLiveEditable ? (
+                    <Link href={`/recruiter/directory/${dir.id}/edit`} className="text-blue-600 hover:text-blue-700 font-medium">
+                      Edit
+                    </Link>
+                  ) : (
+                    <span className="text-gray-400 text-xs">Not editable</span>
+                  ),
+                ])}
+              />
             )}
-          </div>
+          </Panel>
         </main>
 
         {/* ================= SIDEBAR ================= */}
         <aside className="col-span-12 xl:col-span-3 space-y-6">
           {/* PROFILE CARD */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
-           <div className="relative inline-block mb-4">
-            <div className="w-20 h-20 rounded-full overflow-hidden mx-auto ring-4 ring-gray-100">
-              <Image
-                src={recruiter?.avatarUrl || "https://i.pravatar.cc/100"}
-                alt="Profile"
-                width={80}
-                height={80}
-                className="w-full h-full object-cover"
-              />
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
+            <div className="relative inline-block mb-4">
+              <div className="w-20 h-20 rounded-full overflow-hidden mx-auto ring-4 ring-gray-50 bg-gray-100 flex items-center justify-center">
+                {recruiter?.avatarUrl ? (
+                  <Image
+                    src={recruiter.avatarUrl}
+                    alt="Profile"
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-2xl font-semibold text-gray-600">
+                    {getInitials(recruiter?.fullName || recruiter?.username || "U")}
+                  </span>
+                )}
+              </div>
+              <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
             </div>
-            <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
-          </div>
 
             <h3 className="font-semibold text-lg text-gray-900">
               {recruiter?.fullName || recruiter?.username}
             </h3>
 
             {recruiter?.headline && (
-              <p className="text-sm text-gray-600 mt-1">
-                {recruiter.headline}
-              </p>
+              <p className="text-sm text-gray-500 mt-1">{recruiter.headline}</p>
             )}
 
             {recruiter?.Company?.name && (
-  <p className="text-sm font-medium text-blue-600 mt-1">
-    {recruiter.Company.name}
-  </p>
-)}
+              <p className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 mt-2">
+                {recruiter.Company.name}
+                {recruiter.Company.isVerified && <BadgeCheck className="w-3.5 h-3.5" />}
+              </p>
+            )}
 
             {recruiter?.location && (
               <p className="text-xs text-gray-500 flex items-center justify-center gap-1 mt-2">
@@ -699,54 +661,46 @@ if (stored) {
             )}
 
             {recruiter?.Company?.slug && (
-  <Link
-    href={`/company/${recruiter.Company.slug}`}
-    className="inline-block mt-4 text-sm text-blue-600 hover:text-blue-700 font-medium"
-  >
-    View Company Profile →
-  </Link>
-)}
+              <Link
+                href={`/company/${recruiter.Company.slug}`}
+                className="inline-block mt-4 text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                View Company Profile →
+              </Link>
+            )}
 
             <Link
-  href="/recruiter/profile/edit"
-  className="block mt-3 text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
->
-  Edit Profile
-</Link>
-
-            <Link
-              href="/packages"
-              className="block mt-3 text-sm border border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg font-medium transition-colors"
+              href="/recruiter/profile/edit"
+              className="block mt-3 text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium transition-colors"
             >
-              {dashboard.subscription?.plan === "free" ? "Upgrade Plan" : "Manage Packages"}
+              Edit Profile
             </Link>
 
+            <div className="flex items-center justify-center gap-1.5 mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
+              Current Plan
+              <span className="font-semibold text-gray-800">{planLabel}</span>
+            </div>
           </div>
 
           {/* PACKAGE PURCHASES */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="font-semibold mb-1 flex items-center gap-2 text-gray-900">
-              <CreditCard size={18} className="text-blue-600" />
+              <CreditCard size={16} className="text-blue-600" />
               Purchase History
             </h3>
-            <p className="text-xs text-gray-500 mb-4">
-              Active plan: {dashboard.subscription?.displayPlanLabel ?? dashboard.subscription?.planLabel ?? "Free"}
-            </p>
+            <p className="text-xs text-gray-500 mb-4">Active plan: {planLabel}</p>
 
             {!dashboard.recentPurchases || dashboard.recentPurchases.length === 0 ? (
               <div className="text-sm text-gray-500">
                 <p>No purchases yet.</p>
-                <Link href="/packages" className="mt-2 inline-block text-blue-600 hover:underline">
+                <Link href="/packages" className="mt-2 inline-block text-blue-600 hover:underline font-medium">
                   Browse packages →
                 </Link>
               </div>
             ) : (
-              <ul className="space-y-3 text-sm">
+              <ul className="space-y-2.5 text-sm">
                 {dashboard.recentPurchases.map((purchase) => (
-                  <li
-                    key={purchase.id}
-                    className="rounded-lg border border-gray-100 px-3 py-2"
-                  >
+                  <li key={purchase.id} className="rounded-lg border border-gray-100 px-3 py-2.5 hover:border-gray-200 transition-colors">
                     <p className="font-medium text-gray-900">{purchase.packageName}</p>
                     <p className="text-xs text-gray-500 mt-1">
                       ₹{purchase.amount.toLocaleString("en-IN")} ·{" "}
@@ -759,9 +713,9 @@ if (stored) {
           </div>
 
           {/* ACTIVITY */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="font-semibold mb-4 flex items-center gap-2 text-gray-900">
-              <Bell size={18} className="text-blue-600" />
+              <Bell size={16} className="text-blue-600" />
               Recent Activity
             </h3>
 
@@ -778,16 +732,12 @@ if (stored) {
                         href={activity.href}
                         className="flex items-start gap-2 text-gray-600 hover:text-blue-600 transition-colors group"
                       >
-                        <span
-                          className={`inline-block w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${ACTIVITY_DOT_COLORS[activity.color]}`}
-                        />
+                        <span className={`inline-block w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${ACTIVITY_DOT_COLORS[activity.color]}`} />
                         <span className="group-hover:underline">{activity.message}</span>
                       </Link>
                     ) : (
                       <span className="flex items-start gap-2 text-gray-600">
-                        <span
-                          className={`inline-block w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${ACTIVITY_DOT_COLORS[activity.color]}`}
-                        />
+                        <span className={`inline-block w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${ACTIVITY_DOT_COLORS[activity.color]}`} />
                         {activity.message}
                       </span>
                     )}
@@ -803,32 +753,40 @@ if (stored) {
 }
 
 /* ================= COMPONENTS ================= */
-
 function KpiCard({
   title,
   value,
   icon,
-  color,
+  accent,
   subtitle,
 }: {
   title: string
   value: number | string
   icon: React.ReactNode
-  color: string
+  accent: string
   subtitle?: string
 }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex justify-between items-start hover:shadow-md transition-shadow">
-      <div>
-        <p className="text-sm text-gray-600 font-medium">{title}</p>
-        <h3 className="text-3xl font-bold text-gray-900 mt-2">{value}</h3>
-        {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
-      </div>
+    <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
       <div
-        className={`w-14 h-14 rounded-xl flex items-center justify-center text-white shadow-lg ${color}`}
+        className={`w-12 h-12 rounded-xl flex items-center justify-center text-white mb-4 ${accent}`}
       >
         {icon}
       </div>
+
+      <p className="text-lg font-semibold text-gray-700 leading-snug">
+        {title}
+      </p>
+
+      <p className="text-4xl font-bold text-gray-900 mt-2 leading-none">
+        {value}
+      </p>
+
+      {subtitle && (
+        <p className="text-sm text-gray-500 mt-3 leading-relaxed line-clamp-2">
+          {subtitle}
+        </p>
+      )}
     </div>
   )
 }
@@ -844,13 +802,128 @@ function ActionCard({
 }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+      <div className="w-9 h-9 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
         {icon}
       </div>
-      <div>
-        <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-        <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+      <div className="min-w-0">
+        <h2 className="text-sm font-semibold text-gray-900 truncate">{title}</h2>
+        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{desc}</p>
       </div>
+    </div>
+  )
+}
+
+function Panel({
+  title,
+  subtitle,
+  action,
+  actionHref,
+  actionLabel,
+  children,
+}: {
+  title: string
+  subtitle?: string
+  action?: React.ReactNode
+  actionHref?: string
+  actionLabel?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div className="flex items-center justify-between mb-1">
+        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+        {action}
+        {actionHref && actionLabel && (
+          <Link href={actionHref} className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+            {actionLabel} →
+          </Link>
+        )}
+      </div>
+      {subtitle && <p className="text-sm text-gray-500 mb-4">{subtitle}</p>}
+      {!subtitle && <div className="mb-4" />}
+      {children}
+    </div>
+  )
+}
+
+function EmptyState({
+  icon,
+  message,
+  children,
+}: {
+  icon: React.ReactNode
+  message: string
+  children?: React.ReactNode
+}) {
+  return (
+    <div className="text-center py-10">
+      <div className="mx-auto mb-3 flex items-center justify-center">{icon}</div>
+      <p className="text-sm text-gray-500 mb-2">{message}</p>
+      {children}
+    </div>
+  )
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const style = STATUS_BADGE[status] ?? "bg-gray-50 text-gray-600 ring-1 ring-gray-600/10"
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${style}`}>
+      {status.charAt(0) + status.slice(1).toLowerCase()}
+    </span>
+  )
+}
+
+function Table({
+  head,
+  rows,
+  alignLast,
+  center = [],
+}: {
+  head: string[]
+  rows: React.ReactNode[][]
+  alignLast?: "right"
+  center?: number[]
+}) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-gray-100">
+      <table className="w-full text-sm">
+        <thead className="bg-gray-50/70 border-b border-gray-100">
+          <tr>
+            {head.map((h, i) => (
+              <th
+                key={h}
+                className={`px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide ${i === head.length - 1 && alignLast === "right"
+                  ? "text-right"
+                  : center.includes(i)
+                    ? "text-center"
+                    : "text-left"
+                  }`}
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          {rows.map((row, ri) => (
+            <tr key={ri} className="hover:bg-gray-50/60 transition-colors">
+              {row.map((cell, ci) => (
+                <td
+                  key={ci}
+                  className={`px-4 py-4 ${ci === row.length - 1 && alignLast === "right"
+                    ? "text-right"
+                    : center.includes(ci)
+                      ? "text-center"
+                      : "text-left"
+                    }`}
+                >
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }

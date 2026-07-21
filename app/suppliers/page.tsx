@@ -4,9 +4,9 @@ import { useEffect, useState, useCallback } from "react"
 import { ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react"
 import SupplierRowCard from "./SupplierRowCard"
 import SupplierFilters from "./SupplierFilters"
-import SupplierAds from "@/components/SupplierAds"
+
 import StandOut from "@/components/suppliers/StandOut";
-import ClientBanner from "@/components/Banners/ClientBanner";
+import Banner from "@/components/Banners/Banner";
 
 type Supplier = {
   id: number
@@ -290,17 +290,17 @@ export default function SuppliersPage() {
           </main>
 
           {/* RIGHT ADS — DESKTOP */}
-          <aside className="hidden lg:block">
+          <aside className="hidden lg:block" aria-label="Sponsored">
             <div className="sticky top-24">
-              <SupplierAds />
+              <Banner placement="SUPPLIER_RIGHT" />
             </div>
           </aside>
 
           {/* RIGHT ADS — MOBILE */}
-          <div className="lg:hidden">
-            <SupplierAds />
+          <div className="lg:hidden" aria-label="Sponsored">
+            <Banner placement="SUPPLIER_RIGHT" />
           </div>
-        
+
         </div>
           
       </div>
@@ -308,7 +308,7 @@ export default function SuppliersPage() {
                 <StandOut />
               
               {/* Banner after Stand Out */}
-              <ClientBanner placement="SUPPLIER_AFTER_VIDEO" />
+              <Banner placement="SUPPLIER_AFTER_VIDEO" />
     </div>
     
   )

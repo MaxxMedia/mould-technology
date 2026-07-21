@@ -127,7 +127,7 @@ export default function UploadBox({
                 <FileText size={42} className="text-red-500 mb-2" />
                 <p className="text-sm text-gray-600">PDF Uploaded</p>
                 <p className="text-xs text-gray-400 mt-1">
-                  Click to replace file
+                  Click to replace file.
                 </p>
               </div>
             ) : (

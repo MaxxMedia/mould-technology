@@ -10,6 +10,15 @@ export type JobPostingEligibility = {
   isUnlimited?: boolean;
   upgradeRequired?: boolean;
   message?: string;
+  reason?: string;
+};
+
+// 🔹 Backend now returns both quotas in one response:
+// top-level fields = job eligibility (kept for backward compatibility),
+// plus explicit `.job` and `.internship` breakdowns.
+export type JobPostingEligibilityResponse = JobPostingEligibility & {
+  job: JobPostingEligibility;
+  internship: JobPostingEligibility;
 };
 
 export type JobPostingEligibilityResponse = JobPostingEligibility & {

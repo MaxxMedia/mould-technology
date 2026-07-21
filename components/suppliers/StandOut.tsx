@@ -46,7 +46,7 @@ export default function StandOut() {
         </div>
 
         {/* Right */}
-        <Link href="/supplier-listing-form">
+        <Link href="/paid-packages">
           <button className="bg-[#D71920] hover:bg-red-700 text-white px-8 py-4 text-lg font-semibold whitespace-nowrap transition">
             Find Out How
           </button>

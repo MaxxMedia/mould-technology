@@ -1,94 +1,103 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
-import { useEffect, useMemo, useRef, useState } from "react"
-import type { Post } from "../types/Post"
-import SupplierAds from "./SupplierAds"
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { Post } from "../types/Post";
+import Banner from "./Banners/Banner";
 
-const ROTATE_INTERVAL = 6000
-const PAGE_SIZE = 6 // 3 rows × 2 cols
+const ROTATE_INTERVAL = 6000;
+const PAGE_SIZE = 6; // 3 rows × 2 cols
 
 const BADGE_COLORS: Record<string, string> = {
   FEATURED: "bg-[#E11D48]",
   WEBINAR: "bg-[#7C3AED]",
-  EVENT:    "bg-[#0EA5E9]",
+  EVENT: "bg-[#0EA5E9]",
   TRENDING: "bg-[#F97316]",
-  EXCLUSIVE:"bg-[#059669]",
-}
+  EXCLUSIVE: "bg-[#059669]",
+};
 
 const CATEGORY_COLORS: Record<string, string> = {
-  gaming:         "bg-[#0073FF]",
-  fashion:        "bg-[#E033E0]",
+  gaming: "bg-[#0073FF]",
+  fashion: "bg-[#E033E0]",
   "latest-issue": "bg-[#F69C00]",
-  tech:           "bg-[#22C55E]",
-  politics:       "bg-[#EF4444]",
-  travel:         "bg-[#0EA5E9]",
-}
+  tech: "bg-[#22C55E]",
+  politics: "bg-[#EF4444]",
+  travel: "bg-[#0EA5E9]",
+  articles: "bg-[#8B5CF6]",
+  latest: "bg-[#F59E0B]",
+  basics: "bg-[#0073FF]",
+  maintain: "bg-[#8B5CF6]",
+  machining: "bg-[#EC4899]",
+  build: "bg-[#14B8A6]",
+  cuttingtools: "bg-[#F97316]",
+  advancedmanufacturing: "bg-[#6366F1]",
+  departments: "bg-[#06B6D4]",
+  events: "bg-[#8B5CF6]",
+  "header-videos": "bg-[#EF4444]",
+};
 
-export default function HomeCompanyArticles() {
-  const [allPosts, setAllPosts]   = useState<Post[]>([])
-  const [pageIndex, setPageIndex] = useState(0)
-  const [fade, setFade]           = useState(true)
-  const [paused, setPaused]       = useState(false)
-  const timerRef                  = useRef<ReturnType<typeof setInterval> | null>(null)
+type Props = {
+  posts: Post[];
+};
 
-  /* ── Fetch ── */
+export default function HomeCompanyArticles({ posts }: Props) {
+  const [allPosts, setAllPosts] = useState<Post[]>([]);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [fade, setFade] = useState(true);
+  const [paused, setPaused] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Update posts when prop changes
   useEffect(() => {
-    ;(async () => {
-      try {
-        const res  = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/articles/approved`)
-        const data = await res.json()
-        setAllPosts(Array.isArray(data) ? data : [])
-      } catch (err) {
-        console.error("Failed to load approved articles", err)
-      }
-    })()
-  }, [])
+    if (posts && Array.isArray(posts)) {
+      setAllPosts(posts);
+    }
+  }, [posts]);
 
   /* ── Total pages ── */
-  const totalPages = Math.ceil(allPosts.length / PAGE_SIZE)
+  const totalPages = Math.ceil(allPosts.length / PAGE_SIZE);
 
   /* ── Visible slice ── */
   const visiblePosts = useMemo(() => {
-    if (!allPosts.length) return []
-    const start = pageIndex * PAGE_SIZE
+    if (!allPosts.length) return [];
+    const start = pageIndex * PAGE_SIZE;
     return Array.from({ length: PAGE_SIZE }, (_, i) =>
       allPosts[(start + i) % allPosts.length]
-    )
-  }, [allPosts, pageIndex])
+    );
+  }, [allPosts, pageIndex]);
 
   /* ── Auto-rotate ── */
   const goToPage = (next: number) => {
-    setFade(false)
+    setFade(false);
     setTimeout(() => {
-      setPageIndex(next % (totalPages || 1))
-      setFade(true)
-    }, 300)
-  }
+      setPageIndex(next % (totalPages || 1));
+      setFade(true);
+    }, 300);
+  };
 
   useEffect(() => {
-    if (totalPages <= 1 || paused) return
+    if (totalPages <= 1 || paused) return;
     timerRef.current = setInterval(() => {
-      goToPage((pageIndex + 1) % totalPages)
-    }, ROTATE_INTERVAL)
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [totalPages, pageIndex, paused])
+      goToPage((pageIndex + 1) % totalPages);
+    }, ROTATE_INTERVAL);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [totalPages, pageIndex, paused]);
 
-  if (!visiblePosts.length) return null
+  if (!visiblePosts.length) return null;
 
   return (
     <section className="pt-4 sm:pt-8 w-full">
       <div className="max-w-[1320px] mx-auto px-4">
         <div className="flex gap-8">
-
           {/* ══ LEFT: Articles ══ */}
           <div
             className="flex-1 min-w-0"
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}
           >
-
             {/* Heading */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-[#121213]">Featured Post</h2>
@@ -103,30 +112,40 @@ export default function HomeCompanyArticles() {
             {/* Grid 2 × 3 */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {visiblePosts.map((post, i) => {
-                const slug         = typeof post.category === "object" ? post.category?.slug || "" : ""
-                const categoryName = typeof post.category === "object" ? post.category?.name || "" : ""
-                const badge        = post.badge?.trim()
-                const tagText      = badge || categoryName
+                const slug =
+                  typeof post.category === "object"
+                    ? post.category?.slug?.toLowerCase() || ""
+                    : String(post.category || "").toLowerCase();
+                const categoryName =
+                  typeof post.category === "object"
+                    ? post.category?.name || ""
+                    : String(post.category || "");
+                const badge = post.badge?.trim();
+                const tagText = badge || categoryName;
 
-                let tagClass = "bg-[#9CA3AF]"
+                let tagClass = "bg-[#9CA3AF]";
                 if (badge) {
-                  tagClass = BADGE_COLORS[badge.toUpperCase()] || "bg-[#6B7280]"
+                  tagClass = BADGE_COLORS[badge.toUpperCase()] || "bg-[#6B7280]";
                 } else {
                   const match = Object.keys(CATEGORY_COLORS).find((k) =>
-                    slug.toLowerCase().includes(k)
-                  )
-                  if (match) tagClass = CATEGORY_COLORS[match]
+                    slug.includes(k)
+                  );
+                  if (match) tagClass = CATEGORY_COLORS[match];
                 }
 
                 const imageUrl = post.imageUrl?.startsWith("http")
                   ? post.imageUrl
-                  : `${process.env.NEXT_PUBLIC_API_URL}${post.imageUrl}`
+                  : post.imageUrl
+                    ? `${process.env.NEXT_PUBLIC_API_URL}${post.imageUrl}`
+                    : "/placeholder.jpg";
 
                 const formattedDate = post.createdAt
                   ? new Date(post.createdAt).toLocaleDateString("en-US", {
-                      month: "short", day: "numeric", year: "numeric",
-                    })
-                  : ""
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                  : "";
 
                 return (
                   <article
@@ -178,7 +197,13 @@ export default function HomeCompanyArticles() {
                         </span>
 
                         <span className="flex items-center gap-1">
-                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <svg
+                            className="w-3 h-3"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
                             <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
                             <polyline points="16 7 22 7 22 13" />
                           </svg>
@@ -187,11 +212,17 @@ export default function HomeCompanyArticles() {
 
                         {formattedDate && (
                           <span className="flex items-center gap-1">
-                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <svg
+                              className="w-3 h-3"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
                               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                               <line x1="16" y1="2" x2="16" y2="6" />
-                              <line x1="8"  y1="2" x2="8"  y2="6" />
-                              <line x1="3"  y1="10" x2="21" y2="10" />
+                              <line x1="8" y1="2" x2="8" y2="6" />
+                              <line x1="3" y1="10" x2="21" y2="10" />
                             </svg>
                             {formattedDate}
                           </span>
@@ -199,7 +230,7 @@ export default function HomeCompanyArticles() {
                       </div>
                     </div>
                   </article>
-                )
+                );
               })}
             </div>
 
@@ -223,12 +254,11 @@ export default function HomeCompanyArticles() {
           </div>
 
           {/* ══ RIGHT: Ads ══ */}
-          <div className="hidden xl:block w-[300px] flex-shrink-0">
-            <SupplierAds />
-          </div>
-
+          <aside className="hidden xl:block w-[300px] flex-shrink-0" aria-label="Sponsored">
+            <Banner placement="SIDEBAR" />
+          </aside>
         </div>
       </div>
     </section>
-  )
+  );
 }

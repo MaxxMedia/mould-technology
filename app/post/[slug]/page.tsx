@@ -36,6 +36,8 @@ type Post = {
   author?: Author
   category?: Category
   youtubeUrl?: string
+  views?: number
+  shares?: number
 }
 
 /* ================= YOUTUBE HELPERS ================= */
@@ -63,41 +65,104 @@ export default function PostDetailsPage() {
   const slugValue = Array.isArray(slug) ? slug[0] : slug
 
   const [post, setPost] = useState<Post | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [showGate, setShowGate] = useState(false)
   const [userSubmitted, setUserSubmitted] = useState(false)
 
-  /* ================= FETCH POST ================= */
+  /* ================= FETCH POST BY SLUG ================= */
   useEffect(() => {
     async function fetchPost() {
+      if (!slugValue) {
+        setLoading(false)
+        return
+      }
+      
+      setLoading(true)
+      setError(null)
+      
       try {
+        // Use the dedicated slug endpoint from your API
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/posts?limit=50`,
-          { cache: "no-store" }
+          `${process.env.NEXT_PUBLIC_API_URL}/api/posts/slug/${encodeURIComponent(slugValue)}`,
+          { 
+            cache: "no-store",
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          }
         )
+        
+        if (!res.ok) {
+          if (res.status === 404) {
+            throw new Error(`Post with slug "${slugValue}" not found`)
+          }
+          throw new Error(`Failed to fetch post: ${res.status}`)
+        }
+        
         const data = await res.json()
-        const posts: Post[] = Array.isArray(data.data) ? data.data : []
-        const found = posts.find(p => p.slug === slugValue)
-        if (found) setPost(found)
+        
+        // The API returns the post object directly (not wrapped in data)
+        if (data && typeof data === 'object' && data.id) {
+          setPost(data)
+        } else {
+          throw new Error("Invalid post data received")
+        }
       } catch (err) {
         console.error("Failed to load post:", err)
+        setError(err instanceof Error ? err.message : "Failed to load post")
+      } finally {
+        setLoading(false)
       }
     }
 
-    if (slugValue) fetchPost()
+    fetchPost()
   }, [slugValue])
 
   /* ================= CONTENT GATE ================= */
   useEffect(() => {
-    if (userSubmitted) return
+    if (userSubmitted || !post || loading) return
     const timer = setTimeout(() => setShowGate(true), 9000)
     return () => clearTimeout(timer)
-  }, [userSubmitted])
+  }, [userSubmitted, post, loading])
 
-  if (!post) return <Loader />
+  /* ================= LOADING STATE ================= */
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f9f9f9]">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#003B5C] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading post...</p>
+        </div>
+      </div>
+    )
+  }
+
+  /* ================= ERROR STATE ================= */
+  if (error || !post) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f9f9f9] px-4">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-6">📄</div>
+          <h2 className="text-2xl font-bold text-[#003B5C] mb-3">
+            Post Not Found
+          </h2>
+          <p className="text-gray-600 mb-6">
+            {error || "The post you're looking for doesn't exist or has been removed."}
+          </p>
+          <a
+            href="/"
+            className="inline-block bg-[#003B5C] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#002d47] transition-colors"
+          >
+            Return to Home
+          </a>
+        </div>
+      </div>
+    )
+  }
 
   const embedUrl = getYoutubeEmbed(post.youtubeUrl)
 
-  // ✅ UPDATED: Allow YouTube for industry-talks also
   const allowYoutube =
     post.category?.slug === "video" ||
     post.category?.slug === "industry-talks"
@@ -135,46 +200,53 @@ export default function PostDetailsPage() {
 
         {/* ================= HERO ================= */}
         <section className="bg-white border-b border-gray-200">
-  <div className="max-w-[1320px] mx-auto px-4 py-10">
-            <p className="text-gray-500 text-sm mb-3">
-              Published {date}
-            </p>
+          <div className="max-w-[1320px] mx-auto px-4 py-10">
+            {post.category?.name && (
+              <span className="inline-block text-[11px] font-semibold tracking-wide uppercase text-[#003049] bg-[#003049]/5 px-3 py-1 rounded-full mb-4">
+                {post.category.name}
+              </span>
+            )}
 
-            <h1 className="text-3xl md:text-4xl font-bold text-[#003049] mb-4">
+            <p className="text-gray-500 text-sm mb-3">Published {date}</p>
+
+            <h1 className="text-3xl md:text-4xl font-bold text-[#003049] mb-4 leading-tight max-w-4xl">
               {post.title}
             </h1>
 
             {post.excerpt && (
-              <p className="text-gray-700 max-w-3xl mb-6">
+              <p className="text-gray-600 text-lg max-w-3xl mb-8 leading-relaxed">
                 {post.excerpt}
               </p>
             )}
 
-            <div className="relative w-full h-[420px] mb-0">
+            {/* HERO IMAGE — full image visible, no cropping */}
+            <div className="relative w-full aspect-[16/9] md:aspect-[21/9] bg-gray-100 rounded-2xl overflow-hidden border border-gray-100">
               <Image
                 src={imageUrl}
                 alt={post.title}
                 fill
-                className="object-cover"
+                className="object-contain"
                 sizes="(max-width: 768px) 100vw, 1200px"
                 priority
               />
             </div>
 
             {post.author && (
-              <div className="flex items-center gap-3 mt-6">
-                <div className="relative w-10 h-10">
+              <div className="flex items-center gap-3 mt-8 pt-6 border-t border-gray-100">
+                <div className="relative w-11 h-11 shrink-0">
                   <Image
                     src={post.author.avatarUrl || "/avatar-placeholder.png"}
                     alt={post.author.name}
                     fill
-                    className="rounded-full border object-cover"
-                    sizes="40px"
+                    className="rounded-full border border-gray-200 object-cover"
+                    sizes="44px"
                   />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">{post.author.name}</p>
-                  <p className="text-xs text-gray-500">{post.author.bio}</p>
+                  <p className="text-sm font-semibold text-[#003049]">{post.author.name}</p>
+                  {post.author.bio && (
+                    <p className="text-xs text-gray-500 mt-0.5">{post.author.bio}</p>
+                  )}
                 </div>
               </div>
             )}
@@ -183,56 +255,58 @@ export default function PostDetailsPage() {
 
         {/* ================= CONTENT + SIDEBAR ================= */}
         <section className="max-w-[1320px] mx-auto px-4 py-10">
-  <div className="grid grid-cols-1 lg:grid-cols-[8fr_4fr] gap-10">
+          <div className="grid grid-cols-1 lg:grid-cols-[8fr_4fr] gap-10">
 
-          {/* CONTENT */}
-          <article className="max-w-3xl overflow-hidden">
+            {/* CONTENT */}
+            <article className="max-w-3xl overflow-hidden">
 
-            {/* CONTENT BODY */}
-            <div
-              className="prose prose-lg max-w-none break-words overflow-hidden"
-              dangerouslySetInnerHTML={{ __html: post.content || "" }}
-            />
+              {/* CONTENT BODY */}
+              <div
+                className="prose prose-lg max-w-none break-words overflow-hidden prose-headings:text-[#003049] prose-a:text-[#003049] prose-img:rounded-xl"
+                dangerouslySetInnerHTML={{ __html: post.content || "" }}
+              />
 
-            <ShareSection post={post} />
-
-            {/* ================= YOUTUBE BLOCK ================= */}
-            {allowYoutube && post.youtubeUrl && (
-              <div className="mt-12">
-                {embedUrl ? (
-                  <div className="aspect-video w-full rounded-lg overflow-hidden border shadow">
-                    <iframe
-                      src={embedUrl}
-                      title={post.title}
-                      className="w-full h-full"
-                      allowFullScreen
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full rounded-lg border bg-black text-white flex flex-col items-center justify-center py-16">
-                    <p className="text-lg font-semibold mb-4">
-                      Watch on YouTube
-                    </p>
-                    <a
-                      href={post.youtubeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-red-600 px-6 py-3 rounded font-bold hover:bg-red-700"
-                    >
-                      Open YouTube →
-                    </a>
-                  </div>
-                )}
+              <div className="mt-10 pt-6 border-t border-gray-100">
+                <ShareSection post={post} />
               </div>
-            )}
-          </article>
 
-                  {/* SIDEBAR */}
-        <div className="w-full overflow-hidden">
-          <SupplierAds />
-        </div>
-      </div>
-</section>
+              {/* ================= YOUTUBE BLOCK ================= */}
+              {allowYoutube && post.youtubeUrl && (
+                <div className="mt-12">
+                  {embedUrl ? (
+                    <div className="aspect-video w-full rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                      <iframe
+                        src={embedUrl}
+                        title={post.title}
+                        className="w-full h-full"
+                        allowFullScreen
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full rounded-xl border border-gray-800 bg-black text-white flex flex-col items-center justify-center py-16 px-6 text-center">
+                      <p className="text-lg font-semibold mb-4">Watch on YouTube</p>
+                      <a
+                        href={post.youtubeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 bg-red-600 px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
+                      >
+                        Open YouTube →
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+            </article>
+
+            {/* SIDEBAR */}
+            <div className="w-full overflow-hidden">
+              <div className="lg:sticky lg:top-6">
+                <SupplierAds />
+              </div>
+            </div>
+          </div>
+        </section>
 
         <RelatedPostsCarousel />
       </main>

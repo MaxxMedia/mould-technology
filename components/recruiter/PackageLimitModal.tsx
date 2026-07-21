@@ -12,6 +12,8 @@ export default function PackageLimitModal({
   usedLabel = "Used",
   usedValue,
   limitValue,
+  ctaLabel = "View Packages",
+  fallbackMessage = "You've reached your package limit. Upgrade to continue.",
 }: {
   open: boolean;
   onClose: () => void;
@@ -20,6 +22,8 @@ export default function PackageLimitModal({
   usedLabel?: string;
   usedValue?: number;
   limitValue?: number | "Unlimited";
+  ctaLabel?: string;
+  fallbackMessage?: string;
 }) {
   if (!open) return null;
 
@@ -30,8 +34,7 @@ export default function PackageLimitModal({
           <div>
             <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
             <p className="mt-2 text-sm text-gray-600">
-              {eligibility?.message ||
-                "You've reached your package limit. Upgrade to continue."}
+              {eligibility?.message || fallbackMessage}
             </p>
           </div>
           <button
@@ -64,7 +67,7 @@ export default function PackageLimitModal({
             className="flex-1 rounded-lg bg-[#004d73] px-4 py-3 text-center text-sm font-semibold text-white hover:bg-[#003a59]"
             onClick={onClose}
           >
-            View Packages
+            {ctaLabel}
           </Link>
           <button
             type="button"

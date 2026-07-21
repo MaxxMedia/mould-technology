@@ -1,5 +1,6 @@
 "use client";
 
+import AdminPackages from "@/components/admin/AdminPackages";
 import { useEffect, useState } from "react";
 
 type Purchase = {
@@ -60,75 +61,79 @@ export default function AdminPackagesPage() {
   }
 
   return (
-    <div>
-      <h2 className="text-2xl font-semibold text-gray-800 mb-8">
-        Packages &amp; Payments
-      </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="rounded-xl border border-gray-200 p-6 text-center">
-          <p className="text-sm text-gray-600">Total Revenue</p>
-          <p className="text-3xl font-bold text-indigo-700 mt-2">
-            ₹{stats.totalRevenue.toLocaleString("en-IN")}
-          </p>
-        </div>
-        <div className="rounded-xl border border-gray-200 p-6 text-center">
-          <p className="text-sm text-gray-600">Paid Orders</p>
-          <p className="text-3xl font-bold text-emerald-700 mt-2">{stats.paidCount}</p>
-        </div>
-        <div className="rounded-xl border border-gray-200 p-6 text-center">
-          <p className="text-sm text-gray-600">Pending Orders</p>
-          <p className="text-3xl font-bold text-amber-700 mt-2">{stats.pendingCount}</p>
-        </div>
-      </div>
+    <>
+      <div>
+        <h2 className="text-2xl font-semibold text-gray-800 mb-8">
+          Packages &amp; Payments
+        </h2>
 
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">Subscription Breakdown</h3>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-        {stats.planBreakdown.map((row) => (
-          <div key={row.plan} className="rounded-lg bg-gray-50 border border-gray-200 p-4">
-            <p className="text-sm text-gray-600">{row.planLabel}</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{row.count}</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="rounded-xl border border-gray-200 p-6 text-center">
+            <p className="text-sm text-gray-600">Total Revenue</p>
+            <p className="text-3xl font-bold text-indigo-700 mt-2">
+              ₹{stats.totalRevenue.toLocaleString("en-IN")}
+            </p>
           </div>
-        ))}
-      </div>
+          <div className="rounded-xl border border-gray-200 p-6 text-center">
+            <p className="text-sm text-gray-600">Paid Orders</p>
+            <p className="text-3xl font-bold text-emerald-700 mt-2">{stats.paidCount}</p>
+          </div>
+          <div className="rounded-xl border border-gray-200 p-6 text-center">
+            <p className="text-sm text-gray-600">Pending Orders</p>
+            <p className="text-3xl font-bold text-amber-700 mt-2">{stats.pendingCount}</p>
+          </div>
+        </div>
 
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Purchases</h3>
-      <div className="overflow-x-auto rounded-xl border border-gray-200">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 text-left">
-            <tr>
-              <th className="px-4 py-3">Package</th>
-              <th className="px-4 py-3">Type</th>
-              <th className="px-4 py-3">User</th>
-              <th className="px-4 py-3">Company</th>
-              <th className="px-4 py-3">Amount</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Payment ID</th>
-              <th className="px-4 py-3">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {purchases.map((purchase) => (
-              <tr key={purchase.id} className="border-t border-gray-100">
-                <td className="px-4 py-3 font-medium">{purchase.packageName}</td>
-                <td className="px-4 py-3">{purchase.packageType}</td>
-                <td className="px-4 py-3">
-                  {purchase.User?.fullName || purchase.User?.email || "—"}
-                </td>
-                <td className="px-4 py-3">{purchase.Company?.name || "—"}</td>
-                <td className="px-4 py-3">₹{purchase.amount.toLocaleString("en-IN")}</td>
-                <td className="px-4 py-3">{purchase.status}</td>
-                <td className="px-4 py-3 text-xs text-gray-500">
-                  {purchase.razorpayPaymentId || purchase.razorpayOrderId || "—"}
-                </td>
-                <td className="px-4 py-3">
-                  {new Date(purchase.createdAt).toLocaleString()}
-                </td>
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Subscription Breakdown</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+          {stats.planBreakdown.map((row) => (
+            <div key={row.plan} className="rounded-lg bg-gray-50 border border-gray-200 p-4">
+              <p className="text-sm text-gray-600">{row.planLabel}</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{row.count}</p>
+            </div>
+          ))}
+        </div>
+
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Purchases</h3>
+        <div className="overflow-x-auto rounded-xl border border-gray-200">
+          <table className="min-w-full text-sm">
+            <thead className="bg-gray-50 text-left">
+              <tr>
+                <th className="px-4 py-3">Package</th>
+                <th className="px-4 py-3">Type</th>
+                <th className="px-4 py-3">User</th>
+                <th className="px-4 py-3">Company</th>
+                <th className="px-4 py-3">Amount</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Payment ID</th>
+                <th className="px-4 py-3">Date</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {purchases.map((purchase) => (
+                <tr key={purchase.id} className="border-t border-gray-100">
+                  <td className="px-4 py-3 font-medium">{purchase.packageName}</td>
+                  <td className="px-4 py-3">{purchase.packageType}</td>
+                  <td className="px-4 py-3">
+                    {purchase.User?.fullName || purchase.User?.email || "—"}
+                  </td>
+                  <td className="px-4 py-3">{purchase.Company?.name || "—"}</td>
+                  <td className="px-4 py-3">₹{purchase.amount.toLocaleString("en-IN")}</td>
+                  <td className="px-4 py-3">{purchase.status}</td>
+                  <td className="px-4 py-3 text-xs text-gray-500">
+                    {purchase.razorpayPaymentId || purchase.razorpayOrderId || "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    {new Date(purchase.createdAt).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+      <AdminPackages/>
+    </>
   );
 }

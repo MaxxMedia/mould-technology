@@ -28,6 +28,7 @@ type Directory = {
   productGallery?: unknown
   companyGallery?: unknown
   factoryGallery?: unknown
+  productCatalogues?: unknown  // ✅ This is correct
 
   companyBrochure?: unknown
   certifications?: unknown
@@ -78,12 +79,10 @@ export default function RecruiterDirectoriesPage() {
 
         if (!directoriesRes.ok) {
           const error = await directoriesRes.json().catch(() => ({}))
-
           setError(
             error.error ??
             "The server is temporarily unavailable. Please try again later."
           )
-
           return
         }
 

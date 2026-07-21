@@ -1,5 +1,7 @@
+// app/supplier/[slug]/page.tsx
 import CompanyArticlesCarousel from "@/components/CompanyArticlesCarousel"
 import SocialLinksTracker from "@/components/SocialLinksTracker"
+import QuoteRequestButton from "@/components/QuteRequestForm"
 import {
   LucideFacebook,
   LucideLinkedin,
@@ -25,7 +27,7 @@ type JwtPayload = {
 
 async function getCurrentUser(): Promise<JwtPayload | null> {
   const cookieStore = await cookies()
-  const token = cookieStore.get("token")?.value // 🔧 ADJUST "token" if your cookie has a different name
+  const token = cookieStore.get("token")?.value
   if (!token) return null
 
   try {
@@ -33,15 +35,13 @@ async function getCurrentUser(): Promise<JwtPayload | null> {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     })
-    if (!res.ok) return null // invalid/expired token — backend already checked this
+    if (!res.ok) return null
     const data = await res.json()
     return data.user as JwtPayload
   } catch {
     return null
   }
 }
-
-/* ================= TYPES ================= */
 
 type Article = {
   id: number
@@ -53,9 +53,10 @@ type Article = {
 }
 
 type Supplier = {
-  planTier?: "free" | "basic" | "professional" | "enterprise"
+  productCatalogues?: string[]
+  planTier?: "free" | "basic" | "professional" | "enterprise" | string | null
   promotionBanners?: string[]
-
+  googleMapUrl?: string | null
   id: number
   companyId: number
   name: string
@@ -63,14 +64,15 @@ type Supplier = {
   description: string
   website?: string
   logoUrl?: string
-  coverImageUrl?: string
+  coverImageUrl?: string | string[] | null
   phoneNumber?: string
   email?: string
   tradeNames?: string[]
   videoGallery?: string[]
-  productGallery?: string[] 
-  companyGallery?: string[] 
-  factoryGallery?: string[] 
+  productGallery?: string[]
+  companyGallery?: string[]
+  factoryGallery?: string[]
+  enableInquiryForm?: boolean
   views?: number
   connections?: number
   createdAt?: string
@@ -79,6 +81,7 @@ type Supplier = {
     linkedin?: string
     twitter?: string
     youtube?: string
+    whatsapp?: string
   }
   Company?: {
     id: number
@@ -86,10 +89,10 @@ type Supplier = {
     location?: string
     industry?: string
     website?: string
+    tagline?: string
+    slug?: string
   }
 }
-
-/* ================= PAGE ================= */
 
 export default async function SupplierShowroomPage({
   params,
@@ -98,7 +101,6 @@ export default async function SupplierShowroomPage({
 }) {
   const { slug } = await params
 
-  /* ---------- FETCH SUPPLIER ---------- */
   const supplierRes = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/suppliers/${slug}`,
     { cache: "no-store" }
@@ -116,7 +118,6 @@ export default async function SupplierShowroomPage({
 
   const social = supplier.socialLinks || {}
 
-  /* ---------- FETCH COMPANY ARTICLES ---------- */
   const articlesRes = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/companies/${supplier.companyId}/articles`,
     { cache: "no-store" }
@@ -129,71 +130,134 @@ export default async function SupplierShowroomPage({
 
   const websiteLink = supplier.website || supplier.Company?.website
 
-  /* ---------- PLAN ---------- */
-  const planTier = supplier.planTier ?? "free"
-  const normalizedPlanTier =
-    planTier.toLowerCase() as "free" | "basic" | "professional" | "enterprise"
-  const isPaid = normalizedPlanTier !== "free"
+  const rawPlanTier = supplier.planTier
+  const normalizedPlanTier = (
+    String(rawPlanTier ?? "free").trim().toLowerCase()
+  ) as "free" | "basic" | "professional" | "enterprise"
 
-  /* ---------- OWNERSHIP CHECK ----------
-     Reads the JWT from the "token" cookie and verifies it with the same
-     JWT_SECRET the Express backend uses. No session store involved —
-     this mirrors what requireAuth does on the API side, just server-side
-     in the Next.js page instead of an Express middleware.
-  */
+  const KNOWN_TIERS = ["free", "basic", "professional", "enterprise"]
+  const isPaid =
+    KNOWN_TIERS.includes(normalizedPlanTier) && normalizedPlanTier !== "free"
+
+  const showQuoteButton = isPaid && supplier.enableInquiryForm !== false
+
   const currentUser = await getCurrentUser()
   const isLoggedIn = Boolean(currentUser)
   const isOwner =
     isLoggedIn && currentUser?.companyId === supplier.companyId
 
-  // Convenience flag: show upgrade/claim UI only to the owner of a free listing
   const showUpsellToOwner = !isPaid && isOwner
+
+  const companySlug = supplier.Company?.slug || supplier.slug
+
+  const location = supplier.Company?.location || ""
+
+  function getMapEmbedUrl(googleMapUrl?: string | null, location?: string): string | null {
+    if (googleMapUrl) {
+      const coordMatch = googleMapUrl.match(/@([-0-9.]+),([-0-9.]+)/)
+      if (coordMatch) {
+        const lat = coordMatch[1]
+        const lng = coordMatch[2]
+        return `https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed`
+      }
+
+      const queryMatch = googleMapUrl.match(/[?&]q=([^&]+)/)
+      if (queryMatch) {
+        const query = decodeURIComponent(queryMatch[1])
+        return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=15&output=embed`
+      }
+
+      const placeMatch = googleMapUrl.match(/\/place\/([^/]+)/)
+      if (placeMatch) {
+        const place = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '))
+        return `https://maps.google.com/maps?q=${encodeURIComponent(place)}&z=15&output=embed`
+      }
+
+      if (googleMapUrl.includes('google.com/maps')) {
+        if (googleMapUrl.includes('output=embed')) {
+          return googleMapUrl
+        }
+        if (googleMapUrl.includes('?q=')) {
+          const match = googleMapUrl.match(/[?&]q=([^&]+)/)
+          if (match) {
+            const query = decodeURIComponent(match[1])
+            return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=15&output=embed`
+          }
+        }
+      }
+    }
+
+    if (location) {
+      return `https://maps.google.com/maps?q=${encodeURIComponent(location)}&z=15&output=embed`
+    }
+
+    return null
+  }
+
+  const mapEmbedUrl = getMapEmbedUrl(supplier.googleMapUrl, location)
+  const hasValidMap = mapEmbedUrl !== null
+
+  const bannerLimit = normalizedPlanTier === "basic"
+    ? 1
+    : normalizedPlanTier === "professional"
+      ? 3
+      : normalizedPlanTier === "enterprise"
+        ? 5
+        : 0;
+
+  const bannerImages = (
+    Array.isArray(supplier.coverImageUrl)
+      ? supplier.coverImageUrl
+      : supplier.coverImageUrl
+        ? [supplier.coverImageUrl]
+        : []
+  );
+
+  const limitedBannerImages = bannerImages.slice(0, bannerLimit);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* HERO - visible for every plan */}
-      <div className="relative bg-black h-[180px] md:h-[200px]" />
+      <div className="relative bg-black h-[140px] sm:h-[170px] md:h-[200px]" />
 
-      {/* PROMOTION BANNER - carries logo, name, location, contact info & socials for paid suppliers */}
-      {isPaid && (
-        <div className="relative z-20 max-w-6xl mx-auto px-6 -mt-14 md:-mt-16">
+      {isPaid && limitedBannerImages.length > 0 && (
+        <div className="relative z-20 max-w-6xl mx-auto px-4 sm:px-6 -mt-6 sm:-mt-10 md:-mt-14">
           <SupplierPromotionBanner
             planTier={normalizedPlanTier}
             name={supplier.name}
             location={supplier.Company?.location}
             logoUrl={supplier.logoUrl}
-            coverImageUrl={supplier.coverImageUrl}
+            tagline={supplier.Company?.tagline}
             tradeNames={supplier.tradeNames}
             phoneNumber={supplier.phoneNumber}
             email={supplier.email}
             website={websiteLink}
             socialLinks={supplier.socialLinks}
+            slug={supplier.slug}
+            showQuoteButton={false}
+            coverImageUrl={limitedBannerImages}
           />
         </div>
       )}
 
-      {/* MAIN CONTENT */}
       <div
-        className={`relative z-10 max-w-6xl mx-auto px-6 ${isPaid ? "mt-6" : "-mt-24 md:-mt-28"
+        className={`relative z-10 max-w-6xl mx-auto px-4 sm:px-6 ${isPaid ? "mt-6" : "-mt-16 sm:-mt-20 md:-mt-24"
           }`}
       >
-        {/* FREE PLAN: original card-with-sidebar layout, since there's no promo banner to hold contact info */}
         {!isPaid && (
-          <div className="bg-white rounded-lg shadow p-10 border-t-4 border-red-700">
-            <h1 className="text-3xl font-bold text-center text-[#0b3954]">
+          <div className="bg-white rounded-lg shadow p-6 sm:p-10 border-t-4 border-red-700">
+            <h1 className="text-2xl sm:text-3xl font-bold text-center text-[#0b3954]">
               {supplier.name}
             </h1>
 
-            {supplier.Company?.location && (
+            {location && (
               <p className="flex items-center justify-center gap-2 text-gray-500 mt-2">
                 <MapPin size={16} />
-                {supplier.Company.location}
+                {location}
               </p>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-14 mt-12">
-              {/* LEFT SIDEBAR */}
-              <aside className="space-y-8 md:col-span-1">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-14 mt-8 md:mt-12">
+              <aside className="space-y-6 md:space-y-8 md:col-span-1">
                 {supplier.logoUrl && (
                   <img
                     src={supplier.logoUrl}
@@ -202,45 +266,54 @@ export default async function SupplierShowroomPage({
                   />
                 )}
 
-                {/* CONTACT INFO */}
-                <div className="text-sm space-y-3">
-                  {supplier.tradeNames && supplier.tradeNames.length > 0 && (
-                    <p className="text-gray-600">
-                      <strong>Trade Names:</strong>{" "}
-                      {supplier.tradeNames.join(", ")}
-                    </p>
-                  )}
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                  <div className="text-sm space-y-3">
+                    {supplier.tradeNames && supplier.tradeNames.length > 0 && (
+                      <p className="text-gray-600">
+                        <strong>Trade Names:</strong>{" "}
+                        {supplier.tradeNames.join(", ")}
+                      </p>
+                    )}
 
-                  {supplier.phoneNumber && (
-                    <p className="flex items-center gap-2">
-                      <Phone size={14} />
-                      {supplier.phoneNumber}
-                    </p>
-                  )}
+                    {supplier.phoneNumber && (
+                      <p className="flex items-center gap-2">
+                        <Phone size={14} />
+                        {supplier.phoneNumber}
+                      </p>
+                    )}
 
-                  {supplier.email && (
-                    <p className="flex items-center gap-2">
-                      <Mail size={14} />
-                      {supplier.email}
-                    </p>
-                  )}
+                    {supplier.email && (
+                      <p className="flex items-center gap-2">
+                        <Mail size={14} />
+                        {supplier.email}
+                      </p>
+                    )}
 
-                  {websiteLink && (
-                    <p className="flex items-center gap-2">
-                      <Globe size={14} />
-                      <a
-                        href={websiteLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
-                      >
-                        {websiteLink}
-                      </a>
-                    </p>
+                    {websiteLink && (
+                      <p className="flex items-center gap-2">
+                        <Globe size={14} />
+                        <a
+                          href={websiteLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {websiteLink}
+                        </a>
+                      </p>
+                    )}
+                  </div>
+
+                  {showQuoteButton && (
+                    <div className="shrink-0">
+                      <QuoteRequestButton
+                        supplierSlug={supplier.slug}
+                        supplierName={supplier.name}
+                      />
+                    </div>
                   )}
                 </div>
 
-                {/* SOCIAL LINKS */}
                 {(social.facebook ||
                   social.linkedin ||
                   social.twitter ||
@@ -278,7 +351,6 @@ export default async function SupplierShowroomPage({
                   )}
               </aside>
 
-              {/* RIGHT CONTENT */}
               <section className="md:col-span-2">
                 <div
                   className="prose prose-sm max-w-none text-gray-700"
@@ -289,20 +361,82 @@ export default async function SupplierShowroomPage({
           </div>
         )}
 
-        {/* PAID PLANS: banner already carries logo/contact/social, so just show the description as plain prose */}
         {isPaid && (
-          <div
-            className="prose prose-sm max-w-none text-gray-700"
-            dangerouslySetInnerHTML={{ __html: supplier.description }}
-          />
+          <>
+            <div
+              className="prose prose-sm max-w-none text-gray-700"
+              dangerouslySetInnerHTML={{ __html: supplier.description }}
+            />
+
+            {showQuoteButton && (
+              <div className="mt-6 flex justify-start">
+                <QuoteRequestButton
+                  supplierSlug={supplier.slug}
+                  supplierName={supplier.name}
+                />
+              </div>
+            )}
+          </>
         )}
 
-        {/* Update Your Listing - free plan only, AND only for the owner viewing their own listing */}
+        {hasValidMap && (
+          <div className="mt-8 bg-white rounded-lg shadow p-6">
+            <h4 className="text-sm font-semibold text-gray-600 uppercase mb-3 flex items-center gap-2">
+              <MapPin size={16} />
+              Location Map
+            </h4>
+            <div className="rounded-lg overflow-hidden border border-gray-200 h-[300px] relative">
+              <iframe
+                src={mapEmbedUrl}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Supplier Location"
+                className="w-full h-full"
+              />
+            </div>
+            {location && (
+              <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                <MapPin size={12} />
+                {location}
+              </p>
+            )}
+            <a
+              href={supplier.googleMapUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-3 text-blue-600 hover:underline text-sm"
+            >
+              Open in Google Maps →
+            </a>
+          </div>
+        )}
+
+        {!hasValidMap && location && (
+          <div className="mt-8 bg-white rounded-lg shadow p-6">
+            <h4 className="text-sm font-semibold text-gray-600 uppercase mb-3 flex items-center gap-2">
+              <MapPin size={16} />
+              Location
+            </h4>
+            <p className="text-gray-700">{location}</p>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-3 text-blue-600 hover:underline text-sm"
+            >
+              View on Google Maps →
+            </a>
+          </div>
+        )}
+
         {showUpsellToOwner && <ClaimCompanyBanner />}
 
-        <hr className="my-12" />
+        <hr className="my-10 md:my-12" />
 
-        {/* Upsell banner - free plan only, owner-only, sits above the gallery, doesn't replace it */}
         {showUpsellToOwner && (
           <div className="text-center py-8 px-6 mb-8 bg-white border border-dashed border-gray-300 rounded-lg">
             <p className="text-gray-700 font-semibold">
@@ -320,19 +454,19 @@ export default async function SupplierShowroomPage({
           </div>
         )}
 
-        {/* GALLERY TABS - visible for every supplier, paid or free */}
         <GalleryTabs
           videoGallery={supplier.videoGallery}
           productGallery={supplier.productGallery}
           companyGallery={supplier.companyGallery}
           factoryGallery={supplier.factoryGallery}
+          productCatalogues={supplier.productCatalogues}
           isPaid={isPaid}
+          companySlug={companySlug}
         />
 
-        {/* ARTICLES - all plans */}
         {articles.length > 0 && (
           <>
-            <hr className="my-12" />
+            <hr className="my-10 md:my-12" />
             <CompanyArticlesCarousel articles={articles} />
           </>
         )}

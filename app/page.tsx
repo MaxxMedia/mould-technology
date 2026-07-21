@@ -233,14 +233,34 @@ export default async function Home() {
   const postsRes = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/posts?limit=50`,
     { cache: "no-store" }
-  )
+  );
 
-  const postsData = await postsRes.json()
+  const text = await postsRes.text();
+
+  console.log("Posts API:", text);
+
+  if (!text) {
+    throw new Error("Posts API returned empty response");
+  }
+
+  const postsData = JSON.parse(text);
+
+  // const postsData = await postsRes.json()
   const posts: Post[] = postsData.data || postsData
 
   if (!Array.isArray(posts) || posts.length === 0) {
     return <div className="text-center p-10">No posts available</div>
   }
+
+  // Log categories of all posts
+  posts.forEach((post, index) => {
+    console.log(`Post ${index + 1}:`, {
+      title: post.title,
+      category: post.category,
+      categoryType: typeof post.category,
+      slug: post.slug
+    });
+  });
 
 //   /* ================= FETCH BANNER ================= */
 
@@ -288,21 +308,15 @@ export default async function Home() {
   const latestPost = latestPosts[0]
 
   return (
-    <>
-       {/* ================= HOME TOP BANNER ================= */}
-       <br />
+    <div className="flex flex-col gap-6 md:gap-10">
+      {/* ================= HOME TOP BANNER ================= */}
       <Banner placement="HOME_TOP" />
 
       {/* 🏢 Company Articles */}
-      <CompanyArticles  />
+      <CompanyArticles />
 
       {/* 📰 Latest Hero */}
-      {latestPost && (
-        <LatestHero post={latestPost} posts={posts} />
-      )}
-
-      {/* 🔥 Advertisement
-      {banner && <TrendingAd banner={banner} />} */}
+      {latestPost && <LatestHero post={latestPost} posts={posts} />}
 
       {/* 📈 Trending */}
       <TrendingSection posts={posts} />
@@ -310,22 +324,19 @@ export default async function Home() {
       {/* 📘 Basics */}
       <BasicsSection posts={posts} />
 
-         {/* ================= HOME MIDDLE BANNER ================= */}
+      {/* ================= HOME MIDDLE BANNER ================= */}
       <Banner placement="HOME_MIDDLE" />
 
       {/* 🎥 Videos */}
       <VideosSection posts={posts} />
 
-      {/* 🏭 Manufacturing */}
-      {/* <ManufacturingConnected
-        posts={manufacturingPosts.slice(0, 4)}
-      /> */}
+      {/* 🏭 Manufacturing (currently disabled) */}
+      {/* <ManufacturingConnected posts={manufacturingPosts.slice(0, 4)} /> */}
 
+      <HomeCompanyArticles posts={posts} />
 
-      <HomeCompanyArticles />
-
-        {/* ================= HOME BOTTOM BANNER ================= */}
+      {/* ================= HOME BOTTOM BANNER ================= */}
       <Banner placement="HOME_BOTTOM" />
-    </>
+    </div>
   )
 }

@@ -23,6 +23,7 @@ export interface ContactMessage {
   message: string;
   status: 'NEW' | 'IN_PROGRESS' | 'RESOLVED' | 'ARCHIVED';
   createdAt: string;
+  plan?: string;
 }
 
 export interface ApiResponse<T = any> {

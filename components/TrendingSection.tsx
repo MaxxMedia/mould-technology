@@ -236,6 +236,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   latest: "bg-[#F69C00]",
   video: "bg-[#EF4444]",
   engineering: "bg-[#2563EB]",
+  articles: "bg-[#8B5CF6]",
 };
 
 type Props = {
@@ -245,18 +246,25 @@ type Props = {
 export default function TrendingSection({ posts }: Props) {
 
   /* ================= FILTER TRENDING ================= */
-
+  // Now filtering for 'latest' category since that's what's available
   const filteredPosts = useMemo(() => {
     return posts
-      .filter((p) =>
-        typeof p.category === "object"
-          ? p.category?.slug?.toLowerCase().includes("trending")
-          : String(p.category || "").toLowerCase().includes("trending")
-      )
+      .filter((p) => {
+        const slug =
+          typeof p.category === "object"
+            ? p.category?.slug?.toLowerCase() || ""
+            : String(p.category || "").toLowerCase();
+
+        // Check for 'latest' or 'trending' (trending for future compatibility)
+        return slug === "latest" || slug === "trending" || slug.includes("latest") || slug.includes("trending");
+      })
       .slice(0, 5);
   }, [posts]);
 
-  if (!filteredPosts.length) return null;
+  if (!filteredPosts || filteredPosts.length === 0) {
+    console.log("⚠️ No trending posts found");
+    return null;
+  }
 
   const [s1, s2, s3, big, right] = filteredPosts;
 
@@ -266,16 +274,16 @@ export default function TrendingSection({ posts }: Props) {
     post?.imageUrl?.startsWith("http")
       ? post.imageUrl
       : post?.imageUrl
-      ? `${process.env.NEXT_PUBLIC_API_URL}${post.imageUrl}`
-      : "/placeholder.jpg";
+        ? `${process.env.NEXT_PUBLIC_API_URL}${post.imageUrl}`
+        : "/placeholder.jpg";
 
   const Meta = ({ post }: { post?: Post }) =>
     post ? (
       <div className="flex items-center gap-4 mt-2 text-[13px] text-white/70">
         <span>{post.views?.toLocaleString()} Views</span>
-        {post.publishedAt && (
+        {post.createdAt && (
           <span>
-            {new Date(post.publishedAt).toLocaleDateString("en-US", {
+            {new Date(post.createdAt).toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
               year: "numeric",
@@ -326,60 +334,60 @@ export default function TrendingSection({ posts }: Props) {
             Trending News
           </h2>
           <Link
-            href="/post/tooling-plays-a-fundamental-role-in-manufacturing"
+            href="/articles"
             className="text-sm text-white/70 hover:text-white"
           >
             View All →
           </Link>
         </div>
 
-    {/* TOP 3 SMALL POSTS */}
-<div className="relative py-8">
-  <span className="absolute top-0 left-0 w-full h-px bg-white/10" />
-  <span className="absolute bottom-0 left-0 w-full h-px bg-white/10" />
+        {/* TOP 3 SMALL POSTS */}
+        <div className="relative py-8">
+          <span className="absolute top-0 left-0 w-full h-px bg-white/10" />
+          <span className="absolute bottom-0 left-0 w-full h-px bg-white/10" />
 
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-    {[s1, s2, s3].map(
-      (post, i) =>
-        post && (() => {
-          const tag = getTag(post);
-          return (
-            <Link
-              key={i}
-              href={`/post/${post.slug}`}
-              className="flex gap-4 group hover:opacity-90 transition"
-            >
-              <Image
-                src={imageUrl(post)}
-                alt={post.title}
-                width={90}
-                height={90}
-                sizes="90px"
-                quality={70}
-                className="rounded-md object-cover"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[s1, s2, s3].map(
+              (post, i) =>
+                post && (() => {
+                  const tag = getTag(post);
+                  return (
+                    <Link
+                      key={i}
+                      href={`/post/${post.slug}`}
+                      className="flex gap-4 group hover:opacity-90 transition"
+                    >
+                      <Image
+                        src={imageUrl(post)}
+                        alt={post.title}
+                        width={90}
+                        height={90}
+                        sizes="90px"
+                        quality={70}
+                        className="rounded-md object-cover"
+                      />
 
-              <div>
-                {tag.text && (
-                  <span
-                    className={`${tag.color} inline-block mb-2 text-xs font-bold px-3 py-1 rounded text-black`}
-                  >
-                    {tag.text}
-                  </span>
-                )}
+                      <div>
+                        {tag.text && (
+                          <span
+                            className={`${tag.color} inline-block mb-2 text-xs font-bold px-3 py-1 rounded text-black`}
+                          >
+                            {tag.text}
+                          </span>
+                        )}
 
-                <h3 className="text-[16px] font-semibold leading-snug group-hover:text-gray-300 transition">
-                  {post.title}
-                </h3>
+                        <h3 className="text-[16px] font-semibold leading-snug group-hover:text-gray-300 transition">
+                          {post.title}
+                        </h3>
 
-                <Meta post={post} />
-              </div>
-            </Link>
-          );
-        })()
-    )}
-  </div>
-</div>
+                        <Meta post={post} />
+                      </div>
+                    </Link>
+                  );
+                })()
+            )}
+          </div>
+        </div>
 
         {/* FEATURE POSTS */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

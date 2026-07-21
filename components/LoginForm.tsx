@@ -36,35 +36,31 @@ export default function LoginForm() {
         return
       }
 
-      // 🔐 Save token & user
       localStorage.setItem("token", data.token)
       localStorage.setItem("user", JSON.stringify(data.user))
       window.dispatchEvent(new Event("userChanged"))
 
       const user = data.user
 
-      // 🔁 Redirect by role
       if (user.role === "admin") {
         router.push("/admin/dashboard")
-      }
-
-      else if (user.role === "recruiter") {
-        // ✅ FIXED LOGIC
-        if (!user.isOnboarded || !user.companyId) {
-          router.push("/recruiter/onboarding")
-        } else {
-          router.push("/recruiter/dashboard")
-        }
-      }
-
-      else if (user.role === "candidate") {
+      } else if (user.role === "recruiter") {
+          // Recruiters still need package selection
+          if (!user.packageSelected) {
+            router.push("/packages?from=login")  // Add query param
+          } else if (!user.isOnboarded) {
+            router.push("/recruiter/onboarding")
+          } else {
+            router.push("/recruiter/dashboard")
+          }
+        } else if (user.role === "candidate") {
+        // Candidates skip package selection, go directly to onboarding or feed
         if (!user.isOnboarded) {
           router.push("/candidate/onboarding")
         } else {
           router.push("/candidate/feed")
         }
       }
-
     } catch (err) {
       setError("Something went wrong. Try again.")
     } finally {
@@ -74,9 +70,7 @@ export default function LoginForm() {
 
   return (
     <div className="w-full max-w-md">
-      <h2 className="text-3xl font-semibold mb-8 text-center">
-        Login
-      </h2>
+      <h2 className="text-3xl font-semibold mb-8 text-center">Login</h2>
 
       {error && (
         <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">
@@ -94,25 +88,24 @@ export default function LoginForm() {
           className="w-full h-[52px] px-4 rounded-md border border-gray-200 focus:outline-none focus:border-[#0073FF]"
         />
 
-       <div className="relative">
-  <input
-    type={showPassword ? "text" : "password"}
-    placeholder="Password"
-    required
-    value={password}
-    onChange={(e) => setPassword(e.target.value)}
-    className="w-full h-[50px] px-4 pr-12 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#0073FF]"
-  />
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full h-[50px] px-4 pr-12 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#0073FF]"
+          />
 
-  <button
-    type="button"
-    onClick={() => setShowPassword(!showPassword)}
-    className="absolute inset-y-0 right-4 flex items-center text-gray-500"
-  >
-    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-  </button>
-</div>
-
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute inset-y-0 right-4 flex items-center text-gray-500"
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
 
         <div className="flex items-center justify-between text-sm">
           <label className="flex items-center gap-2">

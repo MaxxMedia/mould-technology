@@ -326,7 +326,7 @@ useEffect(() => {
     <div className="absolute left-0 top-0 h-6 bg-[#B30F24] flex items-center px-6 pr-12">
 
       <span className="text-white text-xs sm:text-sm font-semibold whitespace-nowrap">
-        What’s New and What Works in the World of Tooling
+        Driving Manufacturing Excellence
       </span>
 
       {/* RIGHT SLANT */}

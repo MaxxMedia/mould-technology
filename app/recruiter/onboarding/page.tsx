@@ -40,6 +40,11 @@ export default function RecruiterOnboardingPage() {
       }
 
       // 1️⃣ Create company
+      // ✅ Server-side, createCompany() now also backfills any PAID
+      // PackagePurchase rows that were made before this Company existed
+      // and syncs Company.subscriptionPlan from them (see
+      // companyController.js). So by the time this request resolves,
+      // the correct plan is already sitting on the Company row.
       const companyRes = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/companies`,
         {
@@ -87,15 +92,44 @@ export default function RecruiterOnboardingPage() {
         return
       }
 
-      // 3️⃣ Update localStorage user
-      const user = JSON.parse(localStorage.getItem("user") || "{}")
-      const updatedUser = {
-        ...user,
-        companyId: company.id,
-        isOnboarded: true,
-        fullName: profileData.fullName || fullName,
+      // 3️⃣ Refresh user from the server instead of hand-assembling it.
+      // ✅ FIX: the old code only patched companyId/isOnboarded/fullName
+      // onto the stale cached user, so packageSelected and
+      // subscriptionPlan stayed at whatever they were at login time
+      // (usually "false" / "free" — before the plan was purchased).
+      // Pulling /api/auth/me here guarantees the dashboard sees the
+      // real, just-synced plan on its very first render.
+      const meRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+
+      const cachedUser = JSON.parse(localStorage.getItem("user") || "{}")
+
+      if (meRes.ok) {
+        const freshUser = await meRes.json()
+        localStorage.setItem(
+          "user",
+          JSON.stringify({ ...cachedUser, ...freshUser })
+        )
+      } else {
+        // Fallback if /me is unreachable — at least keep what we know
+        // locally so the app doesn't break, though the plan may lag
+        // until the next refresh triggers RecruiterLayout's own /me call.
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            ...cachedUser,
+            companyId: company.id,
+            isOnboarded: true,
+            fullName: profileData.fullName || fullName,
+          })
+        )
       }
-      localStorage.setItem("user", JSON.stringify(updatedUser))
+
+      window.dispatchEvent(new Event("userChanged"))
 
       router.push("/recruiter/dashboard")
     } catch (err) {

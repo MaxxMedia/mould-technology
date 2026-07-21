@@ -1,5 +1,5 @@
 import Link from "next/link"
-import SupplierAds from "@/components/SupplierAds"
+import Banner from "@/components/Banners/Banner"
 import Image from "next/image"
 import type { Post } from "@/types/Post"
 
@@ -88,7 +88,7 @@ const remainingIssues = inThisIssuePosts
 
         {/* RIGHT SIDEBAR */}
         <aside className="space-y-6">
-          <SupplierAds />
+          <Banner placement="MAGAZINE_RIGHT" />
         </aside>
 
       </div>

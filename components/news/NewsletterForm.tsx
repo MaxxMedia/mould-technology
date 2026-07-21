@@ -1,6 +1,7 @@
 "use client"
 import { useState } from "react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
 
@@ -33,6 +34,7 @@ interface NewsletterFormProps {
 }
 
 export default function NewsletterForm({ hasNewsletterContent = true }: NewsletterFormProps) {
+  const router = useRouter()
   const [step, setStep] = useState(1)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [formData, setFormData] = useState({
@@ -51,21 +53,66 @@ export default function NewsletterForm({ hasNewsletterContent = true }: Newslett
     setStep(1)
   }
 
-  const handleSubmit = async (values: typeof formData, { setSubmitting }: any) => {
+  const handleSubmit = async (values: typeof formData, { setSubmitting, resetForm }: any) => {
     try {
-      console.log("Newsletter Submit", values)
+      // Prepare data for API
+      const subscriberData = {
+        fullName: `${values.firstName} ${values.lastName}`,
+        email: values.email,
+        companyName: values.company,
+        frequency: "MONTHLY",
+        emailSubscribed: true,
+        whatsappSubscribed: false,
+        smsSubscribed: false,
+      }
 
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      // Call the subscribe API
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/newsletter/subscribe`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(subscriberData),
+        }
+      )
 
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Subscription failed")
+      }
+
+      // Check if user is admin (has token and admin role)
+      const token = localStorage.getItem("token")
+      const userRole = localStorage.getItem("userRole")
+
+      if (token && userRole === "admin") {
+        // Redirect to admin subscribers page with success message
+        router.push("/admin/newsletter/subscribers?subscribed=true")
+        return
+      }
+
+      // For regular users, show success message
       setIsSubmitted(true)
 
+      // Reset form after 5 seconds
       setTimeout(() => {
         setIsSubmitted(false)
+        resetForm()
         setStep(1)
+        setFormData({
+          firstName: "",
+          lastName: "",
+          company: "",
+          email: "",
+        })
       }, 5000)
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Submission error:", error)
+      alert(error.message || "Failed to subscribe. Please try again.")
     } finally {
       setSubmitting(false)
     }

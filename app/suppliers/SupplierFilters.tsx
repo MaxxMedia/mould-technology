@@ -15,6 +15,7 @@ type FilterState = {
   category: string
   featuredOnly: boolean
   industryId: number | null
+  ranking: "all" | "basic" | "professional" | "enterprise"
 }
 
 type Props = {
@@ -38,6 +39,7 @@ export default function SupplierFilters({ onFilterChange }: Props) {
     category: "",
     featuredOnly: false,
     industryId: null,
+    ranking: "all",
   })
 
   // Debounced filter emit
@@ -64,6 +66,7 @@ export default function SupplierFilters({ onFilterChange }: Props) {
       category: "",
       featuredOnly: false,
       industryId: null,
+      ranking: "all",
     }
     setFilters(cleared)
     onFilterChange?.(cleared)
@@ -154,7 +157,7 @@ export default function SupplierFilters({ onFilterChange }: Props) {
 
   const hasActiveFilters =
     filters.name || filters.location || filters.category ||
-    filters.featuredOnly || filters.industryId !== null
+    filters.featuredOnly || filters.industryId !== null || filters.ranking !== "all"
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -220,6 +223,21 @@ export default function SupplierFilters({ onFilterChange }: Props) {
               </button>
             )}
           </div>
+        </div>
+
+        {/* RANKING FILTER DROPDOWN */}
+        <div className="relative">
+          <select
+            className="w-full border border-gray-300 rounded-md pl-3 pr-10 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#0F5B78] focus:border-transparent bg-white"
+            value={filters.ranking}
+            onChange={e => updateFilter("ranking", e.target.value)}
+          >
+            <option value="all">All Rankings</option>
+            <option value="basic">Standard (Basic)</option>
+            <option value="professional">Priority (Professional)</option>
+            <option value="enterprise">Top Results (Enterprise)</option>
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
         </div>
 
         {/* FEATURED CHECKBOX */}

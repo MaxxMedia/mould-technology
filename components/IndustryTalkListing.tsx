@@ -3,7 +3,8 @@
 import Link from "next/link"
 import type { Post } from "@/types/Post"
 import Image from "next/image"
-import SupplierAds from "@/components/SupplierAds"
+import Banner from "@/components/Banners/Banner"
+
 
 type Props = {
   posts: Post[]
@@ -131,8 +132,8 @@ export default function IndustryTalkListing({ posts }: Props) {
           </div>
 
           {/* RIGHT COLUMN (ADS) */}
-          <aside className="space-y-8 sticky top-24 h-fit">
-            <SupplierAds />
+          <aside className="space-y-8 sticky top-24 h-fit" aria-label="Sponsored">
+            <Banner placement="INDUSTRY_TALKS_RIGHT" />
           </aside>
         </div>
       </section>

@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
+import { User, Upload } from "lucide-react";
 
 export default function CreateAuthor() {
   const [form, setForm] = useState({
@@ -8,6 +10,26 @@ export default function CreateAuthor() {
     avatarUrl: "",
   });
   const [message, setMessage] = useState("");
+  const [uploading, setUploading] = useState(false);
+
+  async function handleAvatarUpload(file: File) {
+    setUploading(true);
+    try {
+      const data = new FormData();
+      data.append("image", file);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, {
+        method: "POST",
+        body: data,
+      });
+      if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+      const result = await res.json();
+      setForm(prev => ({ ...prev, avatarUrl: result.imageUrl }));
+    } catch (err: any) {
+      setMessage(`❌ Image upload failed: ${err.message}`);
+    } finally {
+      setUploading(false);
+    }
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -57,14 +79,42 @@ export default function CreateAuthor() {
           className="w-full p-2 border rounded"
           rows={3}
         />
-        <input
-          type="url"
-          name="avatarUrl"
-          placeholder="Avatar URL"
-          value={form.avatarUrl}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
+        {/* AVATAR UPLOAD */}
+        <div className="flex flex-col items-center gap-2">
+          <label className="cursor-pointer group relative">
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={e => {
+                if (e.target.files?.[0]) handleAvatarUpload(e.target.files[0]);
+              }}
+            />
+            <div className="w-24 h-24 rounded-full border-2 border-dashed border-gray-300 overflow-hidden flex items-center justify-center bg-gray-50 group-hover:border-blue-500 transition relative">
+              {form.avatarUrl ? (
+                <Image
+                  src={form.avatarUrl}
+                  alt="Avatar"
+                  fill
+                  className="object-cover"
+                  sizes="96px"
+                />
+              ) : uploading ? (
+                <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <User size={32} className="text-gray-400" />
+              )}
+              {!uploading && (
+                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition rounded-full">
+                  <Upload size={18} className="text-white" />
+                </div>
+              )}
+            </div>
+          </label>
+          <p className="text-xs text-gray-500">
+            {form.avatarUrl ? "Click to replace photo" : "Click to upload avatar"}
+          </p>
+        </div>
         <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
           Create Author
         </button>
