@@ -142,7 +142,7 @@ export default function PublicFeedPage() {
                         ? "/jobs"
                         : "/signup?role=candidate"
                     }
-                      className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-6 py-3 text-white font-semibold shadow-md hover:bg-emerald-700 transition-all"                  >
+                     className="inline-flex w-[180px] h-[50px] items-center justify-center rounded-xl bg-white text-[#0F5B78] text-lg font-semibold shadow-lg hover:bg-gray-100 hover:shadow-xl transition-all duration-300"                 >
                     Apply for Jobs
                   </Link>
 
@@ -156,7 +156,7 @@ export default function PublicFeedPage() {
                         ? "/recruiter/jobs/new"
                         : "/signup?role=recruiter"
                     }
-                      className="inline-flex items-center justify-center rounded-lg border border-white/30 backdrop-blur-md px-6 py-3 text-white font-semibold bg-[#BE1622] hover:border-[#BE1622] transition-all"                  >
+                      className="inline-flex w-[180px] h-[50px] items-center justify-center rounded-xl bg-white text-[#0F5B78] text-lg font-semibold shadow-lg hover:bg-gray-100 hover:shadow-xl transition-all duration-300"                  >
                     Post a Job
                   </Link>
 
