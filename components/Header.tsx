@@ -19,11 +19,11 @@ type User = {
 /* ================= MENUS ================= */
 const TOPICS = [
   { label: "Machining", slug: "machining" },
-  { label: "Cutting Tools ", slug: "cuttingtools" },
+  { label: "Cutting Tools", slug: "cuttingtools" },
   { label: "Surface Engineering", slug: "surfaceengineering" },
   { label: "Smart Manufacturing", slug: "smartmanufacturing" },
   { label: "Advanced Manufacturing", slug: "advancedmanufacturing" },
-  { label: "Maintenance & Operations", slug: "maintenance&operations" },
+  { label: "Maintenance & Operations", slug: "maintenance-operations" },
 ]
 
 const RESOURCES = [
@@ -31,8 +31,7 @@ const RESOURCES = [
   { label: "Videos", slug: "video" },
   { label: "Events", slug: "events" },
   { label: "Suppliers", slug: "suppliers" },
-  // { label: "Basics", slug: "basics" },
-  { label: "ToolingDesign & Optimization", slug: "molddesign&optimization" },
+  { label: "ToolingDesign & Optimization", slug: "molddesign-optimization" },
 ]
 
 export default function Header() {
@@ -41,10 +40,12 @@ export default function Header() {
   const [user, setUser] = useState<User | null>(null)
   const [openUserMenu, setOpenUserMenu] = useState(false)
 
-  const [allPosts, setAllPosts] = useState<Post[]>([])
   const [events, setEvents] = useState<any[]>([])
   const [suppliers, setSuppliers] = useState<any[]>([])
-  
+
+  // Per-slug post cache: slug -> Post[]
+  const [postsCache, setPostsCache] = useState<Record<string, Post[]>>({})
+  const [postsLoading, setPostsLoading] = useState(false)
 
   const [activeSlug, setActiveSlug] = useState("machining")
   const [showHighlight, setShowHighlight] = useState(true)
@@ -73,14 +74,29 @@ export default function Header() {
   }
 }, [])
 
-  useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts?limit=50`)
-      .then(res => res.json())
-      .then(data => {
-        const posts = Array.isArray(data?.data) ? data.data : []
-        setAllPosts(posts)
-      })
-  }, [])
+  /* ================= FETCH POSTS PER TOPIC (with cache) ================= */
+
+  async function fetchPostsForSlug(slug: string) {
+    // Only skip slugs that have dedicated non-post panels
+    if (["events", "suppliers"].includes(slug)) return
+    // Already cached
+    if (postsCache[slug]) return
+
+    setPostsLoading(true)
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/posts?category=${encodeURIComponent(slug)}&limit=4`
+      )
+      const data = await res.json()
+      const posts: Post[] = Array.isArray(data?.data) ? data.data : []
+      setPostsCache(prev => ({ ...prev, [slug]: posts }))
+    } catch (err) {
+      console.error("Posts fetch error for slug:", slug, err)
+      setPostsCache(prev => ({ ...prev, [slug]: [] }))
+    } finally {
+      setPostsLoading(false)
+    }
+  }
 
   useEffect(() => {
   fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/events`)
@@ -115,9 +131,8 @@ useEffect(() => {
       ? post.category?.slug?.toLowerCase()
       : ""
 
-  const filteredPosts = allPosts
-    .filter(p => slugOf(p).includes(activeSlug))
-    .slice(0, 4)
+  // Posts to show in mega menu for the active topic
+  const activePosts = postsCache[activeSlug] ?? []
 
   function handleLogout() {
     localStorage.removeItem("token")
@@ -292,6 +307,16 @@ useEffect(() => {
                   Dashboard
                 </Link>
 
+                {user.role === "candidate" && (
+                  <Link
+                    href={`/candidate/${user.email?.split("@")[0] || "gopinath2322002"}`}
+                    className="block px-4 py-3 hover:bg-gray-100 text-sm transition border-b font-medium text-blue-600"
+                    onClick={() => setOpenUserMenu(false)}
+                  >
+                    View Public Profile
+                  </Link>
+                )}
+
                 <button
                   onClick={handleLogout}
                   className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition font-medium"
@@ -355,7 +380,10 @@ XL	22% */}
               {(openMega === "topics" ? TOPICS : RESOURCES).map(item => (
                 <button
                   key={item.slug}
-                  onMouseEnter={() => setActiveSlug(item.slug)}
+                  onMouseEnter={() => {
+                    setActiveSlug(item.slug)
+                    fetchPostsForSlug(item.slug)
+                  }}
                   className={`w-full px-5 py-4 text-left  font-medium transition-colors ${
                     activeSlug === item.slug
                       ? "bg-[#062E45] text-white"
@@ -372,25 +400,23 @@ XL	22% */}
 {openMega === "resources" && activeSlug === "events" ? (
 
   events.length === 0 ? (
-    <p className="text-white col-span-4">
-      No upcoming events available.
-    </p>
+    <p className="text-white col-span-4">No upcoming events available.</p>
   ) : (
     events.slice(0, 4).map(event => (
-      <div key={event.id} className="text-white">
+      <div key={event.id} className="text-white flex flex-col">
 
-        <Link href={`/events/${event.slug}`}>
-          <div className="bg-white rounded p-4 mb-3">
+        <Link href={`/events/${event.slug}`} className="block">
+          <div className="relative w-full h-40 mb-3 bg-white rounded overflow-hidden">
             {event.logoUrl ? (
               <Image
                 src={event.logoUrl}
                 alt={event.title}
-                width={200}
-                height={120}
-                className="object-contain mx-auto"
+                fill
+                className="object-contain p-2"
+                sizes="(max-width:1280px) 25vw, 300px"
               />
             ) : (
-              <div className="h-24 bg-gray-100 flex items-center justify-center text-black">
+              <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">
                 No Image
               </div>
             )}
@@ -398,20 +424,16 @@ XL	22% */}
         </Link>
 
         <p className="text-xs text-gray-300 mb-1">
-          {new Date(event.startDate).toLocaleDateString()} –{" "}
+          {new Date(event.startDate).toLocaleDateString()} &ndash;{" "}
           {new Date(event.endDate).toLocaleDateString()}
         </p>
 
-        <h4 className="text-sm font-semibold hover:text-[#B30F24]">
-          <Link href={`/events/${event.slug}`}>
-            {event.title}
-          </Link>
+        <h4 className="text-sm font-semibold hover:text-[#B30F24] line-clamp-2">
+          <Link href={`/events/${event.slug}`}>{event.title}</Link>
         </h4>
 
         {event.location && (
-          <p className="text-xs text-gray-400 mt-1">
-            📍 {event.location}
-          </p>
+          <p className="text-xs text-gray-400 mt-1">📍 {event.location}</p>
         )}
 
       </div>
@@ -421,40 +443,34 @@ XL	22% */}
 ) : openMega === "resources" && activeSlug === "suppliers" ? (
 
   suppliers.length === 0 ? (
-    <p className="text-white col-span-4">
-      No suppliers available.
-    </p>
+    <p className="text-white col-span-4">No suppliers available.</p>
   ) : (
     suppliers.slice(0, 4).map(supplier => (
-      <div key={supplier.id} className="text-white">
+      <div key={supplier.id} className="text-white flex flex-col">
 
-        <Link href={`/suppliers/${supplier.slug}`}>
-          <div className="bg-white rounded p-4 mb-3">
+        <Link href={`/suppliers/${supplier.slug}`} className="block">
+          <div className="relative w-full h-40 mb-3 bg-white rounded overflow-hidden">
             {supplier.logoUrl ? (
               <Image
                 src={supplier.logoUrl}
                 alt={supplier.name}
-                width={200}
-                height={120}
-                className="object-contain mx-auto"
+                fill
+                className="object-contain p-2"
+                sizes="(max-width:1280px) 25vw, 300px"
               />
             ) : (
-              <div className="h-24 bg-gray-100 flex items-center justify-center text-black">
+              <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">
                 No Image
               </div>
             )}
           </div>
         </Link>
 
-        <h4 className="text-sm font-semibold hover:text-[#B30F24]">
-          <Link href={`/suppliers/${supplier.slug}`}>
-            {supplier.name}
-          </Link>
+        <h4 className="text-sm font-semibold hover:text-[#B30F24] line-clamp-2">
+          <Link href={`/suppliers/${supplier.slug}`}>{supplier.name}</Link>
         </h4>
 
-        <p className="text-xs text-gray-300 mt-2 line-clamp-2">
-          {supplier.description}
-        </p>
+        <p className="text-xs text-gray-300 mt-2 line-clamp-2">{supplier.description}</p>
 
       </div>
     ))
@@ -462,34 +478,42 @@ XL	22% */}
 
 ) : (
 
-  filteredPosts.map(post => (
-    <article key={post.id}>
-      <Link href={`/post/${post.slug}`}>
-        <div className="relative w-full h-40 mb-3">
-          <Image
-            src={post.imageUrl || "/placeholder.svg"}
-            alt={post.title}
-            fill
-            className="object-cover rounded hover:opacity-90 transition-opacity"
-          />
-        </div>
-      </Link>
-
-      <h5 className="text-[10px] uppercase text-red-500 font-bold tracking-wide mb-1">
-        {post.badge}
-      </h5>
-
-      <h4 className="text-sm font-semibold text-white leading-snug hover:text-[#B30F24]">
+  postsLoading ? (
+    <div className="col-span-4 flex items-center justify-center py-10">
+      <div className="w-7 h-7 border-2 border-white border-t-transparent rounded-full animate-spin" />
+    </div>
+  ) : activePosts.length === 0 ? (
+    <p className="text-white/60 col-span-4 text-sm">No articles found for this topic.</p>
+  ) : (
+    activePosts.map(post => (
+      <article key={post.id}>
         <Link href={`/post/${post.slug}`}>
-          {post.title}
+          <div className="relative w-full h-40 mb-3">
+            <Image
+              src={post.imageUrl || "/placeholder.svg"}
+              alt={post.title}
+              fill
+              className="object-cover rounded hover:opacity-90 transition-opacity"
+            />
+          </div>
         </Link>
-      </h4>
 
-      <p className="text-xs text-gray-300 mt-2 leading-relaxed line-clamp-2">
-        {post.excerpt}
-      </p>
-    </article>
-  ))
+        <h5 className="text-[10px] uppercase text-red-500 font-bold tracking-wide mb-1">
+          {post.badge}
+        </h5>
+
+        <h4 className="text-sm font-semibold text-white leading-snug hover:text-[#B30F24]">
+          <Link href={`/post/${post.slug}`}>
+            {post.title}
+          </Link>
+        </h4>
+
+        <p className="text-xs text-gray-300 mt-2 leading-relaxed line-clamp-2">
+          {post.excerpt}
+        </p>
+      </article>
+    ))
+  )
 
 )}
 

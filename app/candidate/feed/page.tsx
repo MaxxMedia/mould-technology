@@ -180,22 +180,30 @@ export default function CandidateFeedPage() {
         <aside className="col-span-12 lg:col-span-3 space-y-4 lg:sticky lg:top-6 self-start">
           <div className="bg-white rounded-md overflow-hidden shadow-sm">
             <div className="h-16 bg-gradient-to-r from-blue-600 to-indigo-600" />
-            <div className="flex flex-col items-center -mt-8 pb-4">
+            <Link
+              href={`/candidate/${profile?.username || 'gopinath2322002'}`}
+              className="flex flex-col items-center -mt-8 pb-4 px-3 cursor-pointer group hover:bg-gray-50/50 transition-colors"
+            >
               <CandidateAvatar
                 avatarUrl={profile?.avatarUrl}
                 name={displayName}
                 size="md"
-                borderClassName="border-2 border-white"
+                borderClassName="border-2 border-white group-hover:ring-2 group-hover:ring-blue-500 transition-all"
               />
-              <h3 className="font-semibold mt-2">{displayName}</h3>
-              <p className="text-xs text-gray-500">{displayHeadline}</p>
+              <h3 className="font-semibold mt-2 text-gray-900 group-hover:text-blue-600 transition-colors flex items-center gap-1">
+                {displayName}
+              </h3>
+              <p className="text-xs text-gray-500 text-center line-clamp-2">{displayHeadline}</p>
               {profile?.Company && (
                 <div className="mt-1 flex items-center gap-1 text-xs text-blue-600">
                   <Building2 size={12} />
                   {profile.Company.name}
                 </div>
               )}
-            </div>
+              <span className="mt-2 text-[11px] font-semibold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full">
+                View Full Profile →
+              </span>
+            </Link>
           </div>
 
           <nav className="bg-white rounded-md shadow-sm p-3 space-y-1 text-sm">
