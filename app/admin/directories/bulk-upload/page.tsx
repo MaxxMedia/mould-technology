@@ -1,6 +1,9 @@
+// app/admin/directories/bulk-upload/page.tsx
+
 "use client"
 
 import { useState } from "react"
+import BulkImportUserList from "@/components/admin/BulkImportUserList"
 
 export default function BulkDirectoryUpload() {
   const [file, setFile] = useState<File | null>(null)
@@ -13,9 +16,6 @@ export default function BulkDirectoryUpload() {
       ? localStorage.getItem("token")
       : null
 
-  /* =============================
-     📤 Upload Excel
-  ============================== */
   const handleUpload = async () => {
     if (!file) {
       setError("Please select an Excel file.")
@@ -56,9 +56,6 @@ export default function BulkDirectoryUpload() {
     }
   }
 
-  /* =============================
-     📥 Download Template
-  ============================== */
   const handleDownloadTemplate = async () => {
     try {
       setError(null)
@@ -98,16 +95,13 @@ export default function BulkDirectoryUpload() {
       </h1>
 
       <div className="bg-white p-6 rounded-xl shadow space-y-6">
-
-        {/* 📥 Download Template */}
         <button
           onClick={handleDownloadTemplate}
           className="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300"
         >
-          Download Excel Template
+          📥 Download Excel Template
         </button>
 
-        {/* 📤 File Input */}
         <input
           type="file"
           accept=".xlsx"
@@ -117,34 +111,30 @@ export default function BulkDirectoryUpload() {
           className="border p-2 rounded w-full"
         />
 
-        {/* 🚀 Upload Button */}
         <button
           onClick={handleUpload}
           disabled={!file || loading}
           className="bg-purple-600 text-white px-6 py-2 rounded disabled:opacity-50"
         >
-          {loading ? "Uploading..." : "Upload Excel"}
+          {loading ? "Uploading..." : "📤 Upload Excel"}
         </button>
 
-        {/* ❌ Error Message */}
         {error && (
           <div className="bg-red-50 text-red-600 p-3 rounded text-sm">
-            {error}
+            ❌ {error}
           </div>
         )}
 
-        {/* 📊 Result Section */}
         {result && (
           <div className="bg-gray-50 p-4 rounded text-sm space-y-2">
             <p><strong>Total:</strong> {result.total}</p>
             <p className="text-green-600">
-              <strong>Success:</strong> {result.successCount}
+              <strong>✅ Success:</strong> {result.successCount}
             </p>
             <p className="text-red-600">
-              <strong>Failed:</strong> {result.failedCount}
+              <strong>❌ Failed:</strong> {result.failedCount}
             </p>
 
-            {/* Failed Rows List */}
             {result.failed?.length > 0 && (
               <div className="mt-3">
                 <p className="font-semibold mb-2">Failed Rows:</p>
@@ -160,6 +150,12 @@ export default function BulkDirectoryUpload() {
           </div>
         )}
       </div>
+
+      {/* ✅ User List with Send Email buttons */}
+      <div className="mt-8">
+        <BulkImportUserList />
+      </div>
     </div>
   )
 }
+
