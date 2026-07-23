@@ -11,10 +11,9 @@ import {
   LogOut,
   Mail,
   Users,
-<<<<<<< Updated upstream
+
   UserPlus,
-=======
->>>>>>> Stashed changes
+
   ShieldCheck,
 } from "lucide-react"
 
@@ -43,11 +42,9 @@ export default function AdminLayout({
     pathname.startsWith("/admin/articles")
   )
   const [usersOpen, setUsersOpen] = useState(
-<<<<<<< Updated upstream
-    pathname.startsWith("/admin/users")
-=======
+
     pathname.startsWith("/admin/Users")
->>>>>>> Stashed changes
+
   )
 
   useEffect(() => {
@@ -191,68 +188,6 @@ export default function AdminLayout({
             </div>
           )}
 
-<<<<<<< Updated upstream
-          {/* ================= USERS DROPDOWN ================= */}
-          <div>
-            <button
-              onClick={() => setUsersOpen(!usersOpen)}
-              className={`flex items-center justify-between w-full px-4 py-2.5 rounded-md text-sm font-medium transition-all
-                ${pathname.startsWith("/admin/Users")
-                  ? "bg-white/20 text-white"
-                  : "text-white/80 hover:bg-white/10 hover:text-white"
-                }
-              `}
-            >
-              <div className="flex items-center gap-3">
-                <Users size={18} />
-                <span>Users</span>
-              </div>
-              <span className="text-xs">
-                {usersOpen ? "▾" : "▸"}
-              </span>
-            </button>
-
-            {usersOpen && (
-              <div className="ml-6 mt-1 space-y-1">
-                {/* <SidebarLink
-                  href="/admin/Users/super-admin"
-                  label="Super Admins"
-                  icon={<Users size={16} />}
-                  active={pathname.startsWith("/admin/Users/super-admin")}
-                /> */}
-
-                <SidebarLink
-                  href="/admin/Users/sub-admin"
-                  label="Sub Admins"
-                  icon={<Users size={16} />}
-                  active={pathname.startsWith("/admin/Users/sub-admin")}
-                />
-
-                <SidebarLink
-                  href="/admin/Users/custom-role-templates"
-                  label="Custom Role Templates"
-                  icon={<ShieldCheck size={16} />}
-                  active={pathname === "/admin/Users/custom-role-templates"}
-                />
-
-                <SidebarLink
-                  href="/admin/Users/sub-admin-tracking"
-                  label="Sub Admin Tracking"
-                  icon={<FileText size={16} />}
-                  active={pathname === "/admin/Users/sub-admin-tracking"}
-                />
-              </div>
-            )}
-          </div>
-
-
-          <SidebarLink
-            href="/admin/packages"
-            label="Packages"
-            icon={<Folder size={18} />}
-            active={pathname === "/admin/packages"}
-          />
-=======
           {isSuperAdmin && (
             <div>
               <button
@@ -272,7 +207,6 @@ export default function AdminLayout({
                   {usersOpen ? "▾" : "▸"}
                 </span>
               </button>
->>>>>>> Stashed changes
 
               {usersOpen && (
                 <div className="ml-6 mt-1 space-y-1">
@@ -289,23 +223,7 @@ export default function AdminLayout({
                     icon={<ShieldCheck size={16} />}
                     active={pathname === "/admin/Users/custom-role-templates"}
                   />
-
-<<<<<<< Updated upstream
-          <SidebarLink
-            href="/admin/leads"
-            label="Leads"
-            icon={<Users size={18} />}
-            active={pathname === "/admin/leads" || pathname.startsWith("/admin/leads/")}
-          />
-
-          <SidebarLink
-            href="/admin/contact"
-            label="Contact"
-            icon={<Mail size={18} />}
-            active={pathname === "/admin/contact" || pathname.startsWith("/admin/contact/")}
-          />
-=======
-                  <SidebarLink
+    <SidebarLink
                     href="/admin/Users/sub-admin-tracking"
                     label="Sub Admin Tracking"
                     icon={<FileText size={16} />}
@@ -324,7 +242,6 @@ export default function AdminLayout({
               active={pathname === "/admin/packages"}
             />
           )}
->>>>>>> Stashed changes
 
           {can("banners.view") && (
             <SidebarLink
