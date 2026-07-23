@@ -12,6 +12,7 @@ import {
   Mail,
   Users,
   UserPlus,
+  ShieldCheck,
 } from "lucide-react"
 
 export default function AdminLayout({
@@ -27,6 +28,9 @@ export default function AdminLayout({
   const [articlesOpen, setArticlesOpen] = useState(
     pathname.startsWith("/admin/posts") ||
     pathname.startsWith("/admin/articles")
+  )
+  const [usersOpen, setUsersOpen] = useState(
+    pathname.startsWith("/admin/users")
   )
 
   useEffect(() => {
@@ -139,18 +143,66 @@ export default function AdminLayout({
             )}
           </div>
 
+          {/* ================= USERS DROPDOWN ================= */}
+          <div>
+            <button
+              onClick={() => setUsersOpen(!usersOpen)}
+              className={`flex items-center justify-between w-full px-4 py-2.5 rounded-md text-sm font-medium transition-all
+                ${pathname.startsWith("/admin/Users")
+                  ? "bg-white/20 text-white"
+                  : "text-white/80 hover:bg-white/10 hover:text-white"
+                }
+              `}
+            >
+              <div className="flex items-center gap-3">
+                <Users size={18} />
+                <span>Users</span>
+              </div>
+              <span className="text-xs">
+                {usersOpen ? "▾" : "▸"}
+              </span>
+            </button>
+
+            {usersOpen && (
+              <div className="ml-6 mt-1 space-y-1">
+                {/* <SidebarLink
+                  href="/admin/Users/super-admin"
+                  label="Super Admins"
+                  icon={<Users size={16} />}
+                  active={pathname.startsWith("/admin/Users/super-admin")}
+                /> */}
+
+                <SidebarLink
+                  href="/admin/Users/sub-admin"
+                  label="Sub Admins"
+                  icon={<Users size={16} />}
+                  active={pathname.startsWith("/admin/Users/sub-admin")}
+                />
+
+                <SidebarLink
+                  href="/admin/Users/custom-role-templates"
+                  label="Custom Role Templates"
+                  icon={<ShieldCheck size={16} />}
+                  active={pathname === "/admin/Users/custom-role-templates"}
+                />
+
+                <SidebarLink
+                  href="/admin/Users/sub-admin-tracking"
+                  label="Sub Admin Tracking"
+                  icon={<FileText size={16} />}
+                  active={pathname === "/admin/Users/sub-admin-tracking"}
+                />
+              </div>
+            )}
+          </div>
+
+
           <SidebarLink
             href="/admin/packages"
             label="Packages"
             icon={<Folder size={18} />}
             active={pathname === "/admin/packages"}
           />
-          {/* <SidebarLink
-            href="/admin/package-usage"
-            label="users"
-            icon={<UserPlus size={18} />}
-            active={pathname === "/admin/package-usage"}
-          /> */}
 
           <SidebarLink
             href="/admin/banners"
@@ -166,7 +218,6 @@ export default function AdminLayout({
             active={pathname === "/admin/events"}
           />
 
-          {/* ✅ LEADS Menu Item */}
           <SidebarLink
             href="/admin/leads"
             label="Leads"
@@ -174,7 +225,6 @@ export default function AdminLayout({
             active={pathname === "/admin/leads" || pathname.startsWith("/admin/leads/")}
           />
 
-          {/* ✅ CONTACT Menu Item */}
           <SidebarLink
             href="/admin/contact"
             label="Contact"
