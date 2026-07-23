@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ChevronRight } from "lucide-react";
@@ -302,4 +303,5 @@ export default function AddNewSubAdminPage() {
             </form>
         </div>
     );
+
 }

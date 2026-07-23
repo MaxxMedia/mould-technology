@@ -347,6 +347,7 @@ export default function SubAdminTrackingPage() {
             </div>
         </div>
     );
+
 }
 
 /* ================= SMALL CARD COMPONENTS ================= */
@@ -382,4 +383,5 @@ function PerfCard({ label, value, icon }: { label: string; value: number | strin
             <p className="text-xl font-bold text-gray-900 mt-1">{value}</p>
         </div>
     );
+
 }
