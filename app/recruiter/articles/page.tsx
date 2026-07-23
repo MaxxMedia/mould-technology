@@ -40,10 +40,14 @@ export default function RecruiterArticlesPage() {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
+
       const data = await fetchArticlePostingEligibility(token);
+
+      console.log("Eligibility:", data);
+
       setEligibility(data);
     } catch (error) {
-      console.error("Article eligibility error:", error);
+      console.error(error);
     }
   }
 

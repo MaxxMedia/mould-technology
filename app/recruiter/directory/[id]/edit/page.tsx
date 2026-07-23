@@ -35,6 +35,12 @@ async function uploadDocument(file: File): Promise<string> {
   return data.documentUrl;
 }
 
+type GalleryItem = {
+  image: string;
+  name: string;
+  description: string;
+};
+
 export default function EditDirectoryPage() {
   const router = useRouter();
   const params = useParams();
@@ -46,6 +52,7 @@ export default function EditDirectoryPage() {
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [uploadingCatalogue, setUploadingCatalogue] = useState(false);
+  const [uploadingGalleryImage, setUploadingGalleryImage] = useState(false);
   const [listingEligibility, setListingEligibility] =
     useState<ContentLimitEligibility | null>(null);
   const [profileLimits, setProfileLimits] = useState<CompanyProfileEligibility | null>(null);
@@ -142,6 +149,21 @@ export default function EditDirectoryPage() {
           coverImages = [""];
         }
 
+        // Normalize gallery data - ensure objects have all fields
+        const normalizeGallery = (gallery: any[]) => {
+          if (!Array.isArray(gallery)) return [];
+          return gallery.map(item => {
+            if (typeof item === 'string') {
+              return { image: item, name: "", description: "" };
+            }
+            return {
+              image: item?.image || "",
+              name: item?.name || "",
+              description: item?.description || ""
+            };
+          });
+        };
+
         setDirectory({
           id: data.id,
           name: data.name || "",
@@ -162,9 +184,9 @@ export default function EditDirectoryPage() {
           address: data.address || "",
           industryId: data.industryId || "",
           coverImages: coverImages,
-          productGallery: Array.isArray(data.productGallery) ? data.productGallery : [""],
-          companyGallery: Array.isArray(data.companyGallery) ? data.companyGallery : [""],
-          factoryGallery: Array.isArray(data.factoryGallery) ? data.factoryGallery : [""],
+          productGallery: normalizeGallery(data.productGallery),
+          companyGallery: normalizeGallery(data.companyGallery),
+          factoryGallery: normalizeGallery(data.factoryGallery),
           productCatalogues: Array.isArray(data.productCatalogues) ? data.productCatalogues : [""],
           companyBrochure: Array.isArray(data.companyBrochure) ? data.companyBrochure : [""],
           certifications: Array.isArray(data.certifications) ? data.certifications : [""],
@@ -236,6 +258,52 @@ export default function EditDirectoryPage() {
   ) => {
     const url = await uploadFile(file);
     updateArrayItem(field, index, url);
+  };
+
+  // Handle gallery image upload with object structure
+  const handleGalleryImageUpload = async (
+    field: string,
+    index: number,
+    file: File
+  ) => {
+    setUploadingGalleryImage(true);
+    try {
+      const url = await uploadFile(file);
+      setDirectory((prev: any) => {
+        const arr = [...(prev[field] || [])];
+        arr[index] = { ...arr[index], image: url };
+        return { ...prev, [field]: arr };
+      });
+    } catch (error: any) {
+      setSaveError(error.message || "Failed to upload image");
+    } finally {
+      setUploadingGalleryImage(false);
+    }
+  };
+
+  // Update gallery item field
+  const updateGalleryItem = (field: string, index: number, key: string, value: string) => {
+    setDirectory((prev: any) => {
+      const arr = [...(prev[field] || [])];
+      arr[index] = { ...arr[index], [key]: value };
+      return { ...prev, [field]: arr };
+    });
+  };
+
+  // Add new gallery item
+  const addGalleryItem = (field: string) => {
+    setDirectory((prev: any) => ({
+      ...prev,
+      [field]: [...(prev[field] || []), { image: "", name: "", description: "" }],
+    }));
+  };
+
+  // Remove gallery item
+  const removeGalleryItem = (field: string, index: number) => {
+    setDirectory((prev: any) => ({
+      ...prev,
+      [field]: (prev[field] || []).filter((_: any, idx: number) => idx !== index),
+    }));
   };
 
   const handleCatalogueUpload = async (field: string, index: number, file: File) => {
@@ -323,6 +391,12 @@ export default function EditDirectoryPage() {
 
       const cleanArray = (arr: any[]) => arr.filter((item) => item && item.trim().length > 0);
 
+      // Clean gallery arrays - remove items without image
+      const cleanGallery = (gallery: GalleryItem[]) => {
+        if (!Array.isArray(gallery)) return [];
+        return gallery.filter(item => item.image && item.image.trim().length > 0);
+      };
+
       const payload = {
         name: directory.name,
         slug: directory.slug,
@@ -337,9 +411,9 @@ export default function EditDirectoryPage() {
         socialLinks: directory.socialLinks || {},
         videoGallery: cleanArray(directory.videoGallery),
         productSupplies: cleanArray(directory.productSupplies),
-        productGallery: cleanArray(directory.productGallery),
-        companyGallery: cleanArray(directory.companyGallery),
-        factoryGallery: cleanArray(directory.factoryGallery),
+        productGallery: cleanGallery(directory.productGallery),
+        companyGallery: cleanGallery(directory.companyGallery),
+        factoryGallery: cleanGallery(directory.factoryGallery),
         productCatalogues: cleanArray(directory.productCatalogues),
         companyBrochure: cleanArray(directory.companyBrochure),
         certifications: cleanArray(directory.certifications),
@@ -877,15 +951,71 @@ export default function EditDirectoryPage() {
               ? "Unlimited product images on your plan."
               : `Your plan allows up to ${getDisplayLimit(profileLimits?.productImages)} product images.`}
           </p>
-          <GallerySection
-            field="productGallery"
-            items={directory.productGallery}
-            onUpload={handleImageUpload}
-            onAdd={addArrayItem}
-            onRemove={removeArrayItem}
-            addLabel="+ Add product image"
-            max={getFeatureLimit(profileLimits?.productImages)}
-          />
+          <div className="space-y-4">
+            {directory.productGallery.map((item: GalleryItem, i: number) => (
+              <div key={i} className="p-4 border rounded-lg space-y-3 bg-white">
+                <div className="flex justify-between items-start">
+                  <span className="text-sm font-medium">Product Image {i + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeGalleryItem("productGallery", i)}
+                    className="text-red-500 hover:text-red-700 text-sm"
+                  >
+                    ✕ Remove
+                  </button>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium block mb-1">Image</label>
+                  <UploadBox
+                    label="Upload Image"
+                    value={item.image}
+                    onUpload={(file) => handleGalleryImageUpload("productGallery", i, file)}
+                  />
+                  {item.image && (
+                    <div className="mt-1">
+                      <img src={item.image} alt="Preview" className="h-16 w-16 object-cover rounded" />
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium block mb-1">Product Name</label>
+                  <input
+                    className="input w-full"
+                    value={item.name || ''}
+                    onChange={(e) => updateGalleryItem("productGallery", i, "name", e.target.value)}
+                    placeholder="Product name (optional)"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium block mb-1">Description</label>
+                  <textarea
+                    className="input w-full"
+                    value={item.description || ''}
+                    onChange={(e) => updateGalleryItem("productGallery", i, "description", e.target.value)}
+                    placeholder="Product description (optional)"
+                    rows={2}
+                  />
+                </div>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => addGalleryItem("productGallery")}
+              disabled={
+                !isUnlimited(profileLimits?.productImages) &&
+                directory.productGallery.length >= (getFeatureLimit(profileLimits?.productImages) ?? 0)
+              }
+              className="disabled:opacity-40 disabled:cursor-not-allowed border px-4 py-2 rounded bg-gray-50 hover:bg-gray-100 text-sm font-medium"
+            >
+              + Add Product Image
+              {!isUnlimited(profileLimits?.productImages) &&
+                ` (${directory.productGallery.length}/${getDisplayLimit(profileLimits?.productImages)})`}
+            </button>
+          </div>
         </PlanGatedSection>
       </Section>
 
@@ -900,15 +1030,71 @@ export default function EditDirectoryPage() {
               ? "Unlimited company images on your plan."
               : `Your plan allows up to ${getDisplayLimit(profileLimits?.galleryImages)} company images.`}
           </p>
-          <GallerySection
-            field="companyGallery"
-            items={directory.companyGallery}
-            onUpload={handleImageUpload}
-            onAdd={addArrayItem}
-            onRemove={removeArrayItem}
-            addLabel="+ Add company image"
-            max={getFeatureLimit(profileLimits?.galleryImages)}
-          />
+          <div className="space-y-4">
+            {directory.companyGallery.map((item: GalleryItem, i: number) => (
+              <div key={i} className="p-4 border rounded-lg space-y-3 bg-white">
+                <div className="flex justify-between items-start">
+                  <span className="text-sm font-medium">Company Image {i + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeGalleryItem("companyGallery", i)}
+                    className="text-red-500 hover:text-red-700 text-sm"
+                  >
+                    ✕ Remove
+                  </button>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium block mb-1">Image</label>
+                  <UploadBox
+                    label="Upload Image"
+                    value={item.image}
+                    onUpload={(file) => handleGalleryImageUpload("companyGallery", i, file)}
+                  />
+                  {item.image && (
+                    <div className="mt-1">
+                      <img src={item.image} alt="Preview" className="h-16 w-16 object-cover rounded" />
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium block mb-1">Image Name</label>
+                  <input
+                    className="input w-full"
+                    value={item.name || ''}
+                    onChange={(e) => updateGalleryItem("companyGallery", i, "name", e.target.value)}
+                    placeholder="Image name (optional)"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium block mb-1">Description</label>
+                  <textarea
+                    className="input w-full"
+                    value={item.description || ''}
+                    onChange={(e) => updateGalleryItem("companyGallery", i, "description", e.target.value)}
+                    placeholder="Image description (optional)"
+                    rows={2}
+                  />
+                </div>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => addGalleryItem("companyGallery")}
+              disabled={
+                !isUnlimited(profileLimits?.galleryImages) &&
+                directory.companyGallery.length >= (getFeatureLimit(profileLimits?.galleryImages) ?? 0)
+              }
+              className="disabled:opacity-40 disabled:cursor-not-allowed border px-4 py-2 rounded bg-gray-50 hover:bg-gray-100 text-sm font-medium"
+            >
+              + Add Company Image
+              {!isUnlimited(profileLimits?.galleryImages) &&
+                ` (${directory.companyGallery.length}/${getDisplayLimit(profileLimits?.galleryImages)})`}
+            </button>
+          </div>
         </PlanGatedSection>
       </Section>
 
@@ -923,15 +1109,71 @@ export default function EditDirectoryPage() {
               ? "Unlimited factory images on your plan."
               : `Your plan allows up to ${getDisplayLimit(profileLimits?.factoryImages)} factory images.`}
           </p>
-          <GallerySection
-            field="factoryGallery"
-            items={directory.factoryGallery}
-            onUpload={handleImageUpload}
-            onAdd={addArrayItem}
-            onRemove={removeArrayItem}
-            addLabel="+ Add factory image"
-            max={getFeatureLimit(profileLimits?.factoryImages)}
-          />
+          <div className="space-y-4">
+            {directory.factoryGallery.map((item: GalleryItem, i: number) => (
+              <div key={i} className="p-4 border rounded-lg space-y-3 bg-white">
+                <div className="flex justify-between items-start">
+                  <span className="text-sm font-medium">Factory Image {i + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeGalleryItem("factoryGallery", i)}
+                    className="text-red-500 hover:text-red-700 text-sm"
+                  >
+                    ✕ Remove
+                  </button>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium block mb-1">Image</label>
+                  <UploadBox
+                    label="Upload Image"
+                    value={item.image}
+                    onUpload={(file) => handleGalleryImageUpload("factoryGallery", i, file)}
+                  />
+                  {item.image && (
+                    <div className="mt-1">
+                      <img src={item.image} alt="Preview" className="h-16 w-16 object-cover rounded" />
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium block mb-1">Image Name</label>
+                  <input
+                    className="input w-full"
+                    value={item.name || ''}
+                    onChange={(e) => updateGalleryItem("factoryGallery", i, "name", e.target.value)}
+                    placeholder="Image name (optional)"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium block mb-1">Description</label>
+                  <textarea
+                    className="input w-full"
+                    value={item.description || ''}
+                    onChange={(e) => updateGalleryItem("factoryGallery", i, "description", e.target.value)}
+                    placeholder="Image description (optional)"
+                    rows={2}
+                  />
+                </div>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => addGalleryItem("factoryGallery")}
+              disabled={
+                !isUnlimited(profileLimits?.factoryImages) &&
+                directory.factoryGallery.length >= (getFeatureLimit(profileLimits?.factoryImages) ?? 0)
+              }
+              className="disabled:opacity-40 disabled:cursor-not-allowed border px-4 py-2 rounded bg-gray-50 hover:bg-gray-100 text-sm font-medium"
+            >
+              + Add Factory Image
+              {!isUnlimited(profileLimits?.factoryImages) &&
+                ` (${directory.factoryGallery.length}/${getDisplayLimit(profileLimits?.factoryImages)})`}
+            </button>
+          </div>
         </PlanGatedSection>
       </Section>
 
@@ -1346,7 +1588,7 @@ export default function EditDirectoryPage() {
 
       <button
         onClick={saveChanges}
-        disabled={saving || uploadingCatalogue}
+        disabled={saving || uploadingCatalogue || uploadingGalleryImage}
         className="bg-black text-white px-6 py-2 rounded disabled:opacity-50"
       >
         {saving ? "Saving..." : "Save Changes"}

@@ -52,6 +52,12 @@ type Article = {
   publishedAt: string
 }
 
+type GalleryItem = {
+  image: string
+  name?: string
+  description?: string
+}
+
 type Supplier = {
   productCatalogues?: string[]
   planTier?: "free" | "basic" | "professional" | "enterprise" | string | null
@@ -69,9 +75,9 @@ type Supplier = {
   email?: string
   tradeNames?: string[]
   videoGallery?: string[]
-  productGallery?: string[]
-  companyGallery?: string[]
-  factoryGallery?: string[]
+  productGallery?: GalleryItem[] | string[]
+  companyGallery?: GalleryItem[] | string[]
+  factoryGallery?: GalleryItem[] | string[]
   enableInquiryForm?: boolean
   views?: number
   connections?: number
@@ -92,6 +98,69 @@ type Supplier = {
     tagline?: string
     slug?: string
   }
+}
+
+// Helper to get image from gallery item (supports both formats)
+function getGalleryImage(item: any): string {
+  if (typeof item === 'string') return item
+  return item?.image || ''
+}
+
+// Helper to get name from gallery item (supports both formats)
+function getGalleryName(item: any): string {
+  if (typeof item === 'string') return ''
+  return item?.name || ''
+}
+
+// Helper to get description from gallery item (supports both formats)
+function getGalleryDescription(item: any): string {
+  if (typeof item === 'string') return ''
+  return item?.description || ''
+}
+
+function GalleryItemCard({ item, title }: { item: any; title?: string }) {
+  const image = getGalleryImage(item)
+  const name = getGalleryName(item)
+  const description = getGalleryDescription(item)
+
+  return (
+    <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200">
+      <div className="aspect-square overflow-hidden">
+        {image ? (
+          <img
+            src={image}
+            alt={name || title || 'Gallery image'}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">
+            No image
+          </div>
+        )}
+      </div>
+      {(name || description) && (
+        <div className="p-4">
+          {name && <h4 className="font-medium text-gray-800">{name}</h4>}
+          {description && <p className="text-sm text-gray-600 mt-1">{description}</p>}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function GalleryGrid({ items, title }: { items: any[]; title?: string }) {
+  if (!items || items.length === 0) return null
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      {items.filter(item => {
+        if (typeof item === 'string') return item.trim().length > 0
+        return item && item.image && item.image.trim().length > 0
+      }).map((item, index) => (
+        <GalleryItemCard key={index} item={item} title={title} />
+      ))}
+    </div>
+  )
 }
 
 export default async function SupplierShowroomPage({
@@ -358,6 +427,41 @@ export default async function SupplierShowroomPage({
                 />
               </section>
             </div>
+
+            {/* Gallery sections for free plan - show images without upgrade prompt */}
+            {!isPaid && (
+              <>
+                {(supplier.productGallery && (supplier.productGallery as any[]).filter(item => {
+                  if (typeof item === 'string') return item.trim().length > 0
+                  return item && item.image && item.image.trim().length > 0
+                }).length > 0) && (
+                    <div className="mt-8">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Product Gallery</h3>
+                      <GalleryGrid items={supplier.productGallery as any[]} title="Product" />
+                    </div>
+                  )}
+
+                {(supplier.companyGallery && (supplier.companyGallery as any[]).filter(item => {
+                  if (typeof item === 'string') return item.trim().length > 0
+                  return item && item.image && item.image.trim().length > 0
+                }).length > 0) && (
+                    <div className="mt-8">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Company Gallery</h3>
+                      <GalleryGrid items={supplier.companyGallery as any[]} title="Company" />
+                    </div>
+                  )}
+
+                {(supplier.factoryGallery && (supplier.factoryGallery as any[]).filter(item => {
+                  if (typeof item === 'string') return item.trim().length > 0
+                  return item && item.image && item.image.trim().length > 0
+                }).length > 0) && (
+                    <div className="mt-8">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Factory Gallery</h3>
+                      <GalleryGrid items={supplier.factoryGallery as any[]} title="Factory" />
+                    </div>
+                  )}
+              </>
+            )}
           </div>
         )}
 
