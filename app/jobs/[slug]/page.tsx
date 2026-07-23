@@ -24,8 +24,17 @@ import {
   FileText,
   MessageSquare,
   Star,
+  Sparkles,
 } from "lucide-react"
 import { ApplySection } from "@/components/ApplySection"
+
+const FALLBACK_SKILLS = [
+  "Communication",
+  "Team Leadership",
+  "Problem Solving",
+  "Time Management",
+  "Process Improvement",
+]
 
 export default function JobDetailPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -75,7 +84,9 @@ export default function JobDetailPage() {
         const jobs = jobsData.jobs || [];
 
         setOtherJobs(
-          jobs.filter((j: any) => j.slug !== slug).slice(0, 6)
+          jobs
+            .filter((j: any) => j.slug !== slug && j.title && j.slug)
+            .slice(0, 6)
         );
       } catch (err) {
         console.error(err);
@@ -137,12 +148,13 @@ export default function JobDetailPage() {
   }
 
   const handleApply = () => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}")
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}")
 
-    if (!user?.id) {
+    if (!storedUser?.id) {
       router.push("/login")
       return
     }
+    if (storedUser?.role !== "candidate") return
 
     setShowApplyForm(true)
   }
@@ -180,7 +192,38 @@ export default function JobDetailPage() {
   const company = job.Company || job.company || {}
   const companyName = company.name || job.companyName || "N/A"
   const benefits: string[] = job.benefits || []
-  const hiringTeam: any[] = job.hiringTeam || []
+
+  const rawHiringTeam =
+    job.hiringTeam || job.team || job.recruiters || job.postedBy || job.hiring_team
+  const hiringTeam: any[] =
+    Array.isArray(rawHiringTeam) && rawHiringTeam.length > 0
+      ? rawHiringTeam
+      : rawHiringTeam && typeof rawHiringTeam === "object"
+      ? [rawHiringTeam]
+      : [{ name: `${companyName} Team`, role: "Hiring Manager" }]
+
+  const trendingSkills: string[] =
+    job.skills && job.skills.length > 0 ? job.skills : FALLBACK_SKILLS
+  const applicants = job.applicants ?? job.views ?? 0
+
+  // Job match (candidate view only)
+  const requiredSkills: string[] =
+    job.requiredSkills && job.requiredSkills.length > 0
+      ? job.requiredSkills
+      : trendingSkills.slice(0, 5)
+  const candidateSkills: string[] = user?.skills || []
+  const matchedSkills = requiredSkills.filter((s) =>
+    candidateSkills.some((cs) => cs.toLowerCase() === s.toLowerCase())
+  )
+  const missingSkills = requiredSkills.filter(
+    (s) => !matchedSkills.some((m) => m.toLowerCase() === s.toLowerCase())
+  )
+  const matchPercent =
+    requiredSkills.length > 0
+      ? Math.round((matchedSkills.length / requiredSkills.length) * 100)
+      : 0
+  const matchLabel =
+    matchPercent >= 70 ? "Great match" : matchPercent >= 40 ? "Good match" : "Partial match"
 
   return (
     <div
@@ -209,126 +252,120 @@ export default function JobDetailPage() {
         {/* LEFT */}
         <div className="lg:col-span-2 space-y-4 min-w-0">
 
- 
-<div className="bg-white rounded-md shadow-[0_2px_12px_rgba(0,0,0,0.07)] overflow-hidden">
+          <div className="bg-white rounded-md shadow-[0_2px_12px_rgba(0,0,0,0.07)] overflow-hidden">
 
-  {/* Banner */}
-  <div className="relative h-32 bg-gradient-to-br from-[#0B1E4D] via-[#142B63] to-[#1E3A8A] overflow-visible">
-    <div className="absolute -right-6 top-4 w-40 h-40 rounded-full bg-white/5" />
-    <div className="absolute right-10 bottom-0 w-24 h-24 rounded-full bg-white/5" />
-    <div className="absolute left-24 top-6 flex gap-1.5">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <span key={i} className="w-1 h-1 rounded-full bg-white/30" />
-      ))}
-    </div>
-    <div className="absolute right-4 top-4 w-2 h-2 rounded-full bg-blue-300/60" />
+            {/* Banner */}
+            <div className="relative h-32 bg-gradient-to-br from-[#0B1E4D] via-[#142B63] to-[#1E3A8A] overflow-visible">
+              <div className="absolute -right-6 top-4 w-40 h-40 rounded-full bg-white/5" />
+              <div className="absolute right-10 bottom-0 w-24 h-24 rounded-full bg-white/5" />
+              <div className="absolute left-24 top-6 flex gap-1.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <span key={i} className="w-1 h-1 rounded-full bg-white/30" />
+                ))}
+              </div>
+              <div className="absolute right-4 top-4 w-2 h-2 rounded-full bg-blue-300/60" />
 
-    {/* Floating Logo + Buttons */}
-    <div className="absolute left-8 right-8 -bottom-10 flex items-end justify-between">
-      {/* Company Logo */}
-      <div className="w-20 h-20 rounded-xl bg-white border border-gray-200 shadow-lg overflow-hidden flex items-center justify-center">
-        {company.logoUrl ? (
-          <Image
-            src={company.logoUrl}
-            alt={companyName}
-            width={80}
-            height={80}
-            className="object-contain w-full h-full p-2"
-          />
-        ) : (
-          <Building2 size={28} className="text-gray-400" />
-        )}
-      </div>
+              {/* Floating Logo */}
+              <div className="absolute left-8 right-8 -bottom-10 flex items-end justify-between">
+                <div className="w-20 h-20 rounded-xl bg-white border border-gray-200 shadow-lg overflow-hidden flex items-center justify-center">
+                  {company.logoUrl ? (
+                    <Image
+                      src={company.logoUrl}
+                      alt={companyName}
+                      width={80}
+                      height={80}
+                      className="object-contain w-full h-full p-2"
+                    />
+                  ) : (
+                    <Building2 size={28} className="text-gray-400" />
+                  )}
+                </div>
+              </div>
+            </div>
 
+            {/* Content */}
+            <div className="px-8 pt-14 pb-8">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <h1 className="text-[30px] font-bold text-gray-900">
+                  {job.title}
+                </h1>
 
-    </div>
-  </div>
+                {/* Buttons - always visible regardless of role; handlers redirect to login / gate action internally */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={toggleSave}
+                    disabled={savingJob}
+                    className="flex items-center gap-1.5 border border-blue-500 text-blue-600 bg-white px-5 py-2 rounded-full font-medium hover:bg-blue-50 transition-colors"
+                  >
+                    <Bookmark
+                      size={16}
+                      className={saved ? "fill-blue-600 text-blue-600" : ""}
+                    />
+                    {saved ? "Saved" : "Save"}
+                  </button>
 
-  {/* Content */}
-  <div className="px-8 pt-14 pb-8">
-    <div className="flex items-start justify-between gap-3 flex-wrap">
-        <h1 className="text-[30px] font-bold text-gray-900">
-      {job.title}
-    </h1>
-          {/* Buttons */}
- <div className="flex items-center gap-3">
-  <button
-    onClick={toggleSave}
-    className="border border-blue-500 text-blue-600 bg-white px-5 py-2 rounded-full font-medium"
-  >
-    Save
-  </button>
+                  {job.isExternal ? (
+                    job.applyUrl && (
+                      <a
+                        href={job.applyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-medium transition-colors"
+                      >
+                        Easy Apply
+                      </a>
+                    )
+                  ) : (
+                    <button
+                      onClick={handleApply}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-medium transition-colors"
+                    >
+                      Easy Apply
+                    </button>
+                  )}
+                </div>
+              </div>
 
-  <button
-    onClick={handleApply}
-    className="bg-blue-600 text-white px-6 py-2 rounded-full font-medium"
-  >
-    Easy Apply
-  </button>
-</div>
-    </div>
-  
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-base font-semibold text-gray-700">
+                  {companyName}
+                </span>
+                <CheckCircle2 size={15} className="text-blue-600 fill-blue-100" />
+              </div>
 
-    <div className="flex items-center gap-2 mt-2">
-      <span className="text-base font-semibold text-gray-700">
-        {companyName}
-      </span>
-      <CheckCircle2
-        size={15}
-        className="text-blue-600 fill-blue-100"
-      />
-    </div>
+              <p className="text-sm text-gray-500 mt-2">
+                {job.location} • Posted{" "}
+                {daysAgo === 0
+                  ? "today"
+                  : daysAgo === 1
+                  ? "yesterday"
+                  : `${daysAgo} days ago`}
+                {` • ${applicants} applicants`}
+              </p>
 
-    <p className="text-sm text-gray-500 mt-2">
-      {job.location} • Posted{" "}
-      {daysAgo === 0
-        ? "today"
-        : daysAgo === 1
-        ? "yesterday"
-        : `${daysAgo} days ago`}
-      {job.applicants != null && ` • ${job.applicants} applicants`}
-    </p>
+              {/* Tags */}
+              <div className="flex flex-wrap gap-2 mt-5">
+                {job.salaryRange && (
+                  <Tag icon={<IndianRupee size={12} />} label={job.salaryRange} />
+                )}
+                {job.employmentType && (
+                  <Tag icon={<Briefcase size={12} />} label={job.employmentType} />
+                )}
+                <Tag
+                  icon={<span className="w-2 h-2 rounded-full bg-green-500" />}
+                  label="Actively hiring"
+                  variant="success"
+                />
+              </div>
 
-    {/* Tags */}
-    <div className="flex flex-wrap gap-2 mt-5">
-      {job.salaryRange && (
-        <Tag
-          icon={<IndianRupee size={12} />}
-          label={job.salaryRange}
-        />
-      )}
-
-      {job.employmentType && (
-        <Tag
-          icon={<Briefcase size={12} />}
-          label={job.employmentType}
-        />
-      )}
-
-      <Tag
-        icon={<span className="w-2 h-2 rounded-full bg-green-500" />}
-        label="Actively hiring"
-        variant="success"
-      />
-    </div>
-
-    <div className="flex flex-wrap gap-2 mt-2">
-      {job.experience && (
-        <Tag
-          icon={<Clock size={12} />}
-          label={job.experience}
-          variant="muted"
-        />
-      )}
-
-      <Tag
-        icon={<Eye size={12} />}
-        label={`${job.views ?? 0} views`}
-        variant="muted"
-      />
-    </div>
-  </div>
-</div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {job.experience && (
+                  <Tag icon={<Clock size={12} />} label={job.experience} variant="muted" />
+                )}
+                <Tag icon={<Eye size={12} />} label={`${job.views ?? 0} views`} variant="muted" />
+              </div>
+            </div>
+          </div>
 
           {/* Description */}
           <div className="bg-white rounded-md shadow-[0_2px_12px_rgba(0,0,0,0.07)] p-6">
@@ -336,20 +373,21 @@ export default function JobDetailPage() {
               About the job
             </h2>
 
-            <div
-              className={`prose max-w-none prose-sm text-gray-700
-                         prose-h1:text-lg prose-h2:text-base
-                         prose-h1:font-bold prose-h2:font-semibold
-                         prose-ul:list-disc prose-ul:pl-5
-                         prose-strong:text-gray-900
-                         break-words overflow-hidden
-                         ${!showFullDesc ? "max-h-40 overflow-hidden relative" : ""}`}
-              dangerouslySetInnerHTML={{ __html: job.description }}
-            />
-
-            {!showFullDesc && (
-              <div className="h-10 -mt-10 bg-gradient-to-t from-white to-transparent relative" />
-            )}
+            <div className="relative">
+              <div
+                className={`prose max-w-none prose-sm text-gray-700
+                           prose-h1:text-lg prose-h2:text-base
+                           prose-h1:font-bold prose-h2:font-semibold
+                           prose-ul:list-disc prose-ul:pl-5
+                           prose-strong:text-gray-900
+                           break-words overflow-hidden
+                           ${!showFullDesc ? "max-h-40 overflow-hidden" : ""}`}
+                dangerouslySetInnerHTML={{ __html: job.description }}
+              />
+              {!showFullDesc && (
+                <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+              )}
+            </div>
 
             <button
               onClick={() => setShowFullDesc(!showFullDesc)}
@@ -386,28 +424,24 @@ export default function JobDetailPage() {
                 </div>
               ) : (
                 <>
-                  {user?.role === "candidate" && (
-                    <>
-                      <button
-                        onClick={handleApply}
-                        className="bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-sm font-semibold px-7 py-2.5 rounded-full transition-all duration-150 shadow-[0_2px_8px_rgba(37,99,235,0.35)]"
-                      >
-                        Apply for this position
-                      </button>
+                  <button
+                    onClick={handleApply}
+                    className="bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-sm font-semibold px-7 py-2.5 rounded-full transition-all duration-150 shadow-[0_2px_8px_rgba(37,99,235,0.35)]"
+                  >
+                    Apply for this position
+                  </button>
 
-                      {showApplyForm && (
-                        <div className="mt-6 border-t pt-6">
-                          <ApplySection jobId={job.id} />
-                        </div>
-                      )}
-                    </>
+                  {showApplyForm && (
+                    <div className="mt-6 border-t pt-6">
+                      <ApplySection jobId={job.id} />
+                    </div>
                   )}
                 </>
               )}
             </div>
           </div>
 
-          {/* About Company (full width, left column) */}
+          {/* About Company */}
           <div className="bg-white rounded-md shadow-[0_2px_12px_rgba(0,0,0,0.07)] p-6">
             <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
               About the company
@@ -452,64 +486,124 @@ export default function JobDetailPage() {
                 "More information about this company is not available at the moment."}
             </p>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5 pt-5 border-t border-gray-100">
-              {company.website && (
-                <CompanyMeta icon={<Globe size={13} />} label="Website" value={company.website} />
-              )}
-              {company.industry && (
-                <CompanyMeta icon={<Briefcase size={13} />} label="Industry" value={company.industry} />
-              )}
-              {company.employeeCount && (
-                <CompanyMeta icon={<Users size={13} />} label="Company size" value={`${company.employeeCount} employees`} />
-              )}
-              {company.headquarters && (
-                <CompanyMeta icon={<MapPin size={13} />} label="Headquarters" value={company.headquarters} />
-              )}
-              {company.founded && (
-                <CompanyMeta icon={<Calendar size={13} />} label="Founded" value={company.founded} />
-              )}
-            </div>
+            {(company.website || company.industry || company.employeeCount || company.headquarters || company.founded) && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5 pt-5 border-t border-gray-100">
+                {company.website && (
+                  <CompanyMeta icon={<Globe size={13} />} label="Website" value={company.website} />
+                )}
+                {company.industry && (
+                  <CompanyMeta icon={<Briefcase size={13} />} label="Industry" value={company.industry} />
+                )}
+                {company.employeeCount && (
+                  <CompanyMeta icon={<Users size={13} />} label="Company size" value={`${company.employeeCount} employees`} />
+                )}
+                {company.headquarters && (
+                  <CompanyMeta icon={<MapPin size={13} />} label="Headquarters" value={company.headquarters} />
+                )}
+                {company.founded && (
+                  <CompanyMeta icon={<Calendar size={13} />} label="Founded" value={company.founded} />
+                )}
+              </div>
+            )}
           </div>
 
           {/* Meet the hiring team */}
-          {hiringTeam.length > 0 && (
-            <div className="bg-white rounded-md shadow-[0_2px_12px_rgba(0,0,0,0.07)] p-6">
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
-                Meet the hiring team
-              </h3>
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <div className="flex items-center gap-5 flex-wrap">
-                  {hiringTeam.map((person, i) => (
-                    <div key={i} className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
-                        {person.avatarUrl ? (
-                          <Image
-                            src={person.avatarUrl}
-                            alt={person.name}
-                            width={40}
-                            height={40}
-                            className="object-cover w-full h-full"
-                          />
-                        ) : (
-                          <Users size={16} className="text-gray-400" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-800">{person.name}</p>
-                        <p className="text-xs text-gray-400">{person.role}</p>
-                      </div>
+          <div className="bg-white rounded-md shadow-[0_2px_12px_rgba(0,0,0,0.07)] p-6">
+            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
+              Meet the hiring team
+            </h3>
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-5 flex-wrap">
+                {hiringTeam.map((person, i) => (
+                  <div key={i} className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      {person.avatarUrl ? (
+                        <Image
+                          src={person.avatarUrl}
+                          alt={person.name}
+                          width={40}
+                          height={40}
+                          className="object-cover w-full h-full"
+                        />
+                      ) : (
+                        <Users size={16} className="text-gray-400" />
+                      )}
                     </div>
-                  ))}
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">{person.name}</p>
+                      <p className="text-xs text-gray-400">{person.role}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button className="flex items-center gap-1.5 border border-gray-300 hover:border-blue-600 hover:text-blue-600 text-gray-600 text-sm font-semibold px-4 py-2 rounded-full transition-colors">
+                <MessageSquare size={15} />
+                Message
+              </button>
+            </div>
+          </div>
+
+          {/* Job match (candidates only) */}
+          {user?.role === "candidate" && (
+            <div className="bg-white rounded-md shadow-[0_2px_12px_rgba(0,0,0,0.07)] p-6">
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-1">
+                Job match
+              </h3>
+              <p className="text-xs text-gray-500 flex items-center gap-1.5 mb-4">
+                <CheckCircle2 size={13} className="text-gray-400" />
+                Your profile matches {matchPercent}% of the qualifications for this job.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-5">
+                <div className="flex-1">
+                  <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-green-500 rounded-full"
+                      style={{ width: `${matchPercent}%` }}
+                    />
+                  </div>
+                  <p className="text-xs font-semibold text-green-600 mt-1.5">{matchLabel}</p>
+
+                  <p className="text-xs font-semibold text-gray-700 mt-4 mb-2">
+                    Top skills that match this job
+                  </p>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                    {(matchedSkills.length > 0 ? matchedSkills : requiredSkills).map((skill, i) => (
+                      <span key={i} className="flex items-center gap-1.5 text-xs text-gray-600">
+                        <CheckCircle2 size={12} className="text-green-500" />
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <button className="flex items-center gap-1.5 border border-gray-300 hover:border-blue-600 hover:text-blue-600 text-gray-600 text-sm font-semibold px-4 py-2 rounded-full transition-colors">
-                  <MessageSquare size={15} />
-                  Message
-                </button>
+
+                {missingSkills.length > 0 && (
+                  <div className="sm:w-56 flex-shrink-0 bg-gray-50 rounded-md p-4">
+                    <p className="flex items-center gap-1.5 text-xs font-semibold text-gray-800 mb-1">
+                      <Lightbulb size={13} className="text-amber-500" />
+                      Stand out from other applicants
+                    </p>
+                    <p className="text-xs text-gray-500 mb-2">Add these skills to your profile</p>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {missingSkills.map((skill, i) => (
+                        <span
+                          key={i}
+                          className="text-xs font-medium px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-600"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                    <Link href="/profile" className="text-xs font-semibold text-blue-700 hover:text-blue-800">
+                      Update profile
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* Similar Jobs (bottom, full width) */}
+          {/* Similar Jobs */}
           {otherJobs.length > 0 && (
             <div className="bg-white rounded-md shadow-[0_2px_12px_rgba(0,0,0,0.07)] p-6">
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
@@ -581,11 +675,6 @@ export default function JobDetailPage() {
                       <p className="text-xs text-gray-400 mt-0.5">
                         {item.location}
                       </p>
-                      {item.applicants != null && (
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          {item.applicants} applicants
-                        </p>
-                      )}
                     </div>
 
                     <Bookmark size={14} className="text-gray-300 group-hover:text-blue-400 transition-colors flex-shrink-0 mt-1" />
@@ -611,7 +700,7 @@ export default function JobDetailPage() {
             <div className="space-y-4">
               <InsightRow
                 icon={<FileText size={15} className="text-gray-400" />}
-                title={`${job.applicants ?? job.views ?? 0} applicants`}
+                title={`${applicants} applicants`}
                 subtitle="Applied recently"
               />
               {job.experience && (
@@ -626,6 +715,24 @@ export default function JobDetailPage() {
                 title="Location"
                 subtitle={job.location}
               />
+            </div>
+          </div>
+
+          {/* Trending skills */}
+          <div className="bg-white rounded-md shadow-[0_2px_12px_rgba(0,0,0,0.07)] p-6">
+            <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-1.5">
+              <Sparkles size={14} className="text-blue-500" />
+              Trending skills for this role
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {trendingSkills.map((skill, i) => (
+                <span
+                  key={i}
+                  className="text-xs font-medium px-3 py-1.5 rounded-full bg-gray-100 text-gray-600"
+                >
+                  {skill}
+                </span>
+              ))}
             </div>
           </div>
 
