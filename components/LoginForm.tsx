@@ -38,28 +38,41 @@ export default function LoginForm() {
 
       localStorage.setItem("token", data.token)
       localStorage.setItem("user", JSON.stringify(data.user))
+      // ✅ FIX: authController.login also returns `permissions` (the
+      // resolved RBAC key list) alongside `token`/`user` — persist it
+      // so permission-gated UI (sidebar links, buttons, route guards)
+      // doesn't need an extra /me round trip right after login.
+      localStorage.setItem("permissions", JSON.stringify(data.permissions || []))
       window.dispatchEvent(new Event("userChanged"))
 
       const user = data.user
 
-      if (user.role === "admin") {
+      // ✅ FIX: `role` can also come back as "sub_admin" or "admin" from
+      // the backend (User.role) — the old switch only handled
+      // admin/recruiter/candidate, so a sub_admin login succeeded but
+      // silently never redirected anywhere. Both admin-side roles go
+      // to the admin dashboard; RBAC there is enforced by `permissions`.
+      if (user.role === "admin" || user.role === "sub_admin") {
         router.push("/admin/dashboard")
       } else if (user.role === "recruiter") {
-          // Recruiters still need package selection
-          if (!user.packageSelected) {
-            router.push("/packages?from=login")  // Add query param
-          } else if (!user.isOnboarded) {
-            router.push("/recruiter/onboarding")
-          } else {
-            router.push("/recruiter/dashboard")
-          }
-        } else if (user.role === "candidate") {
+        // Recruiters still need package selection
+        if (!user.packageSelected) {
+          router.push("/packages?from=login")
+        } else if (!user.isOnboarded) {
+          router.push("/recruiter/onboarding")
+        } else {
+          router.push("/recruiter/dashboard")
+        }
+      } else if (user.role === "candidate") {
         // Candidates skip package selection, go directly to onboarding or feed
         if (!user.isOnboarded) {
           router.push("/candidate/onboarding")
         } else {
           router.push("/candidate/feed")
         }
+      } else {
+        // Unknown/future role — don't leave the user stranded on the login page.
+        router.push("/")
       }
     } catch (err) {
       setError("Something went wrong. Try again.")

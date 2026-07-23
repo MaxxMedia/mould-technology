@@ -7,11 +7,17 @@ import SupplierTeamTab from "./SupplierTeamTab"
 import { FileText, Download, Eye } from "lucide-react"
 import ProductGalleryPremium from "../components/suppliers/ProductGalleryPremium"
 
+type GalleryItem = {
+  image: string
+  name?: string
+  description?: string
+}
+
 type GalleryTabsProps = {
   videoGallery?: string[]
-  productGallery?: string[]
-  companyGallery?: string[]
-  factoryGallery?: string[]
+  productGallery?: GalleryItem[] | string[]
+  companyGallery?: GalleryItem[] | string[]
+  factoryGallery?: GalleryItem[] | string[]
   productCatalogues?: string[]
   isPaid?: boolean
   companySlug?: string // Company slug for fetching team members
@@ -28,24 +34,69 @@ function EmptyState({ message }: { message: string }) {
   )
 }
 
-function ImageGrid({ images }: { images: string[] }) {
+// Helper to check if gallery has items (supports both formats)
+function hasGalleryItems(gallery: any[] | undefined): boolean {
+  if (!gallery || !Array.isArray(gallery)) return false
+  return gallery.some(item => {
+    if (typeof item === 'string') return item.trim().length > 0
+    return item && item.image && item.image.trim().length > 0
+  })
+}
+
+// Helper to get image from gallery item (supports both formats)
+function getGalleryImage(item: any): string {
+  if (typeof item === 'string') return item
+  return item?.image || ''
+}
+
+// Helper to get name from gallery item (supports both formats)
+function getGalleryName(item: any): string {
+  if (typeof item === 'string') return ''
+  return item?.name || ''
+}
+
+// Helper to get description from gallery item (supports both formats)
+function getGalleryDescription(item: any): string {
+  if (typeof item === 'string') return ''
+  return item?.description || ''
+}
+
+function ImageGrid({ images }: { images: any[] }) {
+  if (!images || images.length === 0) return null
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-      {images.filter(Boolean).map((src, i) => (
-        <a
-          key={i}
-          href={src}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block aspect-square rounded-lg overflow-hidden border border-gray-200 hover:opacity-90 transition"
-        >
-          <img
-            src={src}
-            alt={`Gallery image ${i + 1}`}
-            className="w-full h-full object-cover"
-          />
-        </a>
-      ))}
+      {images.filter(item => {
+        if (typeof item === 'string') return item.trim().length > 0
+        return item && item.image && item.image.trim().length > 0
+      }).map((item, i) => {
+        const image = getGalleryImage(item)
+        const name = getGalleryName(item)
+        const description = getGalleryDescription(item)
+
+        return (
+          <div key={i} className="bg-white rounded-lg overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition">
+            <a
+              href={image}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block aspect-square overflow-hidden"
+            >
+              <img
+                src={image}
+                alt={name || `Gallery image ${i + 1}`}
+                className="w-full h-full object-cover hover:opacity-90 transition"
+              />
+            </a>
+            {(name || description) && (
+              <div className="p-3">
+                {name && <h4 className="font-medium text-gray-800 text-sm">{name}</h4>}
+                {description && <p className="text-xs text-gray-600 mt-1 line-clamp-2">{description}</p>}
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -248,9 +299,11 @@ export default function GalleryTabs({
             <EmptyState message={NO_PLAN_MESSAGE} />
           ) : (
             <>
-              {productGallery && productGallery.filter(Boolean).length > 0 ? (
-                // <ImageGrid images={productGallery} />
-                <ProductGalleryPremium images={productGallery} />
+              {productGallery && hasGalleryItems(productGallery) ? (
+                // Ensure we pass a string[] of image URLs to ProductGalleryPremium
+                  <ProductGalleryPremium
+                    images={productGallery}
+                  />
               ) : (
                 <EmptyState message="No product images available" />
               )}
@@ -266,7 +319,7 @@ export default function GalleryTabs({
       {activeTab === "company" &&
         (!isPaid ? (
           <EmptyState message={NO_PLAN_MESSAGE} />
-        ) : companyGallery && companyGallery.filter(Boolean).length > 0 ? (
+        ) : companyGallery && hasGalleryItems(companyGallery) ? (
           <ImageGrid images={companyGallery} />
         ) : (
           <EmptyState message="No company images available" />
@@ -275,7 +328,7 @@ export default function GalleryTabs({
       {activeTab === "factory" &&
         (!isPaid ? (
           <EmptyState message={NO_PLAN_MESSAGE} />
-        ) : factoryGallery && factoryGallery.filter(Boolean).length > 0 ? (
+        ) : factoryGallery && hasGalleryItems(factoryGallery) ? (
           <ImageGrid images={factoryGallery} />
         ) : (
           <EmptyState message="No factory images available" />

@@ -37,6 +37,7 @@ export default function CreateRecruiterArticlePage() {
         setEligibility(data);
       } catch (err) {
         console.error("Eligibility Error:", err);
+
       }
     }
 
