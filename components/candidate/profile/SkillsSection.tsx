@@ -36,20 +36,9 @@ export default function SkillsSection({
   const [level, setLevel] = useState("");
 
   useEffect(() => {
-    loadSkills();
-  }, []);
-
-  async function loadSkills() {
-    try {
-      setLoading(true);
-      const data = await getSkills();
-      setSkills(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
+    setSkills(initialSkills);
+    setLoading(false);
+  }, [initialSkills]);
 
   function openAddModal() {
     setEditingSkill(null);
@@ -82,7 +71,7 @@ export default function SkillsSection({
       }
 
       setShowModal(false);
-      loadSkills();
+      if (onEditClick) onEditClick();
     } catch (err) {
       console.error(err);
     }
@@ -93,7 +82,8 @@ export default function SkillsSection({
 
     try {
       await deleteSkill(id);
-      loadSkills();
+      setSkills((prev) => prev.filter((s) => s.id !== id));
+      if (onEditClick) onEditClick();
     } catch (err) {
       console.error(err);
     }

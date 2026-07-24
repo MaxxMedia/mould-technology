@@ -114,10 +114,13 @@ export default function ProfileHeader({
                   <UserPlus size={16} />
                   Connect
                 </button>
+                {/* Message button commented out for candidate profile */}
+                {/*
                 <button className="border-2 border-[#0F5B78] text-[#0F5B78] hover:bg-[#0F5B78]/10 px-5 py-2 rounded-full font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer">
                   <MessageSquare size={16} />
                   Message
                 </button>
+                */}
                 <button className="border border-gray-300 hover:bg-gray-100 text-[#5A5F69] px-4 py-2 rounded-full font-semibold text-sm transition-colors cursor-pointer">
                   More...
                 </button>

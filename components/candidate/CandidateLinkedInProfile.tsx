@@ -164,63 +164,128 @@ export default function CandidateLinkedInProfile({ username }: Props) {
 
   const loadCandidate = async () => {
     try {
+      setLoading(true);
+
+      // 1. Determine ownership first
+      let currentIsOwner = false;
+      const stored = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+      if (stored) {
+        try {
+          const u = JSON.parse(stored);
+          if (u.username && u.username.toLowerCase() === username.toLowerCase()) {
+            currentIsOwner = true;
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      // 2. Fetch candidate base profile by username or ID
       let baseData: any = null;
       try {
-        const res = await fetch(
+        let res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/candidates/${username}`,
           { cache: "no-store" }
         );
+        if (!res.ok) {
+          res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/candidates/id/${username}`,
+            { cache: "no-store" }
+          );
+        }
         if (res.ok) {
           baseData = await res.json();
         }
-      } catch {
-        // fallback below
+      } catch (err) {
+        console.error("Failed to fetch candidate base data", err);
       }
 
-      const safeFetch = async (fn: () => Promise<any>) => {
+      // Check if logged in user is owner via fetched profile if not matched by username
+      if (!currentIsOwner && baseData) {
         try {
-          return await fn();
-        } catch {
-          return [];
+          const me = await fetchMyCandidateProfile();
+          if (me && (me.username?.toLowerCase() === baseData.username?.toLowerCase() || me.id === baseData.id)) {
+            currentIsOwner = true;
+          }
+        } catch {}
+      }
+
+      setIsOwner(currentIsOwner);
+
+      // Helper function to extract array from baseData keys
+      const extractArray = (keys: string[]) => {
+        if (!baseData) return [];
+        for (const k of keys) {
+          if (Array.isArray(baseData[k])) return baseData[k];
         }
+        return [];
       };
 
-      const [
-        skillsData,
-        expData,
-        eduData,
-        projData,
-        certsData,
-        langsData,
-        achievementsData,
-        interestsData,
-        socialsData,
-      ] = await Promise.all([
-        safeFetch(getSkills),
-        safeFetch(getExperiences),
-        safeFetch(getEducation),
-        safeFetch(getProjects),
-        safeFetch(getCertifications),
-        safeFetch(getLanguages),
-        safeFetch(getAchievements),
-        safeFetch(getInterests),
-        safeFetch(getSocials),
-      ]);
+      let skillsData: any[] = extractArray(["skills", "CandidateSkill", "CandidateSkills"]);
+      let expData: any[] = extractArray(["experiences", "CandidateExperience", "CandidateExperiences"]);
+      let eduData: any[] = extractArray(["educationList", "education", "CandidateEducation", "CandidateEducations"]);
+      let projData: any[] = extractArray(["projectsList", "projects", "CandidateProject", "CandidateProjects"]);
+      let certsData: any[] = extractArray(["certifications", "CandidateCertification", "CandidateCertifications"]);
+      let langsData: any[] = extractArray(["languages", "CandidateLanguage", "CandidateLanguages"]);
+      let achievementsData: any[] = extractArray(["achievements", "CandidateAchievement", "CandidateAchievements"]);
+      let interestsData: any[] = extractArray(["interests", "CandidateInterest", "CandidateInterests"]);
+      let socialsData: any[] = extractArray(["socials", "CandidateSocial", "CandidateSocials"]);
+
+      // 3. ONLY if logged-in user IS THE OWNER, fetch owner's personal items via token
+      if (currentIsOwner) {
+        const safeFetch = async (fn: () => Promise<any>) => {
+          try {
+            return await fn();
+          } catch {
+            return [];
+          }
+        };
+
+        const [
+          mySkills,
+          myExps,
+          myEdus,
+          myProjs,
+          myCerts,
+          myLangs,
+          myAchievements,
+          myInterests,
+          mySocials,
+        ] = await Promise.all([
+          safeFetch(getSkills),
+          safeFetch(getExperiences),
+          safeFetch(getEducation),
+          safeFetch(getProjects),
+          safeFetch(getCertifications),
+          safeFetch(getLanguages),
+          safeFetch(getAchievements),
+          safeFetch(getInterests),
+          safeFetch(getSocials),
+        ]);
+
+        if (mySkills.length > 0) skillsData = mySkills;
+        if (myExps.length > 0) expData = myExps;
+        if (myEdus.length > 0) eduData = myEdus;
+        if (myProjs.length > 0) projData = myProjs;
+        if (myCerts.length > 0) certsData = myCerts;
+        if (myLangs.length > 0) langsData = myLangs;
+        if (myAchievements.length > 0) achievementsData = myAchievements;
+        if (myInterests.length > 0) interestsData = myInterests;
+        if (mySocials.length > 0) socialsData = mySocials;
+      }
 
       if (baseData) {
         setCandidate({
           ...baseData,
-          skills: skillsData || [],
-          experiences: expData || [],
-          educationList: (eduData && eduData.length > 0)
-            ? eduData
-            : (Array.isArray(baseData.education) ? baseData.education : (baseData.education && typeof baseData.education === "object" ? [baseData.education] : [])),
-          projectsList: projData || [],
-          certifications: certsData || [],
-          languages: langsData || [],
-          achievements: achievementsData || [],
-          interests: interestsData || [],
-          socials: socialsData || [],
+          skills: skillsData,
+          experiences: expData,
+          educationList: eduData,
+          projectsList: projData,
+          certifications: certsData,
+          languages: langsData,
+          achievements: achievementsData,
+          interests: interestsData,
+          socials: socialsData,
         });
       } else {
         setCandidate({
@@ -232,15 +297,15 @@ export default function CandidateLinkedInProfile({ username }: Props) {
           company: "",
           education: "",
           websiteUrl: "",
-          skills: skillsData || [],
-          experiences: expData || [],
-          educationList: eduData || [],
-          projectsList: projData || [],
-          certifications: certsData || [],
-          languages: langsData || [],
-          achievements: achievementsData || [],
-          interests: interestsData || [],
-          socials: socialsData || [],
+          skills: skillsData,
+          experiences: expData,
+          educationList: eduData,
+          projectsList: projData,
+          certifications: certsData,
+          languages: langsData,
+          achievements: achievementsData,
+          interests: interestsData,
+          socials: socialsData,
         });
       }
     } catch (err) {
@@ -656,15 +721,17 @@ export default function CandidateLinkedInProfile({ username }: Props) {
               Projects
             </button>
 
-            <button
-              onClick={() => setActiveTab("connections")}
-              className={`py-3.5 text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "connections"
-                ? "border-[#0F5B78] text-[#0F5B78]"
-                : "border-transparent text-[#5A5F69] hover:text-[#000000]"
-                }`}
-            >
-              Connections
-            </button>
+            {isOwner && (
+              <button
+                onClick={() => setActiveTab("connections")}
+                className={`py-3.5 text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "connections"
+                  ? "border-[#0F5B78] text-[#0F5B78]"
+                  : "border-transparent text-[#5A5F69] hover:text-[#000000]"
+                  }`}
+              >
+                Connections
+              </button>
+            )}
           </div>
         </div>
 
@@ -828,8 +895,8 @@ export default function CandidateLinkedInProfile({ username }: Props) {
           </div>
         )}
 
-        {/* TAB 3: CONNECTIONS */}
-        {activeTab === "connections" && (
+        {/* TAB 3: CONNECTIONS (OWNER ONLY) */}
+        {activeTab === "connections" && isOwner && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
             <div className="lg:col-span-8 space-y-4">
               <div className="bg-white rounded-xl border border-[#e0e0e0] p-12 text-center shadow-sm">
