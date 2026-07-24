@@ -1,40 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import {
-  MapPin,
-  CheckCircle,
-  Pencil,
-  Camera,
-  Search,
-  Mail,
-  Globe,
-  Building2,
-  Users,
-  Award,
-  BookOpen,
-  Briefcase,
-  GraduationCap,
-  Sparkles,
-  UserPlus,
-  MessageSquare,
-  MoreHorizontal,
-  ExternalLink,
-  ChevronDown,
-  X,
-  UserCheck,
-  TrendingUp,
-  ShieldCheck,
-  Layers,
-  Heart,
-  Bookmark,
-  FileText,
-  Loader2,
-  CheckCircle2,
-  FolderKanban
-} from "lucide-react";
-import CandidateAvatar from "@/components/candidate/CandidateAvatar";
+import { Pencil, CheckCircle2, Users, FolderKanban } from "lucide-react";
 
 import SkillsSection from "@/components/candidate/profile/SkillsSection";
 import ExperienceSection from "@/components/candidate/profile/ExperienceSection";
@@ -44,7 +11,10 @@ import CertificationsSection from "@/components/candidate/profile/Certifications
 import LanguagesSection from "@/components/candidate/profile/LanguagesSection";
 import AchievementsSection from "@/components/candidate/profile/AchievementsSection";
 import InterestsSection from "@/components/candidate/profile/InterestsSection";
-import SocialLinksSection from "@/components/candidate/profile/SocialLinksSection";
+
+import ProfileHeader from "@/components/candidate/profile/ProfileHeader";
+import CandidateSidebar from "@/components/candidate/profile/sidebar/CandidateSidebar";
+import ProfileModals, { type ModalType } from "@/components/candidate/profile/ProfileModals";
 
 // API imports
 import { fetchMyCandidateProfile, updateMyCandidateProfile, syncCandidateUserInStorage } from "@/lib/candidateProfile";
@@ -58,18 +28,16 @@ import { getAchievements, createAchievement, updateAchievement, deleteAchievemen
 import { getInterests, createInterest, updateInterest, deleteInterest } from "@/lib/api/candidate/interests";
 import { getSocials, createSocial, updateSocial, deleteSocial } from "@/lib/api/candidate/socials";
 
-// Form imports
-import BasicInfoForm, { type BasicInfoValues } from "@/components/candidate/profile/forms/BasicInfoForm";
-import AboutForm from "@/components/candidate/profile/forms/AboutForm";
-import ExperienceForm, { type Experience } from "@/components/candidate/profile/forms/ExperienceForm";
-import EducationForm, { type Education } from "@/components/candidate/profile/forms/EducationForm";
-import SkillsForm, { type Skill } from "@/components/candidate/profile/forms/SkillsForm";
-import AchievementsForm, { type Achievement } from "@/components/candidate/profile/forms/AchievementsForm";
-import CertificationsForm, { type Certification } from "@/components/candidate/profile/forms/CertificationsForm";
-import ProjectsForm, { type Project } from "@/components/candidate/profile/forms/ProjectsForm";
-import LanguagesForm, { type Language } from "@/components/candidate/profile/forms/LanguagesForm";
-import InterestsForm, { type Interest } from "@/components/candidate/profile/forms/InterestsForm";
-import SocialLinksForm, { type SocialLink } from "@/components/candidate/profile/forms/SocialLinksForm";
+import { type BasicInfoValues } from "@/components/candidate/profile/forms/BasicInfoForm";
+import { type Experience } from "@/components/candidate/profile/forms/ExperienceForm";
+import { type Education } from "@/components/candidate/profile/forms/EducationForm";
+import { type Skill } from "@/components/candidate/profile/forms/SkillsForm";
+import { type Achievement } from "@/components/candidate/profile/forms/AchievementsForm";
+import { type Certification } from "@/components/candidate/profile/forms/CertificationsForm";
+import { type Project } from "@/components/candidate/profile/forms/ProjectsForm";
+import { type Language } from "@/components/candidate/profile/forms/LanguagesForm";
+import { type Interest } from "@/components/candidate/profile/forms/InterestsForm";
+import { type SocialLink } from "@/components/candidate/profile/forms/SocialLinksForm";
 
 type CandidateProfileData = {
   username: string;
@@ -149,29 +117,12 @@ interface Props {
   username: string;
 }
 
-type ModalType =
-  | "intro"
-  | "about"
-  | "experience"
-  | "education"
-  | "skills"
-  | "projects"
-  | "certifications"
-  | "languages"
-  | "achievements"
-  | "interests"
-  | "socials"
-  | null;
-
 export default function CandidateLinkedInProfile({ username }: Props) {
   const [candidate, setCandidate] = useState<CandidateProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
 
-  type TabType =
-    | "profile"
-    | "projects"
-    | "connections";
+  type TabType = "profile" | "projects" | "connections";
 
   const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [activeModal, setActiveModal] = useState<ModalType>(null);
@@ -658,22 +609,6 @@ export default function CandidateLinkedInProfile({ username }: Props) {
 
   const candidateProjects = candidate?.projectsList ?? [];
 
-  // Sidebar components in strict requested order: 1. Trending Articles, 2. Recommended Jobs, 3. Saved Jobs, 4. My Applications
-  const renderSidebar = () => (
-    <div className="lg:col-span-4 space-y-4">
-      <TrendingArticlesCard />
-      <HomeFeedCard />
-      <SavedJobsCard />
-      <MyApplicationsCard />
-      <ContactCard
-        candidate={candidate}
-        isOwner={isOwner}
-        onEditClick={isOwner ? () => setActiveModal("socials") : undefined}
-      />
-      <PublicUrlCard username={candidate?.username || username} />
-    </div>
-  );
-
   return (
     <div className="bg-[#f8f9fa] min-h-screen text-[#000000] relative">
       {/* Toast Notification */}
@@ -686,111 +621,19 @@ export default function CandidateLinkedInProfile({ username }: Props) {
 
       <div className="max-w-[1180px] mx-auto px-4 py-6 pb-16">
 
-        {/* ================= SHARED HEADER CARD ================= */}
-        <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden mb-4 relative">
-          {/* Cover Banner using Secondary Brand Color #0F5B78 */}
-          <div className="h-36 sm:h-44 bg-gradient-to-r from-[#0F5B78] via-[#0F5B78] to-[#B40F24] relative">
-            {isOwner && (
-              <button
-                onClick={() => setActiveModal("intro")}
-                className="absolute top-3 right-3 bg-white/90 hover:bg-white p-2 rounded-full shadow text-[#5A5F69] hover:text-[#000000] transition-colors flex items-center gap-1.5 text-xs font-semibold px-3 cursor-pointer"
-                title="Edit Banner & Intro"
-              >
-                <Pencil size={14} />
-                <span>Edit Banner</span>
-              </button>
-            )}
-          </div>
+        {/* PROFILE HEADER */}
+        <ProfileHeader
+          displayName={displayName}
+          displayHeadline={displayHeadline}
+          displayCompany={displayCompany}
+          displayEducation={displayEducation}
+          displayLocation={displayLocation}
+          avatarUrl={candidate?.avatarUrl}
+          isOwner={isOwner}
+          onEditIntroClick={() => setActiveModal("intro")}
+        />
 
-          {/* Profile Header Main */}
-          <div className="px-6 pb-6 relative">
-            {/* Avatar */}
-            <div className="absolute -top-16 left-6 z-10">
-              <div className="relative">
-                <CandidateAvatar
-                  avatarUrl={candidate?.avatarUrl}
-                  name={displayName}
-                  size="xl"
-                  borderClassName="border-4 border-white shadow-md"
-                />
-                {isOwner && (
-                  <button
-                    onClick={() => setActiveModal("intro")}
-                    className="absolute bottom-1 right-1 bg-white rounded-full p-1.5 shadow border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
-                    title="Edit Photo"
-                  >
-                    <Camera size={13} className="text-[#5A5F69]" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Header Actions & Text */}
-            <div className="pt-14 sm:pt-4 flex flex-col md:flex-row md:items-start justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-[#000000]">{displayName}</h1>
-                  <CheckCircle size={20} className="text-[#0F5B78] fill-[#0F5B78]/10" />
-                  {isOwner && (
-                    <button
-                      onClick={() => setActiveModal("intro")}
-                      className="text-[#5A5F69] hover:text-[#0F5B78] transition-colors p-1 rounded-full hover:bg-gray-100 cursor-pointer ml-1"
-                      title="Edit Intro"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                  )}
-                </div>
-                {displayHeadline && (
-                  <p className="text-sm sm:text-base text-[#5A5F69] font-medium mt-1 max-w-2xl leading-relaxed">
-                    {displayHeadline}
-                  </p>
-                )}
-                <div className="flex items-center gap-2 text-xs sm:text-sm text-[#5A5F69] mt-2 flex-wrap">
-                  {displayCompany && <span className="font-semibold text-[#000000]">{displayCompany}</span>}
-                  {displayCompany && displayEducation && <span>•</span>}
-                  {displayEducation && <span>{displayEducation}</span>}
-                  {(displayCompany || displayEducation) && displayLocation && <span>•</span>}
-                  {displayLocation && (
-                    <span className="flex items-center gap-1">
-                      <MapPin size={13} className="text-[#5A5F69]" />
-                      {displayLocation}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Action Buttons using #0F5B78 */}
-              <div className="flex items-center gap-2 self-start flex-wrap mt-2 md:mt-0">
-                {isOwner ? (
-                  <button
-                    onClick={() => setActiveModal("intro")}
-                    className="bg-[#0F5B78] hover:bg-[#0b445a] text-white px-5 py-2 rounded-full font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Pencil size={15} />
-                    Edit Profile
-                  </button>
-                ) : (
-                  <>
-                    <button className="bg-[#0F5B78] hover:bg-[#0b445a] text-white px-5 py-2 rounded-full font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer">
-                      <UserPlus size={16} />
-                      Connect
-                    </button>
-                    <button className="border-2 border-[#0F5B78] text-[#0F5B78] hover:bg-[#0F5B78]/10 px-5 py-2 rounded-full font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer">
-                      <MessageSquare size={16} />
-                      Message
-                    </button>
-                    <button className="border border-gray-300 hover:bg-gray-100 text-[#5A5F69] px-4 py-2 rounded-full font-semibold text-sm transition-colors cursor-pointer">
-                      More...
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ================= SHARED TAB BAR ================= */}
+        {/* SHARED SUB-NAV TAB BAR */}
         <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-sm mb-4">
           <div className="flex items-center gap-8 px-6 overflow-x-auto scrollbar-hide">
             <button
@@ -825,7 +668,7 @@ export default function CandidateLinkedInProfile({ username }: Props) {
           </div>
         </div>
 
-        {/* ================= TAB 1: PROFILE ================= */}
+        {/* TAB 1: PROFILE */}
         {activeTab === "profile" && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
             {/* MAIN COLUMN */}
@@ -957,11 +800,16 @@ export default function CandidateLinkedInProfile({ username }: Props) {
             </div>
 
             {/* SIDEBAR COLUMN */}
-            {renderSidebar()}
+            <CandidateSidebar
+              candidate={candidate}
+              username={username}
+              isOwner={isOwner}
+              onEditSocialsClick={() => setActiveModal("socials")}
+            />
           </div>
         )}
 
-        {/* ================= TAB 2: PROJECTS ================= */}
+        {/* TAB 2: PROJECTS */}
         {activeTab === "projects" && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
             <div className="lg:col-span-8 space-y-4">
@@ -971,11 +819,16 @@ export default function CandidateLinkedInProfile({ username }: Props) {
                 onEditClick={isOwner ? () => setActiveModal("projects") : undefined}
               />
             </div>
-            {renderSidebar()}
+            <CandidateSidebar
+              candidate={candidate}
+              username={username}
+              isOwner={isOwner}
+              onEditSocialsClick={() => setActiveModal("socials")}
+            />
           </div>
         )}
 
-        {/* ================= TAB 3: CONNECTIONS ================= */}
+        {/* TAB 3: CONNECTIONS */}
         {activeTab === "connections" && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
             <div className="lg:col-span-8 space-y-4">
@@ -989,518 +842,36 @@ export default function CandidateLinkedInProfile({ username }: Props) {
                 </p>
               </div>
             </div>
-            {renderSidebar()}
+            <CandidateSidebar
+              candidate={candidate}
+              username={username}
+              isOwner={isOwner}
+              onEditSocialsClick={() => setActiveModal("socials")}
+            />
           </div>
         )}
 
       </div>
 
-      {/* ================= INLINE MODAL DIALOGS (LINKEDIN STYLE) ================= */}
-      {activeModal && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 overflow-y-auto backdrop-blur-xs">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative animate-in fade-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-5">
-              <h3 className="text-xl font-bold text-[#000000]">
-                {activeModal === "intro" && "Edit Intro"}
-                {activeModal === "about" && "Edit Summary"}
-                {activeModal === "experience" && "Edit Experience"}
-                {activeModal === "education" && "Edit Education"}
-                {activeModal === "skills" && "Edit Skills"}
-                {activeModal === "projects" && "Edit Projects"}
-                {activeModal === "certifications" && "Edit Certifications"}
-                {activeModal === "languages" && "Edit Languages"}
-                {activeModal === "achievements" && "Edit Achievements"}
-                {activeModal === "interests" && "Edit Interests"}
-                {activeModal === "socials" && "Edit Contact & Social Links"}
-              </h3>
-              <button
-                onClick={() => setActiveModal(null)}
-                className="text-[#5A5F69] hover:text-[#000000] p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div>
-              {activeModal === "intro" && (
-                <BasicInfoForm
-                  initialValues={initialBasicInfo}
-                  onSubmit={handleSaveIntro}
-                  loading={modalSaving}
-                />
-              )}
-
-              {activeModal === "about" && (
-                <AboutForm
-                  initialValue={candidate?.about || ""}
-                  onSubmit={handleSaveAbout}
-                  loading={modalSaving}
-                />
-              )}
-
-              {activeModal === "experience" && (
-                <ExperienceForm
-                  initialValues={(candidate?.experiences || []).map((e: any) => ({
-                    id: e.id,
-                    title: e.designation || e.title || "",
-                    company: e.companyName || e.company || "",
-                    employmentType: e.employmentType || "",
-                    location: e.location || "",
-                    startDate: e.startDate || "",
-                    endDate: e.endDate || "",
-                    currentlyWorking: e.currentlyWorking || false,
-                    description: e.description || "",
-                  }))}
-                  onSubmit={handleSaveExperience}
-                  loading={modalSaving}
-                />
-              )}
-
-              {activeModal === "education" && (
-                <EducationForm
-                  initialValues={candidate?.educationList || []}
-                  onSubmit={handleSaveEducation}
-                  loading={modalSaving}
-                />
-              )}
-
-              {activeModal === "skills" && (
-                <SkillsForm
-                  initialValues={candidate?.skills || []}
-                  onSubmit={handleSaveSkills}
-                  loading={modalSaving}
-                />
-              )}
-
-              {activeModal === "projects" && (
-                <ProjectsForm
-                  initialValues={candidate?.projectsList || []}
-                  onSubmit={handleSaveProjects}
-                  loading={modalSaving}
-                />
-              )}
-
-              {activeModal === "certifications" && (
-                <CertificationsForm
-                  initialValues={candidate?.certifications || []}
-                  onSubmit={handleSaveCertifications}
-                  loading={modalSaving}
-                />
-              )}
-
-              {activeModal === "languages" && (
-                <LanguagesForm
-                  initialValues={candidate?.languages || []}
-                  onSubmit={handleSaveLanguages}
-                  loading={modalSaving}
-                />
-              )}
-
-              {activeModal === "achievements" && (
-                <AchievementsForm
-                  initialValues={candidate?.achievements || []}
-                  onSubmit={handleSaveAchievements}
-                  loading={modalSaving}
-                />
-              )}
-
-              {activeModal === "interests" && (
-                <InterestsForm
-                  initialValues={candidate?.interests || []}
-                  onSubmit={handleSaveInterests}
-                  loading={modalSaving}
-                />
-              )}
-
-              {activeModal === "socials" && (
-                <SocialLinksForm
-                  initialValues={candidate?.socials || []}
-                  onSubmit={handleSaveSocials}
-                  loading={modalSaving}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════
-   SIDEBAR CARDS (UNIFIED COLOR #0F5B78 & REAL DATA)
-   ═══════════════════════════════════════════════════════ */
-
-function TrendingArticlesCard() {
-  const [articles, setArticles] = useState<{ id: number; title: string; slug: string; views?: number }[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadTrending() {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/articles/approved`,
-          { cache: "no-store" }
-        );
-        if (!res.ok) return;
-        const data = await res.json();
-        const list = Array.isArray(data) ? data : [];
-        const sorted = [...list].sort((a, b) => (b.views ?? 0) - (a.views ?? 0));
-        setArticles(sorted);
-      } catch {
-        // Fallback
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadTrending();
-  }, []);
-
-  return (
-    <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-md overflow-hidden">
-      <div className="bg-[#0F5B78] px-5 py-3.5">
-        <h3 className="text-white font-bold text-base sm:text-lg tracking-wide">
-          Trending Articles
-        </h3>
-      </div>
-
-      {loading ? (
-        <div className="p-4 text-center text-xs text-[#5A5F69]">Loading trending articles...</div>
-      ) : articles.length === 0 ? (
-        <div className="p-5 text-center text-xs text-[#5A5F69]">No trending articles at the moment.</div>
-      ) : (
-        <div className="divide-y divide-gray-100">
-          {articles.slice(0, 5).map((article, index) => (
-            <Link
-              key={article.id}
-              href={`/post/${article.slug}`}
-              className="px-5 py-3.5 flex items-start gap-3.5 hover:bg-gray-50/80 transition-colors group block"
-            >
-              <div className="w-7 h-7 rounded-md bg-[#0F5B78] text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                {index + 1}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-bold text-[#000000] group-hover:text-[#0F5B78] transition-colors leading-snug line-clamp-2">
-                  {article.title}
-                </h4>
-                <p className="text-xs text-[#5A5F69] mt-0.5 font-medium">
-                  {(article.views ?? 0).toLocaleString()} views
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {articles.length > 0 && (
-        <div className="border-t border-gray-100 bg-white">
-          <Link
-            href="/articles"
-            className="text-center font-bold text-sm text-[#0F5B78] hover:underline py-3.5 block hover:bg-blue-50/40 transition-colors"
-          >
-            View all articles →
-          </Link>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function HomeFeedCard() {
-  const [jobs, setJobs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadJobs() {
-      try {
-        let fetchedJobs: any[] = [];
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/jobs?page=1&limit=20`, { cache: "no-store" });
-        if (res.ok) {
-          const data = await res.json();
-          fetchedJobs = data.jobs || (Array.isArray(data) ? data : []);
-        }
-        if (fetchedJobs.length === 0) {
-          const fallbackRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/jobs/approved`, { cache: "no-store" });
-          if (fallbackRes.ok) {
-            const data = await fallbackRes.json();
-            fetchedJobs = Array.isArray(data) ? data : data.jobs || [];
-          }
-        }
-        setJobs(fetchedJobs.slice(0, 5));
-      } catch (err) {
-        console.error("Failed to fetch jobs for Recommended Jobs card", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadJobs();
-  }, []);
-
-  return (
-    <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-md overflow-hidden">
-      <div className="bg-[#0F5B78] px-5 py-3.5 flex items-center justify-between">
-        <h3 className="text-white font-bold text-base tracking-wide flex items-center gap-2">
-          <Briefcase size={18} />
-          Recommended Jobs
-        </h3>
-        <span className="text-[11px] font-semibold text-white bg-white/20 px-2.5 py-0.5 rounded-full">
-          {jobs.length > 0 ? `${jobs.length} Listed` : "Jobs"}
-        </span>
-      </div>
-
-      {loading ? (
-        <div className="p-4 text-center text-xs text-[#5A5F69]">Loading jobs...</div>
-      ) : jobs.length === 0 ? (
-        <div className="p-5 text-center text-xs text-[#5A5F69]">No recommended jobs available.</div>
-      ) : (
-        <div className="divide-y divide-gray-100">
-          {jobs.slice(0, 5).map((job) => (
-            <Link
-              key={job.id}
-              href="/feed"
-              className="p-3.5 block hover:bg-blue-50/30 transition-colors cursor-pointer group"
-            >
-              <h4 className="text-xs sm:text-sm font-bold text-[#000000] group-hover:text-[#0F5B78] transition-colors truncate">
-                {job.title}
-              </h4>
-              <div className="flex items-center justify-between text-xs text-[#5A5F69] mt-1">
-                <span className="font-medium text-[#0F5B78]">{job.Company?.name || job.companyName || ""}</span>
-                {job.location && (
-                  <span className="flex items-center gap-1">
-                    <MapPin size={11} className="text-[#5A5F69]" />
-                    {job.location}
-                  </span>
-                )}
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-
-      <div className="border-t border-gray-100 bg-white p-2">
-        <Link
-          href="/feed"
-          className="w-full text-center font-bold text-xs text-[#0F5B78] hover:underline py-2 block hover:bg-blue-50/40 rounded transition-colors cursor-pointer"
-        >
-          View all jobs in feed →
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function SavedJobsCard() {
-  const [savedJobs, setSavedJobs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadSaved() {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/jobs/saved/me`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (Array.isArray(data)) setSavedJobs(data.slice(0, 5));
-      } catch {
-        // Fallback
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadSaved();
-  }, []);
-
-  return (
-    <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-md overflow-hidden">
-      <div className="bg-[#0F5B78] px-5 py-3.5 flex items-center justify-between">
-        <h3 className="text-white font-bold text-base tracking-wide flex items-center gap-2">
-          <Bookmark size={18} />
-          Saved Jobs
-        </h3>
-        <span className="text-[11px] font-semibold text-white bg-white/20 px-2.5 py-0.5 rounded-full">
-          {savedJobs.length} Listed
-        </span>
-      </div>
-
-      {loading ? (
-        <div className="p-4 text-center text-xs text-[#5A5F69]">Loading saved jobs...</div>
-      ) : savedJobs.length === 0 ? (
-        <div className="p-5 text-center text-xs text-[#5A5F69]">
-          <p className="font-semibold text-[#000000]">No saved jobs yet</p>
-          <p className="mt-1">Bookmark jobs to view them here</p>
-        </div>
-      ) : (
-        <div className="divide-y divide-gray-100">
-          {savedJobs.slice(0, 5).map((item) => {
-            const job = item.Job || item;
-            return (
-              <div
-                key={item.id || job.id}
-                className="p-3.5 block hover:bg-blue-50/40 transition-colors group"
-              >
-                <h4 className="text-xs sm:text-sm font-bold text-[#000000] group-hover:text-[#0F5B78] transition-colors truncate">
-                  {job.title}
-                </h4>
-                <div className="flex items-center justify-between text-xs text-[#5A5F69] mt-1">
-                  <span className="font-medium text-[#0F5B78]">{job.Company?.name || job.companyName || ""}</span>
-                  <span>{job.location || ""}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function MyApplicationsCard() {
-  const [applications, setApplications] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadApplications() {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/applications/me`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (Array.isArray(data)) setApplications(data.slice(0, 5));
-      } catch {
-        // Fallback
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadApplications();
-  }, []);
-
-  return (
-    <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-md overflow-hidden">
-      <div className="bg-[#0F5B78] px-5 py-3.5 flex items-center justify-between">
-        <h3 className="text-white font-bold text-base tracking-wide flex items-center gap-2">
-          <FileText size={18} />
-          My Applications
-        </h3>
-        <span className="text-[11px] font-semibold text-white bg-white/20 px-2.5 py-0.5 rounded-full">
-          {applications.length} Listed
-        </span>
-      </div>
-
-      {loading ? (
-        <div className="p-4 text-center text-xs text-[#5A5F69]">Loading applications...</div>
-      ) : applications.length === 0 ? (
-        <div className="p-5 text-center text-xs text-[#5A5F69]">
-          <p className="font-semibold text-[#000000]">No applications submitted</p>
-          <p className="mt-1">Applied roles will appear here</p>
-        </div>
-      ) : (
-        <div className="divide-y divide-gray-100">
-          {applications.slice(0, 5).map((app) => {
-            const job = app.Job || {};
-            return (
-              <div
-                key={app.id}
-                className="p-3.5 flex items-center justify-between hover:bg-gray-50 transition-colors"
-              >
-                <div className="min-w-0 flex-1 pr-2">
-                  <h4 className="text-xs sm:text-sm font-bold text-[#000000] truncate">{job.title || "Applied Role"}</h4>
-                  <p className="text-xs text-[#5A5F69] mt-0.5 truncate">{job.Company?.name || ""}</p>
-                </div>
-                <span className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-blue-50 text-[#0F5B78] border border-[#0F5B78]/30 shrink-0">
-                  {app.status || "APPLIED"}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ContactCard({
-  candidate,
-  isOwner,
-  onEditClick,
-}: {
-  candidate?: CandidateProfileData | null;
-  isOwner?: boolean;
-  onEditClick?: () => void;
-}) {
-  return (
-    <div className="bg-white rounded-xl border border-[#e0e0e0] p-6 shadow-sm relative">
-      {isOwner && onEditClick && (
-        <button
-          onClick={onEditClick}
-          title="Edit Contact & Social Links"
-          className="absolute top-4 right-4 text-[#5A5F69] hover:text-[#0F5B78] transition-colors p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
-        >
-          <Pencil size={16} />
-        </button>
-      )}
-
-      <h3 className="text-base font-bold text-[#000000] mb-4">Contact & Socials</h3>
-
-      <div className="space-y-3.5 text-xs sm:text-sm">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#0F5B78]/10 flex items-center justify-center text-[#0F5B78] shrink-0">
-            <Mail size={16} />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-[#5A5F69] font-medium">Email</p>
-            <p className="font-semibold text-[#000000] truncate">
-              {candidate?.email || "Not specified"}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#0F5B78]/10 flex items-center justify-center text-[#0F5B78] shrink-0">
-            <Globe size={16} />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-[#5A5F69] font-medium">Website</p>
-            {candidate?.websiteUrl ? (
-              <a
-                href={candidate.websiteUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="font-semibold text-[#0F5B78] hover:underline truncate block"
-              >
-                {candidate.websiteUrl}
-              </a>
-            ) : (
-              <p className="font-semibold text-[#5A5F69] truncate">Not specified</p>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PublicUrlCard({ username }: { username?: string }) {
-  return (
-    <div className="bg-white rounded-xl border border-[#e0e0e0] p-5 shadow-sm">
-      <h4 className="font-bold text-xs text-[#5A5F69] uppercase tracking-wider mb-2">Public Profile & URL</h4>
-      <p className="text-xs text-[#0F5B78] font-mono break-all font-medium">
-        {typeof window !== 'undefined' ? `${window.location.origin}/candidate/${username || ''}` : `/candidate/${username || ''}`}
-      </p>
+      {/* INLINE MODAL DIALOGS (LINKEDIN STYLE) */}
+      <ProfileModals
+        activeModal={activeModal}
+        onClose={() => setActiveModal(null)}
+        candidate={candidate}
+        initialBasicInfo={initialBasicInfo}
+        modalSaving={modalSaving}
+        onSaveIntro={handleSaveIntro}
+        onSaveAbout={handleSaveAbout}
+        onSaveExperience={handleSaveExperience}
+        onSaveEducation={handleSaveEducation}
+        onSaveSkills={handleSaveSkills}
+        onSaveProjects={handleSaveProjects}
+        onSaveCertifications={handleSaveCertifications}
+        onSaveLanguages={handleSaveLanguages}
+        onSaveAchievements={handleSaveAchievements}
+        onSaveInterests={handleSaveInterests}
+        onSaveSocials={handleSaveSocials}
+      />
     </div>
   );
 }
