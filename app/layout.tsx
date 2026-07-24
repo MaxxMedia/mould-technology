@@ -92,7 +92,7 @@ export default function RootLayout({
       <body className="antialiased">
         <Header />
 
-        <main className="pt-[120px] pb-24">
+        <main className="pt-[80px] pb-24">
           {children}
         </main>
 

@@ -87,14 +87,14 @@ export default async function EventDetailsPage({
       <EventViewTracker slug={slug} />
 
       {/* ================= HEADER ================= */}
-      <div className="relative bg-[#0b1f4d] text-white">
+      <div className="relative bg-gradient-to-r from-[#1a6d8a] via-[#3a3a3a] to-[#c73b4f] text-white overflow-hidden">
         {event.bannerUrl && (
-          <Image src={event.bannerUrl} alt={event.title} fill className="object-cover opacity-30" priority />
+          <Image src={event.bannerUrl} alt={event.title} fill className="object-cover opacity-20" priority />
         )}
         <div className="relative max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row md:items-center gap-6">
           {event.logoUrl && (
-            <div className="bg-white p-3 rounded-lg w-40 flex-shrink-0">
-              <Image src={event.logoUrl} alt={event.title} width={140} height={80} className="object-contain" />
+            <div className="bg-white p-2 rounded-lg w-24 flex-shrink-0">
+              <Image src={event.logoUrl} alt={event.title} width={90} height={50} className="object-contain" />
             </div>
           )}
 
@@ -171,7 +171,7 @@ export default async function EventDetailsPage({
                 <Link
                   href={event.mapUrl || `https://maps.google.com/?q=${encodeURIComponent(event.location)}`}
                   target="_blank"
-                  className="text-xs text-blue-600 hover:underline"
+                  className="text-xs text-[#0f5b78] hover:underline"
                 >
                   Open in Maps ↗
                 </Link>
@@ -196,7 +196,7 @@ export default async function EventDetailsPage({
           {/* UPCOMING EVENTS */}
           {upcomingEvents.length > 0 && (
             <div className="bg-white border border-gray-200 rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-blue-700 border-b-2 border-blue-700 inline-block pb-1 mb-4">
+              <h3 className="text-sm font-semibold text-[#0f5b78] border-b-2 border-[#0f5b78] inline-block pb-1 mb-4">
                 Upcoming Events
               </h3>
               <div className="space-y-4">
