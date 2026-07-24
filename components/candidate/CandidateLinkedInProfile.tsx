@@ -35,9 +35,6 @@ import {
   FolderKanban
 } from "lucide-react";
 import CandidateAvatar from "@/components/candidate/CandidateAvatar";
-import JobFeed from "@/components/job/JobFeed";
-import SavedJobs from "@/components/job/SavedJobs";
-import MyApplicationsPage from "@/app/candidate/applications/page";
 
 import SkillsSection from "@/components/candidate/profile/SkillsSection";
 import ExperienceSection from "@/components/candidate/profile/ExperienceSection";
@@ -174,10 +171,7 @@ export default function CandidateLinkedInProfile({ username }: Props) {
   type TabType =
     | "profile"
     | "projects"
-    | "connections"
-    | "feed"
-    | "saved"
-    | "applications";
+    | "connections";
 
   const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [activeModal, setActiveModal] = useState<ModalType>(null);
@@ -641,7 +635,7 @@ export default function CandidateLinkedInProfile({ username }: Props) {
     return (
       <div className="bg-[#FFFFFF] min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#B40F24] border-t-transparent rounded-full animate-spin mx-auto" />
+          <div className="w-12 h-12 border-4 border-[#0F5B78] border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="mt-4 text-[#5A5F69] font-medium text-sm">Loading candidate profile...</p>
         </div>
       </div>
@@ -663,6 +657,22 @@ export default function CandidateLinkedInProfile({ username }: Props) {
   };
 
   const candidateProjects = candidate?.projectsList ?? [];
+
+  // Sidebar components in strict requested order: 1. Trending Articles, 2. Recommended Jobs, 3. Saved Jobs, 4. My Applications
+  const renderSidebar = () => (
+    <div className="lg:col-span-4 space-y-4">
+      <TrendingArticlesCard />
+      <HomeFeedCard />
+      <SavedJobsCard />
+      <MyApplicationsCard />
+      <ContactCard
+        candidate={candidate}
+        isOwner={isOwner}
+        onEditClick={isOwner ? () => setActiveModal("socials") : undefined}
+      />
+      <PublicUrlCard username={candidate?.username || username} />
+    </div>
+  );
 
   return (
     <div className="bg-[#f8f9fa] min-h-screen text-[#000000] relative">
@@ -720,11 +730,11 @@ export default function CandidateLinkedInProfile({ username }: Props) {
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-2xl sm:text-3xl font-bold text-[#000000]">{displayName}</h1>
-                  <CheckCircle size={20} className="text-[#B40F24] fill-[#B40F24]/10" />
+                  <CheckCircle size={20} className="text-[#0F5B78] fill-[#0F5B78]/10" />
                   {isOwner && (
                     <button
                       onClick={() => setActiveModal("intro")}
-                      className="text-[#5A5F69] hover:text-[#B40F24] transition-colors p-1 rounded-full hover:bg-gray-100 cursor-pointer ml-1"
+                      className="text-[#5A5F69] hover:text-[#0F5B78] transition-colors p-1 rounded-full hover:bg-gray-100 cursor-pointer ml-1"
                       title="Edit Intro"
                     >
                       <Pencil size={16} />
@@ -750,19 +760,19 @@ export default function CandidateLinkedInProfile({ username }: Props) {
                 </div>
               </div>
 
-              {/* Action Buttons using Primary #B40F24 */}
+              {/* Action Buttons using #0F5B78 */}
               <div className="flex items-center gap-2 self-start flex-wrap mt-2 md:mt-0">
                 {isOwner ? (
                   <button
                     onClick={() => setActiveModal("intro")}
-                    className="bg-[#B40F24] hover:bg-[#8e0c1c] text-white px-5 py-2 rounded-full font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
+                    className="bg-[#0F5B78] hover:bg-[#0b445a] text-white px-5 py-2 rounded-full font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
                   >
                     <Pencil size={15} />
                     Edit Profile
                   </button>
                 ) : (
                   <>
-                    <button className="bg-[#B40F24] hover:bg-[#8e0c1c] text-white px-5 py-2 rounded-full font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer">
+                    <button className="bg-[#0F5B78] hover:bg-[#0b445a] text-white px-5 py-2 rounded-full font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer">
                       <UserPlus size={16} />
                       Connect
                     </button>
@@ -786,7 +796,7 @@ export default function CandidateLinkedInProfile({ username }: Props) {
             <button
               onClick={() => setActiveTab("profile")}
               className={`py-3.5 text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "profile"
-                ? "border-[#B40F24] text-[#B40F24]"
+                ? "border-[#0F5B78] text-[#0F5B78]"
                 : "border-transparent text-[#5A5F69] hover:text-[#000000]"
                 }`}
             >
@@ -796,7 +806,7 @@ export default function CandidateLinkedInProfile({ username }: Props) {
             <button
               onClick={() => setActiveTab("projects")}
               className={`py-3.5 text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "projects"
-                ? "border-[#B40F24] text-[#B40F24]"
+                ? "border-[#0F5B78] text-[#0F5B78]"
                 : "border-transparent text-[#5A5F69] hover:text-[#000000]"
                 }`}
             >
@@ -806,41 +816,11 @@ export default function CandidateLinkedInProfile({ username }: Props) {
             <button
               onClick={() => setActiveTab("connections")}
               className={`py-3.5 text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "connections"
-                ? "border-[#B40F24] text-[#B40F24]"
+                ? "border-[#0F5B78] text-[#0F5B78]"
                 : "border-transparent text-[#5A5F69] hover:text-[#000000]"
                 }`}
             >
               Connections
-            </button>
-
-            <button
-              onClick={() => setActiveTab("feed")}
-              className={`py-3.5 text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "feed"
-                ? "border-[#B40F24] text-[#B40F24]"
-                : "border-transparent text-[#5A5F69] hover:text-[#000000]"
-                }`}
-            >
-              Home Feed
-            </button>
-
-            <button
-              onClick={() => setActiveTab("saved")}
-              className={`py-3.5 text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "saved"
-                ? "border-[#B40F24] text-[#B40F24]"
-                : "border-transparent text-[#5A5F69] hover:text-[#000000]"
-                }`}
-            >
-              Saved Jobs
-            </button>
-
-            <button
-              onClick={() => setActiveTab("applications")}
-              className={`py-3.5 text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "applications"
-                ? "border-[#B40F24] text-[#B40F24]"
-                : "border-transparent text-[#5A5F69] hover:text-[#000000]"
-                }`}
-            >
-              My Applications
             </button>
           </div>
         </div>
@@ -856,7 +836,7 @@ export default function CandidateLinkedInProfile({ username }: Props) {
                   <button
                     onClick={() => setActiveModal("about")}
                     title="Edit Summary"
-                    className="absolute top-4 right-4 text-[#5A5F69] hover:text-[#B40F24] transition-colors p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
+                    className="absolute top-4 right-4 text-[#5A5F69] hover:text-[#0F5B78] transition-colors p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
                   >
                     <Pencil size={16} />
                   </button>
@@ -899,7 +879,7 @@ export default function CandidateLinkedInProfile({ username }: Props) {
                             <FolderKanban className="text-[#5A5F69]" size={32} />
                           )}
                         </div>
-                        <figcaption className="text-xs text-[#000000] font-medium mt-2 text-center group-hover:text-[#B40F24] transition-colors line-clamp-2">
+                        <figcaption className="text-xs text-[#000000] font-medium mt-2 text-center group-hover:text-[#0F5B78] transition-colors line-clamp-2">
                           {proj.title}
                         </figcaption>
                       </figure>
@@ -976,19 +956,8 @@ export default function CandidateLinkedInProfile({ username }: Props) {
               />
             </div>
 
-            {/* SIDEBAR COLUMN WITH 3 SIDEBAR CARDS */}
-            <div className="lg:col-span-4 space-y-4">
-              <HomeFeedCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <SavedJobsCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <MyApplicationsCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <TrendingArticlesCard />
-              <ContactCard
-                candidate={candidate}
-                isOwner={isOwner}
-                onEditClick={isOwner ? () => setActiveModal("socials") : undefined}
-              />
-              <PublicUrlCard username={candidate?.username || username} />
-            </div>
+            {/* SIDEBAR COLUMN */}
+            {renderSidebar()}
           </div>
         )}
 
@@ -1002,18 +971,7 @@ export default function CandidateLinkedInProfile({ username }: Props) {
                 onEditClick={isOwner ? () => setActiveModal("projects") : undefined}
               />
             </div>
-            <div className="lg:col-span-4 space-y-4">
-              <HomeFeedCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <SavedJobsCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <MyApplicationsCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <TrendingArticlesCard />
-              <ContactCard
-                candidate={candidate}
-                isOwner={isOwner}
-                onEditClick={isOwner ? () => setActiveModal("socials") : undefined}
-              />
-              <PublicUrlCard username={candidate?.username || username} />
-            </div>
+            {renderSidebar()}
           </div>
         )}
 
@@ -1031,81 +989,7 @@ export default function CandidateLinkedInProfile({ username }: Props) {
                 </p>
               </div>
             </div>
-            <div className="lg:col-span-4 space-y-4">
-              <HomeFeedCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <SavedJobsCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <MyApplicationsCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <TrendingArticlesCard />
-              <ContactCard
-                candidate={candidate}
-                isOwner={isOwner}
-                onEditClick={isOwner ? () => setActiveModal("socials") : undefined}
-              />
-              <PublicUrlCard username={candidate?.username || username} />
-            </div>
-          </div>
-        )}
-
-        {/* ================= TAB 4: HOME FEED ================= */}
-        {activeTab === "feed" && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-            <div className="lg:col-span-8 space-y-4">
-              <JobFeed />
-            </div>
-            <div className="lg:col-span-4 space-y-4">
-              <HomeFeedCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <SavedJobsCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <MyApplicationsCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <TrendingArticlesCard />
-              <ContactCard
-                candidate={candidate}
-                isOwner={isOwner}
-                onEditClick={isOwner ? () => setActiveModal("socials") : undefined}
-              />
-              <PublicUrlCard username={candidate?.username || username} />
-            </div>
-          </div>
-        )}
-
-        {/* ================= TAB 5: SAVED JOBS ================= */}
-        {activeTab === "saved" && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-            <div className="lg:col-span-8 space-y-4">
-              <SavedJobs />
-            </div>
-            <div className="lg:col-span-4 space-y-4">
-              <HomeFeedCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <SavedJobsCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <MyApplicationsCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <TrendingArticlesCard />
-              <ContactCard
-                candidate={candidate}
-                isOwner={isOwner}
-                onEditClick={isOwner ? () => setActiveModal("socials") : undefined}
-              />
-              <PublicUrlCard username={candidate?.username || username} />
-            </div>
-          </div>
-        )}
-
-        {/* ================= TAB 6: MY APPLICATIONS ================= */}
-        {activeTab === "applications" && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-            <div className="lg:col-span-8 space-y-4">
-              <MyApplicationsPage />
-            </div>
-            <div className="lg:col-span-4 space-y-4">
-              <HomeFeedCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <SavedJobsCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <MyApplicationsCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <TrendingArticlesCard />
-              <ContactCard
-                candidate={candidate}
-                isOwner={isOwner}
-                onEditClick={isOwner ? () => setActiveModal("socials") : undefined}
-              />
-              <PublicUrlCard username={candidate?.username || username} />
-            </div>
+            {renderSidebar()}
           </div>
         )}
 
@@ -1246,10 +1130,85 @@ export default function CandidateLinkedInProfile({ username }: Props) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   SIDEBAR CARDS (BRAND PALETTE & REAL DATA ONLY)
+   SIDEBAR CARDS (UNIFIED COLOR #0F5B78 & REAL DATA)
    ═══════════════════════════════════════════════════════ */
 
-function HomeFeedCard({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (t: any) => void }) {
+function TrendingArticlesCard() {
+  const [articles, setArticles] = useState<{ id: number; title: string; slug: string; views?: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadTrending() {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/articles/approved`,
+          { cache: "no-store" }
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : [];
+        const sorted = [...list].sort((a, b) => (b.views ?? 0) - (a.views ?? 0));
+        setArticles(sorted);
+      } catch {
+        // Fallback
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadTrending();
+  }, []);
+
+  return (
+    <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-md overflow-hidden">
+      <div className="bg-[#0F5B78] px-5 py-3.5">
+        <h3 className="text-white font-bold text-base sm:text-lg tracking-wide">
+          Trending Articles
+        </h3>
+      </div>
+
+      {loading ? (
+        <div className="p-4 text-center text-xs text-[#5A5F69]">Loading trending articles...</div>
+      ) : articles.length === 0 ? (
+        <div className="p-5 text-center text-xs text-[#5A5F69]">No trending articles at the moment.</div>
+      ) : (
+        <div className="divide-y divide-gray-100">
+          {articles.slice(0, 5).map((article, index) => (
+            <Link
+              key={article.id}
+              href={`/post/${article.slug}`}
+              className="px-5 py-3.5 flex items-start gap-3.5 hover:bg-gray-50/80 transition-colors group block"
+            >
+              <div className="w-7 h-7 rounded-md bg-[#0F5B78] text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                {index + 1}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-bold text-[#000000] group-hover:text-[#0F5B78] transition-colors leading-snug line-clamp-2">
+                  {article.title}
+                </h4>
+                <p className="text-xs text-[#5A5F69] mt-0.5 font-medium">
+                  {(article.views ?? 0).toLocaleString()} views
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {articles.length > 0 && (
+        <div className="border-t border-gray-100 bg-white">
+          <Link
+            href="/articles"
+            className="text-center font-bold text-sm text-[#0F5B78] hover:underline py-3.5 block hover:bg-blue-50/40 transition-colors"
+          >
+            View all articles →
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HomeFeedCard() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -1269,7 +1228,7 @@ function HomeFeedCard({ activeTab, setActiveTab }: { activeTab: string; setActiv
             fetchedJobs = Array.isArray(data) ? data : data.jobs || [];
           }
         }
-        setJobs(fetchedJobs.slice(0, 4));
+        setJobs(fetchedJobs.slice(0, 5));
       } catch (err) {
         console.error("Failed to fetch jobs for Recommended Jobs card", err);
       } finally {
@@ -1281,13 +1240,13 @@ function HomeFeedCard({ activeTab, setActiveTab }: { activeTab: string; setActiv
 
   return (
     <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-md overflow-hidden">
-      <div className="bg-[#B40F24] px-5 py-3.5 flex items-center justify-between">
+      <div className="bg-[#0F5B78] px-5 py-3.5 flex items-center justify-between">
         <h3 className="text-white font-bold text-base tracking-wide flex items-center gap-2">
           <Briefcase size={18} />
           Recommended Jobs
         </h3>
         <span className="text-[11px] font-semibold text-white bg-white/20 px-2.5 py-0.5 rounded-full">
-          {jobs.length > 0 ? `${jobs.length} Available` : "Jobs"}
+          {jobs.length > 0 ? `${jobs.length} Listed` : "Jobs"}
         </span>
       </div>
 
@@ -1297,13 +1256,13 @@ function HomeFeedCard({ activeTab, setActiveTab }: { activeTab: string; setActiv
         <div className="p-5 text-center text-xs text-[#5A5F69]">No recommended jobs available.</div>
       ) : (
         <div className="divide-y divide-gray-100">
-          {jobs.map((job) => (
-            <div
+          {jobs.slice(0, 5).map((job) => (
+            <Link
               key={job.id}
-              onClick={() => setActiveTab("feed")}
-              className="p-3.5 block hover:bg-red-50/30 transition-colors cursor-pointer group"
+              href="/feed"
+              className="p-3.5 block hover:bg-blue-50/30 transition-colors cursor-pointer group"
             >
-              <h4 className="text-xs sm:text-sm font-bold text-[#000000] group-hover:text-[#B40F24] transition-colors truncate">
+              <h4 className="text-xs sm:text-sm font-bold text-[#000000] group-hover:text-[#0F5B78] transition-colors truncate">
                 {job.title}
               </h4>
               <div className="flex items-center justify-between text-xs text-[#5A5F69] mt-1">
@@ -1315,24 +1274,24 @@ function HomeFeedCard({ activeTab, setActiveTab }: { activeTab: string; setActiv
                   </span>
                 )}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
 
       <div className="border-t border-gray-100 bg-white p-2">
-        <button
-          onClick={() => setActiveTab("feed")}
-          className="w-full text-center font-bold text-xs text-[#B40F24] hover:underline py-2 block hover:bg-red-50/40 rounded transition-colors cursor-pointer"
+        <Link
+          href="/feed"
+          className="w-full text-center font-bold text-xs text-[#0F5B78] hover:underline py-2 block hover:bg-blue-50/40 rounded transition-colors cursor-pointer"
         >
           View all jobs in feed →
-        </button>
+        </Link>
       </div>
     </div>
   );
 }
 
-function SavedJobsCard({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (t: any) => void }) {
+function SavedJobsCard() {
   const [savedJobs, setSavedJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -1349,7 +1308,7 @@ function SavedJobsCard({ activeTab, setActiveTab }: { activeTab: string; setActi
         });
         if (!res.ok) return;
         const data = await res.json();
-        if (Array.isArray(data)) setSavedJobs(data.slice(0, 3));
+        if (Array.isArray(data)) setSavedJobs(data.slice(0, 5));
       } catch {
         // Fallback
       } finally {
@@ -1367,7 +1326,7 @@ function SavedJobsCard({ activeTab, setActiveTab }: { activeTab: string; setActi
           Saved Jobs
         </h3>
         <span className="text-[11px] font-semibold text-white bg-white/20 px-2.5 py-0.5 rounded-full">
-          {savedJobs.length} Saved
+          {savedJobs.length} Listed
         </span>
       </div>
 
@@ -1380,13 +1339,12 @@ function SavedJobsCard({ activeTab, setActiveTab }: { activeTab: string; setActi
         </div>
       ) : (
         <div className="divide-y divide-gray-100">
-          {savedJobs.map((item) => {
+          {savedJobs.slice(0, 5).map((item) => {
             const job = item.Job || item;
             return (
               <div
                 key={item.id || job.id}
-                onClick={() => setActiveTab("saved")}
-                className="p-3.5 block hover:bg-blue-50/40 transition-colors cursor-pointer group"
+                className="p-3.5 block hover:bg-blue-50/40 transition-colors group"
               >
                 <h4 className="text-xs sm:text-sm font-bold text-[#000000] group-hover:text-[#0F5B78] transition-colors truncate">
                   {job.title}
@@ -1400,20 +1358,11 @@ function SavedJobsCard({ activeTab, setActiveTab }: { activeTab: string; setActi
           })}
         </div>
       )}
-
-      <div className="border-t border-gray-100 bg-white p-2">
-        <button
-          onClick={() => setActiveTab("saved")}
-          className="w-full text-center font-bold text-xs text-[#0F5B78] hover:underline py-2 block hover:bg-blue-50/50 rounded transition-colors cursor-pointer"
-        >
-          Manage saved jobs →
-        </button>
-      </div>
     </div>
   );
 }
 
-function MyApplicationsCard({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (t: any) => void }) {
+function MyApplicationsCard() {
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -1430,7 +1379,7 @@ function MyApplicationsCard({ activeTab, setActiveTab }: { activeTab: string; se
         });
         if (!res.ok) return;
         const data = await res.json();
-        if (Array.isArray(data)) setApplications(data.slice(0, 3));
+        if (Array.isArray(data)) setApplications(data.slice(0, 5));
       } catch {
         // Fallback
       } finally {
@@ -1442,13 +1391,13 @@ function MyApplicationsCard({ activeTab, setActiveTab }: { activeTab: string; se
 
   return (
     <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-md overflow-hidden">
-      <div className="bg-[#000000] px-5 py-3.5 flex items-center justify-between">
+      <div className="bg-[#0F5B78] px-5 py-3.5 flex items-center justify-between">
         <h3 className="text-white font-bold text-base tracking-wide flex items-center gap-2">
           <FileText size={18} />
           My Applications
         </h3>
         <span className="text-[11px] font-semibold text-white bg-white/20 px-2.5 py-0.5 rounded-full">
-          {applications.length} Active
+          {applications.length} Listed
         </span>
       </div>
 
@@ -1461,19 +1410,18 @@ function MyApplicationsCard({ activeTab, setActiveTab }: { activeTab: string; se
         </div>
       ) : (
         <div className="divide-y divide-gray-100">
-          {applications.map((app) => {
+          {applications.slice(0, 5).map((app) => {
             const job = app.Job || {};
             return (
               <div
                 key={app.id}
-                onClick={() => setActiveTab("applications")}
-                className="p-3.5 flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer"
+                className="p-3.5 flex items-center justify-between hover:bg-gray-50 transition-colors"
               >
                 <div className="min-w-0 flex-1 pr-2">
                   <h4 className="text-xs sm:text-sm font-bold text-[#000000] truncate">{job.title || "Applied Role"}</h4>
                   <p className="text-xs text-[#5A5F69] mt-0.5 truncate">{job.Company?.name || ""}</p>
                 </div>
-                <span className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                <span className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-blue-50 text-[#0F5B78] border border-[#0F5B78]/30 shrink-0">
                   {app.status || "APPLIED"}
                 </span>
               </div>
@@ -1481,15 +1429,6 @@ function MyApplicationsCard({ activeTab, setActiveTab }: { activeTab: string; se
           })}
         </div>
       )}
-
-      <div className="border-t border-gray-100 bg-white p-2">
-        <button
-          onClick={() => setActiveTab("applications")}
-          className="w-full text-center font-bold text-xs text-[#000000] hover:underline py-2 block hover:bg-gray-100 rounded transition-colors cursor-pointer"
-        >
-          Track all applications →
-        </button>
-      </div>
     </div>
   );
 }
@@ -1509,7 +1448,7 @@ function ContactCard({
         <button
           onClick={onEditClick}
           title="Edit Contact & Social Links"
-          className="absolute top-4 right-4 text-[#5A5F69] hover:text-[#B40F24] transition-colors p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
+          className="absolute top-4 right-4 text-[#5A5F69] hover:text-[#0F5B78] transition-colors p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
         >
           <Pencil size={16} />
         </button>
@@ -1562,81 +1501,6 @@ function PublicUrlCard({ username }: { username?: string }) {
       <p className="text-xs text-[#0F5B78] font-mono break-all font-medium">
         {typeof window !== 'undefined' ? `${window.location.origin}/candidate/${username || ''}` : `/candidate/${username || ''}`}
       </p>
-    </div>
-  );
-}
-
-function TrendingArticlesCard() {
-  const [articles, setArticles] = useState<{ id: number; title: string; slug: string; views?: number }[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadTrending() {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/articles/approved`,
-          { cache: "no-store" }
-        );
-        if (!res.ok) return;
-        const data = await res.json();
-        const list = Array.isArray(data) ? data : [];
-        const sorted = [...list].sort((a, b) => (b.views ?? 0) - (a.views ?? 0));
-        setArticles(sorted);
-      } catch {
-        // Fallback
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadTrending();
-  }, []);
-
-  return (
-    <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-md overflow-hidden">
-      <div className="bg-[#B40F24] px-5 py-3.5">
-        <h3 className="text-white font-bold text-base sm:text-lg tracking-wide">
-          Trending Articles
-        </h3>
-      </div>
-
-      {loading ? (
-        <div className="p-4 text-center text-xs text-[#5A5F69]">Loading trending articles...</div>
-      ) : articles.length === 0 ? (
-        <div className="p-5 text-center text-xs text-[#5A5F69]">No trending articles at the moment.</div>
-      ) : (
-        <div className="divide-y divide-gray-100">
-          {articles.slice(0, 4).map((article, index) => (
-            <Link
-              key={article.id}
-              href={`/post/${article.slug}`}
-              className="px-5 py-3.5 flex items-start gap-3.5 hover:bg-gray-50/80 transition-colors group block"
-            >
-              <div className="w-7 h-7 rounded-md bg-[#B40F24] text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                {index + 1}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-bold text-[#000000] group-hover:text-[#B40F24] transition-colors leading-snug line-clamp-2">
-                  {article.title}
-                </h4>
-                <p className="text-xs text-[#5A5F69] mt-0.5 font-medium">
-                  {(article.views ?? 0).toLocaleString()} views
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {articles.length > 0 && (
-        <div className="border-t border-gray-100 bg-white">
-          <Link
-            href="/articles"
-            className="text-center font-bold text-sm text-[#B40F24] hover:underline py-3.5 block hover:bg-red-50/40 transition-colors"
-          >
-            View all articles →
-          </Link>
-        </div>
-      )}
     </div>
   );
 }
