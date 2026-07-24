@@ -11,20 +11,31 @@ type Language = {
 interface Props {
   editable?: boolean;
   languages: Language[];
+  onEditClick?: () => void;
 }
 
 export default function LanguagesSection({
   editable = false,
   languages,
+  onEditClick,
 }: Props) {
   return (
     <div className="bg-white rounded-lg border border-[#e0e0e0] p-6 shadow-sm relative">
 
+      {(!editable && onEditClick) && (
+        <button
+          onClick={onEditClick}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
+          title="Edit Languages"
+        >
+          <Pencil size={16} />
+        </button>
+      )}
+
       {editable && (
-        <button className="absolute top-4 right-4">
+        <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 cursor-pointer">
           <Pencil
             size={16}
-            className="text-gray-400 hover:text-gray-700"
           />
         </button>
       )}
