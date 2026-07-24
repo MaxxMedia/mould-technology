@@ -24,12 +24,19 @@ type SavedJob = {
 export default function SavedJobs() {
   const [savedJobs, setSavedJobs] = useState<SavedJob[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadSavedJobs() {
-      try {
-        const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token");
 
+      if (!token) {
+        setError("Please log in as a candidate to view saved jobs.");
+        setLoading(false);
+        return;
+      }
+
+      try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/jobs/saved/me`,
           {
@@ -40,13 +47,24 @@ export default function SavedJobs() {
         );
 
         const data = await res.json();
-        console.log("Saved Jobs:", data);
+
+        if (!res.ok) {
+          setError(data.error || "Failed to load saved jobs.");
+          setSavedJobs([]);
+          return;
+        }
 
         if (Array.isArray(data)) {
           setSavedJobs(data);
+        } else {
+          // Backend returned something unexpected — surface it instead
+          // of silently showing "No saved jobs yet."
+          console.error("Unexpected saved jobs response shape:", data);
+          setError("Unexpected response from server.");
         }
       } catch (err) {
         console.error("Failed to load saved jobs", err);
+        setError("Something went wrong while loading saved jobs.");
       } finally {
         setLoading(false);
       }
@@ -56,10 +74,11 @@ export default function SavedJobs() {
   }, []);
 
   async function handleUnsave(jobId: number) {
-    try {
-      const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-      await fetch(
+    try {
+      const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/jobs/${jobId}/save`,
         {
           method: "DELETE",
@@ -69,9 +88,16 @@ export default function SavedJobs() {
         }
       );
 
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to remove saved job.");
+        return;
+      }
+
       setSavedJobs((prev) => prev.filter((job) => job.Job.id !== jobId));
     } catch (err) {
       console.error("Failed to unsave job", err);
+      alert("Something went wrong. Please try again.");
     }
   }
 
@@ -79,6 +105,14 @@ export default function SavedJobs() {
     return (
       <div className="bg-white rounded-lg shadow-sm p-6">
         Loading saved jobs...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <p className="text-red-600 text-sm">{error}</p>
       </div>
     );
   }
