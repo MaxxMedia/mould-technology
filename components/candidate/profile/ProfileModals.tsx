@@ -178,7 +178,13 @@ export default function ProfileModals({
 
           {activeModal === "interests" && (
             <InterestsForm
-              initialValues={candidate?.interests || []}
+              initialValues={(candidate?.interests || []).map((i: any) => ({
+                id: i.id,
+                name: i.name || i.title || i.interestName || "",
+                category: i.category || i.type || "",
+                followersCount: i.followersCount,
+                imageUrl: i.imageUrl,
+              }))}
               onSubmit={onSaveInterests}
               loading={modalSaving}
             />

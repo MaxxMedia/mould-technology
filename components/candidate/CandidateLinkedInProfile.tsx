@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Pencil, CheckCircle2, Users, FolderKanban } from "lucide-react";
 
+import SummarySection from "@/components/candidate/profile/SummarySection";
 import SkillsSection from "@/components/candidate/profile/SkillsSection";
 import ExperienceSection from "@/components/candidate/profile/ExperienceSection";
 import EducationSection from "@/components/candidate/profile/EducationSection";
@@ -274,6 +275,12 @@ export default function CandidateLinkedInProfile({ username }: Props) {
         if (mySocials.length > 0) socialsData = mySocials;
       }
 
+      interestsData = (interestsData || []).map((item: any) => ({
+        ...item,
+        name: item.name || item.title || item.interestName || "",
+        category: item.category || item.type || "",
+      }));
+
       if (baseData) {
         setCandidate({
           ...baseData,
@@ -375,12 +382,14 @@ export default function CandidateLinkedInProfile({ username }: Props) {
       for (const exp of values) {
         const payload = {
           title: exp.title,
+          company: exp.company,
           companyName: exp.company,
+          designation: exp.title,
           employmentType: exp.employmentType,
           location: exp.location,
           startDate: exp.startDate,
           endDate: exp.currentlyWorking ? null : exp.endDate || null,
-          currentlyWorking: exp.currentlyWorking,
+          currentlyWorking: Boolean(exp.currentlyWorking),
           description: exp.description,
         };
         if (exp.id) {
@@ -506,11 +515,17 @@ export default function CandidateLinkedInProfile({ username }: Props) {
       }
       for (const cert of values) {
         const payload = {
-          name: cert.name,
-          issuingOrganization: cert.issuingOrganization,
-          issueDate: cert.issueDate,
-          expirationDate: cert.expirationDate,
-          credentialUrl: cert.credentialUrl,
+          name: cert.name || "",
+          title: cert.name || "",
+          certificateName: cert.name || "",
+          issuingOrganization: cert.issuingOrganization || "",
+          organization: cert.issuingOrganization || "",
+          issuer: cert.issuingOrganization || "",
+          authority: cert.issuingOrganization || "",
+          issueDate: cert.issueDate || null,
+          expirationDate: cert.expirationDate && cert.expirationDate.trim() !== "" ? cert.expirationDate : null,
+          credentialUrl: cert.credentialUrl && cert.credentialUrl.trim() !== "" ? cert.credentialUrl : null,
+          url: cert.credentialUrl && cert.credentialUrl.trim() !== "" ? cert.credentialUrl : null,
         };
         if (cert.id) {
           await updateCertification(cert.id, payload);
@@ -598,7 +613,10 @@ export default function CandidateLinkedInProfile({ username }: Props) {
       for (const interest of values) {
         const payload = {
           title: interest.name || "",
+          name: interest.name || "",
+          interestName: interest.name || "",
           type: interest.category || "",
+          category: interest.category || "",
         };
         if (interest.id) {
           await updateInterest(interest.id, payload);
@@ -740,125 +758,59 @@ export default function CandidateLinkedInProfile({ username }: Props) {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
             {/* MAIN COLUMN */}
             <div className="lg:col-span-8 space-y-4">
-              {/* SUMMARY CARD */}
-              <div className="bg-white rounded-xl border border-[#e0e0e0] p-6 shadow-sm relative">
-                {isOwner && (
-                  <button
-                    onClick={() => setActiveModal("about")}
-                    title="Edit Summary"
-                    className="absolute top-4 right-4 text-[#5A5F69] hover:text-[#0F5B78] transition-colors p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
-                  >
-                    <Pencil size={16} />
-                  </button>
-                )}
-                <h2 className="text-lg font-bold text-[#000000] mb-3">Summary</h2>
-                {displayAbout ? (
-                  <p className="text-sm text-[#5A5F69] leading-relaxed mb-4 whitespace-pre-line">
-                    {displayAbout}
-                  </p>
-                ) : (
-                  <p className="text-sm text-gray-400 italic mb-4">No summary added yet.</p>
-                )}
-
-                {candidate?.websiteUrl && (
-                  <div className="mb-6">
-                    <a
-                      href={candidate.websiteUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-block px-5 py-2 border-2 border-[#0F5B78] text-[#0F5B78] font-semibold text-sm rounded-full hover:bg-[#0F5B78]/10 transition-colors"
-                    >
-                      Visit Website
-                    </a>
-                  </div>
-                )}
-
-                {/* Real Projects Thumbnails from Candidate Data */}
-                {candidateProjects.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-100 pt-4">
-                    {candidateProjects.slice(0, 3).map((proj: any) => (
-                      <figure key={proj.id} className="group cursor-pointer" onClick={() => setActiveTab("projects")}>
-                        <div className="overflow-hidden rounded-md bg-gray-100 h-28 border border-gray-200 flex items-center justify-center">
-                          {proj.imageUrl ? (
-                            <img
-                              src={proj.imageUrl}
-                              alt={proj.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                          ) : (
-                            <FolderKanban className="text-[#5A5F69]" size={32} />
-                          )}
-                        </div>
-                        <figcaption className="text-xs text-[#000000] font-medium mt-2 text-center group-hover:text-[#0F5B78] transition-colors line-clamp-2">
-                          {proj.title}
-                        </figcaption>
-                      </figure>
-                    ))}
-                  </div>
-                )}
-
-                {candidateProjects.length > 0 && (
-                  <button
-                    onClick={() => setActiveTab("projects")}
-                    className="w-full text-center text-sm font-semibold text-[#0F5B78] hover:underline mt-4 pt-2 border-t border-gray-100 cursor-pointer"
-                  >
-                    See all projects →
-                  </button>
-                )}
-              </div>
-
-              {/* SKILLS CARD */}
-              <SkillsSection
-                editable={false}
-                skills={candidate?.skills ?? []}
-                onEditClick={isOwner ? () => setActiveModal("skills") : undefined}
+              {/* 1. SUMMARY / ABOUT CARD (LINKEDIN STYLE) */}
+              <SummarySection
+                aboutText={displayAbout}
+                websiteUrl={candidate?.websiteUrl}
+                projects={candidateProjects}
+                isOwner={isOwner}
+                onEditClick={() => setActiveModal("about")}
+                onSeeAllProjects={() => setActiveTab("projects")}
               />
 
-              {/* EXPERIENCE CARD */}
+              {/* 2. EXPERIENCE CARD */}
               <ExperienceSection
                 editable={false}
                 experiences={candidate?.experiences ?? []}
                 onEditClick={isOwner ? () => setActiveModal("experience") : undefined}
               />
 
-              {/* EDUCATION CARD */}
+              {/* 3. EDUCATION CARD */}
               <EducationSection
                 editable={false}
                 education={candidate?.educationList ?? []}
                 onEditClick={isOwner ? () => setActiveModal("education") : undefined}
               />
 
-              {/* ACCOMPLISHMENTS CARD */}
-              <div className="bg-white rounded-xl border border-[#e0e0e0] p-6 shadow-sm relative">
-                <h2 className="text-lg font-bold text-[#000000] mb-4">Accomplishments</h2>
-                <div className="space-y-4 divide-y divide-gray-100">
-                  <div className="pt-2 first:pt-0">
-                    <AchievementsSection
-                      editable={false}
-                      achievements={candidate?.achievements ?? []}
-                      onEditClick={isOwner ? () => setActiveModal("achievements") : undefined}
-                    />
-                  </div>
+              {/* 4. ACCOMPLISHMENTS CARD */}
+              <AchievementsSection
+                editable={false}
+                achievements={candidate?.achievements ?? []}
+                onEditClick={isOwner ? () => setActiveModal("achievements") : undefined}
+              />
 
-                  <div className="pt-4">
-                    <LanguagesSection
-                      editable={false}
-                      languages={candidate?.languages ?? []}
-                      onEditClick={isOwner ? () => setActiveModal("languages") : undefined}
-                    />
-                  </div>
+              {/* 5. CERTIFICATION CARD */}
+              <CertificationsSection
+                editable={false}
+                certifications={candidate?.certifications ?? []}
+                onEditClick={isOwner ? () => setActiveModal("certifications") : undefined}
+              />
 
-                  <div className="pt-4">
-                    <CertificationsSection
-                      editable={false}
-                      certifications={candidate?.certifications ?? []}
-                      onEditClick={isOwner ? () => setActiveModal("certifications") : undefined}
-                    />
-                  </div>
-                </div>
-              </div>
+              {/* 6. SKILLS CARD */}
+              <SkillsSection
+                editable={false}
+                skills={candidate?.skills ?? []}
+                onEditClick={isOwner ? () => setActiveModal("skills") : undefined}
+              />
 
-              {/* INTERESTS CARD */}
+              {/* 7. LANGUAGES CARD */}
+              <LanguagesSection
+                editable={false}
+                languages={candidate?.languages ?? []}
+                onEditClick={isOwner ? () => setActiveModal("languages") : undefined}
+              />
+
+              {/* 8. INTERESTS CARD */}
               <InterestsSection
                 editable={false}
                 interests={candidate?.interests ?? []}
