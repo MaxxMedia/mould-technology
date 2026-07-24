@@ -64,11 +64,12 @@ export default function LoginForm() {
           router.push("/recruiter/dashboard")
         }
       } else if (user.role === "candidate") {
-        // Candidates skip package selection, go directly to onboarding or feed
+        // Candidates skip package selection, go directly to onboarding or profile
         if (!user.isOnboarded) {
           router.push("/candidate/onboarding")
         } else {
-          router.push("/candidate/feed")
+          const candUsername = user.username || user.email?.split("@")[0] || "gopinath2322002";
+          router.push(`/candidate/${candUsername}`)
         }
       } else {
         // Unknown/future role — don't leave the user stranded on the login page.

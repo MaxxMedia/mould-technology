@@ -7,6 +7,7 @@ import {
     Twitter,
     Instagram,
     ExternalLink,
+    Pencil,
 } from "lucide-react";
 
 type Social = {
@@ -18,6 +19,7 @@ type Social = {
 
 interface Props {
     socials: Social[];
+    onEditClick?: () => void;
 }
 
 function getIcon(platform: string) {
@@ -38,9 +40,19 @@ function getIcon(platform: string) {
 
 export default function SocialLinksSection({
     socials,
+    onEditClick,
 }: Props) {
     return (
-        <div className="bg-white rounded-lg border border-[#e0e0e0] p-6 shadow-sm">
+        <div className="bg-white rounded-lg border border-[#e0e0e0] p-6 shadow-sm relative">
+            {onEditClick && (
+                <button
+                    onClick={onEditClick}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
+                    title="Edit Contact & Social Links"
+                >
+                    <Pencil size={16} />
+                </button>
+            )}
 
             <h3 className="text-base font-semibold mb-5">
                 Contact & Social Links

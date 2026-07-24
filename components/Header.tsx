@@ -14,6 +14,7 @@ type User = {
   email: string
   role: "admin" | "recruiter" | "candidate"
   avatarUrl?: string
+  username?: string
 }
 
 /* ================= MENUS ================= */
@@ -299,23 +300,13 @@ useEffect(() => {
                       ? "/admin/dashboard"
                       : user.role === "recruiter"
                       ? "/recruiter/dashboard"
-                      : "/candidate/feed"
+                      : `/candidate/${user.username || user.email?.split("@")[0] || "gopinath2322002"}`
                   }
-                  className="block px-4 py-3 hover:bg-gray-100 text-sm transition border-b"
+                  className="block px-4 py-3 hover:bg-gray-100 text-sm transition border-b font-semibold text-[#0a66c2]"
                   onClick={() => setOpenUserMenu(false)}
                 >
-                  Dashboard
+                  {user.role === "candidate" ? "My Candidate Profile" : "Dashboard"}
                 </Link>
-
-                {user.role === "candidate" && (
-                  <Link
-                    href={`/candidate/${user.email?.split("@")[0] || "gopinath2322002"}`}
-                    className="block px-4 py-3 hover:bg-gray-100 text-sm transition border-b font-medium text-blue-600"
-                    onClick={() => setOpenUserMenu(false)}
-                  >
-                    View Public Profile
-                  </Link>
-                )}
 
                 <button
                   onClick={handleLogout}

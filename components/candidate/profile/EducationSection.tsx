@@ -21,9 +21,11 @@ interface Props {
 
 export default function EducationSection({
   editable = false,
-  education,
+  education = [],
   onEditClick, // Add this
 }: Props) {
+  const eduList = Array.isArray(education) ? education : [];
+
   return (
     <div className="bg-white rounded-lg border border-[#e0e0e0] p-6 shadow-sm relative">
       {/* Show edit button when not editable */}
@@ -44,11 +46,11 @@ export default function EducationSection({
 
       <h2 className="text-lg font-semibold mb-5">Education</h2>
 
-      {education.length === 0 ? (
+      {eduList.length === 0 ? (
         <p className="text-sm text-gray-500">No education added.</p>
       ) : (
         <div className="space-y-6 divide-y divide-gray-100">
-          {education.map((item) => (
+          {eduList.map((item) => (
             <div key={item.id} className="flex gap-4 pt-5 first:pt-0">
               <div className="w-12 h-12 rounded-md bg-green-100 flex items-center justify-center">
                 <GraduationCap size={22} className="text-green-700" />
