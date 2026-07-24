@@ -64,7 +64,7 @@ export default function ProfileHeader({
         </div>
 
         {/* Header Actions & Text */}
-        <div className="pt-14 sm:pt-4 flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <div className="pt-20 sm:pt-16 flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl sm:text-3xl font-bold text-[#000000]">{displayName}</h1>
