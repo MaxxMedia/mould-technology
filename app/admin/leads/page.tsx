@@ -23,6 +23,7 @@ import {
     ChevronDown,
     ChevronUp
 } from 'lucide-react';
+import React from 'react';
 
 type Lead = {
     id: number;
@@ -399,8 +400,8 @@ export default function AdminLeadsPage() {
                             </tr>
                         ) : (
                             filteredLeads.map((lead) => (
-                                <>
-                                    <tr key={lead.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => toggleRow(lead.id)}>
+                                <React.Fragment key={lead.id}>
+                                    <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => toggleRow(lead.id)}>
                                         <td className="px-6 py-4">
                                             <div>
                                                 <p className="font-medium text-gray-900">{lead.fullName}</p>
@@ -483,8 +484,8 @@ export default function AdminLeadsPage() {
                                         </td>
                                     </tr>
                                     {expandedRows.has(lead.id) && (
-                                        <tr className="bg-gray-50">
-                                            <td colSpan={7} className="px-6 py-4">
+                                        <tr>
+                                            <td colSpan={7} className="px-6 py-4 bg-gray-50">
                                                 <div className="space-y-2">
                                                     <p className="text-sm font-medium text-gray-700">Message:</p>
                                                     <p className="text-sm text-gray-600 bg-white p-3 rounded border border-gray-200">
@@ -517,7 +518,7 @@ export default function AdminLeadsPage() {
                                             </td>
                                         </tr>
                                     )}
-                                </>
+                                </React.Fragment>
                             ))
                         )}
                     </tbody>

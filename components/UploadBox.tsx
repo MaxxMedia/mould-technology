@@ -1,156 +1,118 @@
-// "use client"
-
-// import { UploadCloud, FileText } from "lucide-react"
-
-// type Props = {
-//   label: string
-//   value?: string
-//   onUpload: (file: File) => void
-//   height?: string
-//   accept?: string
-// }
-
-// export default function UploadBox({
-//   label,
-//   value,
-//   onUpload,
-//   height = "h-40",
-//   accept = "image/*,application/pdf"
-// }: Props) {
-
-//   const isPdf = value?.toLowerCase().endsWith(".pdf")
-
-//   return (
-//     <div>
-//       <p className="font-medium mb-2">{label}</p>
-
-//       <label className="block cursor-pointer">
-//         <input
-//           type="file"
-//           accept={accept}
-//           hidden
-//           onChange={e => {
-//             if (e.target.files && e.target.files[0]) {
-//               onUpload(e.target.files[0])
-//             }
-//           }}
-//         />
-
-//         {value ? (
-//           <div className="relative">
-//             {isPdf ? (
-//               <div className={`w-full ${height} flex flex-col items-center justify-center border rounded-lg bg-gray-50`}>
-//                 <FileText size={42} className="text-red-500 mb-2" />
-//                 <p className="text-sm text-gray-600">PDF Uploaded</p>
-//                 <p className="text-xs text-gray-400 mt-1">
-//                   Click to replace file
-//                 </p>
-//               </div>
-//             ) : (
-//               <img
-//                 src={value}
-//                 alt="Uploaded"
-//                 className={`w-full ${height} object-cover rounded-lg border`}
-//               />
-//             )}
-//           </div>
-//         ) : (
-//           <div
-//             className={`w-full ${height} flex flex-col items-center justify-center
-//               border-2 border-dashed border-gray-300 rounded-lg
-//               hover:border-blue-500 transition`}
-//           >
-//             <UploadCloud size={42} className="text-gray-400 mb-2" />
-//             <p className="text-gray-500 text-sm">
-//               Click to upload file
-//             </p>
-//           </div>
-//         )}
-//       </label>
-//     </div>
-//   )
-// }
-
-
+// components/UploadBox.tsx
 "use client"
 
-import { UploadCloud, FileText } from "lucide-react"
+import { useState, useRef } from "react"
+import Image from "next/image"
+import { Upload, X } from "lucide-react"
 
-type Props = {
+interface UploadBoxProps {
   label: string
   value?: string
-  onUpload: (file: File) => void
-  height?: string
-  accept?: string
-  multiple?: boolean   // ✅ NEW (optional)
+  onUpload: (file: File) => Promise<void>
 }
 
-export default function UploadBox({
-  label,
-  value,
-  onUpload,
-  height = "h-40",
-  accept = "image/*,application/pdf",
-  multiple = false,   // ✅ default false
-}: Props) {
+export default function UploadBox({ label, value, onUpload }: UploadBoxProps) {
+  const [isUploading, setIsUploading] = useState(false)
+  const [preview, setPreview] = useState<string>(value || "")
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const isPdf = value?.toLowerCase().endsWith(".pdf")
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const validTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"]
+    if (!validTypes.includes(file.type)) {
+      alert("Please upload a valid file (JPG, PNG, WEBP, or PDF)")
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size must be less than 5MB")
+      return
+    }
+
+    setIsUploading(true)
+
+    try {
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setPreview(reader.result as string)
+        }
+        reader.readAsDataURL(file)
+      }
+
+      await onUpload(file)
+    } catch (error) {
+      console.error("Upload error:", error)
+      alert("Failed to upload file")
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+    }
+  }
+
+  const handleRemove = () => {
+    setPreview("")
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
 
   return (
-    <div>
-      <p className="font-medium mb-2">{label}</p>
-
-      <label className="block cursor-pointer">
-        <input
-          type="file"
-          accept={accept}
-          multiple={multiple}   // ✅ enable multiple when needed
-          hidden
-          onChange={e => {
-            if (!e.target.files) return
-
-            if (multiple) {
-              Array.from(e.target.files).forEach(file => {
-                onUpload(file)
-              })
-            } else {
-              onUpload(e.target.files[0])
-            }
-          }}
-        />
-
-        {/* SINGLE FILE PREVIEW */}
-        {!multiple && value ? (
-          <div className="relative">
-            {isPdf ? (
-              <div className={`w-full ${height} flex flex-col items-center justify-center border rounded-lg bg-gray-50`}>
-                <FileText size={42} className="text-red-500 mb-2" />
-                <p className="text-sm text-gray-600">PDF Uploaded</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Click to replace file.
-                </p>
-              </div>
-            ) : (
-              <img
-                src={value}
-                alt="Uploaded"
-                className={`w-full ${height} object-cover rounded-lg border`}
+    <div className="w-full">
+      {preview ? (
+        <div className="relative group">
+          {preview.startsWith("data:image") || preview.match(/\.(jpeg|jpg|png|webp)$/i) ? (
+            <div className="relative w-full aspect-video rounded-lg border border-gray-200 overflow-hidden bg-gray-50">
+              <Image
+                src={preview}
+                alt="Upload preview"
+                fill
+                className="object-contain"
               />
-            )}
-          </div>
-        ) : (
-          <div
-            className={`w-full ${height} flex flex-col items-center justify-center
-              border-2 border-dashed border-gray-300 rounded-lg
-              hover:border-blue-500 transition`}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <span className="text-sm text-gray-700 truncate flex-1">
+                {preview.split("/").pop() || "Uploaded file"}
+              </span>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={handleRemove}
+            className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-md"
           >
-            <UploadCloud size={42} className="text-gray-400 mb-2" />
-            <p className="text-gray-500 text-sm">
-              Click to upload {multiple ? "files" : "file"}
-            </p>
-          </div>
-        )}
-      </label>
+            <X size={16} />
+          </button>
+        </div>
+      ) : (
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          className="relative flex flex-col items-center justify-center w-full aspect-video border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 transition-colors cursor-pointer bg-gray-50 hover:bg-gray-100"
+        >
+          <Upload className="w-8 h-8 text-gray-400 mb-2" />
+          <p className="text-sm text-gray-600 text-center px-4">
+            {label}
+          </p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,application/pdf"
+            onChange={handleFileChange}
+            className="hidden"
+            disabled={isUploading}
+          />
+          {isUploading && (
+            <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+              <div className="text-sm text-gray-600">Uploading...</div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
