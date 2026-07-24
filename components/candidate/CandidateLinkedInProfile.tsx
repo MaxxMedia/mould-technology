@@ -617,6 +617,8 @@ export default function CandidateLinkedInProfile({ username }: Props) {
           interestName: interest.name || "",
           type: interest.category || "",
           category: interest.category || "",
+          followersCount: interest.followersCount !== undefined && interest.followersCount !== null ? Number(interest.followersCount) : undefined,
+          imageUrl: interest.imageUrl || "",
         };
         if (interest.id) {
           await updateInterest(interest.id, payload);

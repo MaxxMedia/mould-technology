@@ -1,8 +1,8 @@
 "use client";
 
-import { Formik, Form, Field, FieldArray, ErrorMessage, useField } from "formik";
+import { Formik, Form, FieldArray, useField } from "formik";
 import * as Yup from "yup";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Loader2 } from "lucide-react";
 
 export interface Interest {
   id?: number;
@@ -22,18 +22,130 @@ const validationSchema = Yup.object({
   interests: Yup.array().of(
     Yup.object({
       name: Yup.string().required("Interest name is required"),
-      category: Yup.string().required("Category is required"),
+      category: Yup.string(),
       followersCount: Yup.number()
         .nullable()
-        .transform((value, originalValue) =>
-          originalValue === "" ? null : value
-        ),
+        .transform((value, originalValue) => (originalValue === "" ? null : value)),
       imageUrl: Yup.string().url("Invalid URL").nullable(),
     })
   ),
 });
 
-// Custom Input component using useField
+export default function InterestsForm({
+  initialValues,
+  onSubmit,
+  loading = false,
+}: Props) {
+  const sanitizedInitialValues = (initialValues.length > 0 ? initialValues : [
+    { name: "", category: "Industry", followersCount: undefined, imageUrl: "" }
+  ]).map((i) => ({
+    ...i,
+    name: i.name || "",
+    category: i.category || "Industry",
+    followersCount: i.followersCount !== undefined ? i.followersCount : undefined,
+    imageUrl: i.imageUrl || "",
+  }));
+
+  return (
+    <Formik
+      initialValues={{ interests: sanitizedInitialValues }}
+      validationSchema={validationSchema}
+      enableReinitialize
+      onSubmit={async (values) => {
+        await onSubmit(values.interests);
+      }}
+    >
+      {({ values, isSubmitting }) => (
+        <Form className="space-y-6">
+          <FieldArray name="interests">
+            {({ push, remove }) => (
+              <>
+                <div className="space-y-5">
+                  {values.interests.map((_, index) => (
+                    <div
+                      key={index}
+                      className="border border-gray-200 rounded-xl p-5 bg-white relative space-y-4 shadow-2xs"
+                    >
+                      {values.interests.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => remove(index)}
+                          className="absolute top-4 right-4 text-[#5A5F69] hover:text-[#B40F24] transition-colors p-1 rounded-full hover:bg-gray-100 cursor-pointer"
+                          title="Remove Interest"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+
+                      <h4 className="font-bold text-sm text-[#000000]">
+                        Interest #{index + 1}
+                      </h4>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input
+                          label="Interest Name *"
+                          name={`interests.${index}.name`}
+                          placeholder="e.g. Artificial Intelligence, Mould Technology"
+                        />
+
+                        <Input
+                          label="Category / Industry"
+                          name={`interests.${index}.category`}
+                          placeholder="e.g. Technology, Manufacturing"
+                        />
+
+                        <Input
+                          label="Followers Count"
+                          name={`interests.${index}.followersCount`}
+                          type="number"
+                          placeholder="e.g. 15000"
+                        />
+
+                        <Input
+                          label="Image / Logo URL"
+                          name={`interests.${index}.imageUrl`}
+                          placeholder="https://example.com/logo.png"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    push({
+                      name: "",
+                      category: "Industry",
+                      followersCount: undefined,
+                      imageUrl: "",
+                    })
+                  }
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0F5B78] hover:underline cursor-pointer pt-1"
+                >
+                  <Plus size={16} />
+                  Add another interest
+                </button>
+              </>
+            )}
+          </FieldArray>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <button
+              type="submit"
+              disabled={loading || isSubmitting}
+              className="bg-[#0F5B78] hover:bg-[#0b445a] text-white px-6 py-2.5 rounded-full text-sm font-bold transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer shadow-sm"
+            >
+              {(loading || isSubmitting) && <Loader2 size={16} className="animate-spin" />}
+              Save
+            </button>
+          </div>
+        </Form>
+      )}
+    </Formik>
+  );
+}
+
 function Input({
   label,
   name,
@@ -46,126 +158,22 @@ function Input({
   placeholder?: string;
 }) {
   const [field, meta] = useField(name);
-  
+
   return (
     <div>
-      <label className="font-medium">{label}</label>
+      <label className="block text-xs font-semibold text-[#5A5F69] uppercase tracking-wider mb-1.5">
+        {label}
+      </label>
       <input
         {...field}
         type={type}
-        value={field.value || ""}
+        value={field.value !== undefined && field.value !== null ? field.value : ""}
         placeholder={placeholder}
-        className="mt-2 w-full border rounded-lg p-3"
+        className="w-full border border-gray-300 rounded-lg px-3.5 py-2 text-sm text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#0F5B78] focus:border-transparent transition-all"
       />
       {meta.touched && meta.error && (
-        <p className="text-red-500 text-sm mt-1">{meta.error}</p>
+        <p className="text-red-500 text-xs mt-1 font-medium">{meta.error}</p>
       )}
     </div>
-  );
-}
-
-export default function InterestsForm({
-  initialValues,
-  onSubmit,
-  loading = false,
-}: Props) {
-  // Ensure all fields have default values
-  const sanitizedValues = initialValues.map(item => ({
-    id: item.id,
-    name: item.name || "",
-    category: item.category || "",
-    followersCount: item.followersCount || 0,
-    imageUrl: item.imageUrl || "",
-  }));
-
-  return (
-    <Formik
-      initialValues={{ interests: sanitizedValues }}
-      validationSchema={validationSchema}
-      enableReinitialize
-      onSubmit={async (values) => {
-        await onSubmit(values.interests);
-      }}
-    >
-      {({ values, isSubmitting }) => (
-        <Form className="bg-white rounded-xl border shadow p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Interests</h2>
-          </div>
-
-          <FieldArray name="interests">
-            {({ push, remove }) => (
-              <>
-                <div className="space-y-6">
-                  {values.interests.map((_, index) => (
-                    <div key={index} className="border rounded-lg p-5 relative">
-                      <button
-                        type="button"
-                        onClick={() => remove(index)}
-                        className="absolute top-4 right-4 text-red-500"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <Input
-                          label="Interest Name"
-                          name={`interests.${index}.name`}
-                          placeholder="Artificial Intelligence"
-                        />
-
-                        <Input
-                          label="Category"
-                          name={`interests.${index}.category`}
-                          placeholder="Technology"
-                        />
-
-                        <Input
-                          type="number"
-                          label="Followers"
-                          name={`interests.${index}.followersCount`}
-                        />
-
-                        <Input
-                          label="Image URL"
-                          name={`interests.${index}.imageUrl`}
-                          placeholder="https://..."
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  type="button"
-                  className="mt-6 flex items-center gap-2 text-blue-600"
-                  onClick={() =>
-                    push({
-                      name: "",
-                      category: "",
-                      followersCount: 0,
-                      imageUrl: "",
-                    })
-                  }
-                >
-                  <Plus size={18} />
-                  Add Interest
-                </button>
-              </>
-            )}
-          </FieldArray>
-
-          <div className="flex justify-end mt-8">
-            <button
-              type="submit"
-              disabled={loading || isSubmitting}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg"
-            >
-              {loading || isSubmitting ? "Saving..." : "Save Interests"}
-            </button>
-          </div>
-        </Form>
-      )}
-    </Formik>
   );
 }
