@@ -23,9 +23,9 @@ export default function CandidateSidebar({
   return (
     <div className="lg:col-span-4 space-y-4">
       <TrendingArticlesCard />
-      <HomeFeedCard />
-      <SavedJobsCard />
-      <MyApplicationsCard />
+      {isOwner && <HomeFeedCard />}
+      {isOwner && <SavedJobsCard />}
+      {isOwner && <MyApplicationsCard />}
       <ContactCard
         candidate={candidate}
         isOwner={isOwner}
