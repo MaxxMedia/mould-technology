@@ -319,29 +319,50 @@ export default function CandidateFeedPage() {
 
         {/* RIGHT SIDEBAR */}
         <aside className="col-span-12 lg:col-span-3 space-y-4 lg:sticky lg:top-6 self-start">
-          <div className="bg-white rounded-md shadow-sm p-4">
-            <h4 className="font-semibold mb-3">Trending Articles</h4>
+          <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-md overflow-hidden">
+            {/* Red Banner Header */}
+            <div className="bg-[#be1823] px-5 py-3.5">
+              <h3 className="text-white font-bold text-lg tracking-wide">
+                Trending Articles
+              </h3>
+            </div>
+
+            {/* Article Rows */}
             {popularArticles.length === 0 ? (
-              <p className="text-sm text-gray-500">Loading popular articles...</p>
+              <div className="p-5 text-sm text-gray-500">Loading popular articles...</div>
             ) : (
-              <ul className="space-y-3 text-sm">
-                {popularArticles.slice(0, 5).map((article, index) => (
-                  <li key={article.id}>
-                    <Link href={`/post/${article.slug}`} className="group block">
-                      <p className="font-medium text-gray-900 group-hover:text-blue-600 line-clamp-2">
-                        {index + 1}. {article.title}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
+              <div className="divide-y divide-gray-100">
+                {popularArticles.slice(0, 4).map((article, index) => (
+                  <Link
+                    key={article.id}
+                    href={`/post/${article.slug}`}
+                    className="px-5 py-3.5 flex items-start gap-3.5 hover:bg-gray-50/80 transition-colors group block"
+                  >
+                    <div className="w-7 h-7 rounded-md bg-[#be1823] text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-bold text-[#0f172a] group-hover:text-[#be1823] transition-colors leading-snug line-clamp-2">
+                        {article.title}
+                      </h4>
+                      <p className="text-xs text-gray-500 mt-0.5 font-medium">
                         {(article.views ?? 0).toLocaleString()} views
                       </p>
-                    </Link>
-                  </li>
+                    </div>
+                  </Link>
                 ))}
-              </ul>
+              </div>
             )}
-            <Link href="/articles" className="inline-block mt-4 text-xs font-medium text-blue-600 hover:underline">
-              View all articles →
-            </Link>
+
+            {/* Footer */}
+            <div className="border-t border-gray-100 bg-white">
+              <Link
+                href="/articles"
+                className="text-center font-bold text-sm text-[#be1823] hover:underline py-3.5 block hover:bg-red-50/40 transition-colors"
+              >
+                View all articles →
+              </Link>
+            </div>
           </div>
 
           {/* Company Status Widget */}
@@ -776,8 +797,8 @@ function CompanySection({
 
           {message && (
             <div className={`p-3 rounded-lg text-sm mb-4 ${message.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
-                message.type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
-                  'bg-blue-50 text-blue-800 border border-blue-200'
+              message.type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
+                'bg-blue-50 text-blue-800 border border-blue-200'
               }`}>
               {message.text}
             </div>

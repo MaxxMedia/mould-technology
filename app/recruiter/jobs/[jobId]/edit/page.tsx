@@ -2,6 +2,10 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
+import { useEffect } from "react"
+
+
 
 const EMPLOYMENT_TYPES = [
   { value: "FULL_TIME", label: "Full-time" },
@@ -120,7 +124,8 @@ const REQUIRED_FIELDS: { key: keyof FormState; label: string }[] = [
 
 export default function CreateJobPage() {
   const router = useRouter()
-
+  const params = useParams()
+  const id = params.jobId as string
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState<FormState>(initialForm)
   const [customBenefit, setCustomBenefit] = useState("")
@@ -139,6 +144,75 @@ export default function CreateJobPage() {
     })
   }
 
+  useEffect(() => {
+    if (!id || !token) return
+
+    const fetchJob = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/jobs/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+
+        const job = await res.json()
+
+        if (!res.ok) {
+          alert(job.error || "Failed to load job")
+          return
+        }
+
+        setForm({
+          title: job.title || "",
+          companyName: job.companyName || "",
+          location: job.location || "",
+
+          employmentType: job.employmentType || "FULL_TIME",
+          workplaceType: job.workplaceType || "ON_SITE",
+          jobFunction: job.jobFunction || "",
+          seniorityLevel: job.seniorityLevel || "",
+
+          experience: job.experience || "",
+
+          salaryMin: job.salaryMin?.toString() || "",
+          salaryMax: job.salaryMax?.toString() || "",
+          salaryPeriod: job.salaryPeriod || "PER_YEAR",
+
+          openings: job.openings?.toString() || "1",
+
+          startDate: job.startDate || "IMMEDIATELY",
+
+          applicationDeadline: job.applicationDeadline
+            ? job.applicationDeadline.slice(0, 10)
+            : "",
+
+          description: job.description || "",
+          responsibilities: job.responsibilities || "",
+          requirements: job.requirements || "",
+
+          benefits: job.benefits || [],
+
+          industry: job.industry || "",
+          companySize: job.companySize || "",
+          reportsTo: job.reportsTo || "",
+
+          referralBonus: job.referralBonus?.toString() || "",
+
+          applyUrl: job.applyUrl || "",
+          linkedinUrl: job.linkedinUrl || "",
+
+          featured: job.isFeatured || false,
+        })
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    fetchJob()
+  }, [id, token])
   const validate = () => {
     const nextErrors: Partial<Record<keyof FormState, string>> = {}
     REQUIRED_FIELDS.forEach(({ key, label }) => {
@@ -184,8 +258,8 @@ export default function CreateJobPage() {
     setLoading(true)
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/jobs`, {
-        method: "POST",
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/jobs/${id}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -562,7 +636,7 @@ export default function CreateJobPage() {
                   disabled={loading}
                   className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-60"
                 >
-                  {loading ? "Creating..." : "Create Job"}
+                  {loading ? "Updating..." : "Update Job"}
                 </button>
               </div>
             </div>
