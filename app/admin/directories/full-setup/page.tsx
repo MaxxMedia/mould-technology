@@ -424,7 +424,6 @@ const cities = form.state
             label="Company Logo"
             value={form.logoUrl}
             onUpload={handleLogoUpload}
-            accept="image/*"
           />
 
           <Textarea

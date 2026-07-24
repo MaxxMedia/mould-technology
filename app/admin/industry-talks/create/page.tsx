@@ -223,7 +223,6 @@ export default function CreateIndustryTalkPage() {
             label="Featured Image"
             value={form.imageUrl}
             onUpload={handleImageUpload}
-            height="h-64"
           />
 
           {/* YOUTUBE */}

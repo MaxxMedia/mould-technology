@@ -212,7 +212,7 @@ export default function EditIndustryTalkPage() {
             label="Featured Image"
             value={form.imageUrl}
             onUpload={handleImageUpload}
-            height="h-64"
+            // height="h-64"
           />
 
           <input
