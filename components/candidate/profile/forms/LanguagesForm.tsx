@@ -2,12 +2,12 @@
 
 import { Formik, Form, Field, FieldArray, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Loader2 } from "lucide-react";
 
 export interface Language {
   id?: number;
   language: string;
-  proficiency: "Beginner" | "Intermediate" | "Professional" | "Native";
+  proficiency: "Elementary" | "Limited working" | "Professional working" | "Full professional" | "Native or bilingual" | string;
 }
 
 interface Props {
@@ -19,8 +19,8 @@ interface Props {
 const validationSchema = Yup.object({
   languages: Yup.array().of(
     Yup.object({
-      language: Yup.string().required("Language is required"),
-      proficiency: Yup.string().required("Proficiency is required"),
+      language: Yup.string().required("Language name is required"),
+      proficiency: Yup.string(),
     })
   ),
 });
@@ -30,9 +30,17 @@ export default function LanguagesForm({
   onSubmit,
   loading = false,
 }: Props) {
+  const sanitizedInitialValues = (initialValues.length > 0 ? initialValues : [
+    { language: "", proficiency: "Full professional" }
+  ]).map((l) => ({
+    ...l,
+    language: l.language || "",
+    proficiency: l.proficiency || "Full professional",
+  }));
+
   return (
     <Formik
-      initialValues={{ languages: initialValues }}
+      initialValues={{ languages: sanitizedInitialValues }}
       validationSchema={validationSchema}
       enableReinitialize
       onSubmit={async (values) => {
@@ -40,135 +48,92 @@ export default function LanguagesForm({
       }}
     >
       {({ values, isSubmitting }) => (
-        <Form className="bg-white rounded-xl border shadow p-6">
-
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">
-              Languages
-            </h2>
-          </div>
-
+        <Form className="space-y-6">
           <FieldArray name="languages">
             {({ push, remove }) => (
               <>
-                <div className="space-y-5">
-
+                <div className="space-y-4">
                   {values.languages.map((_, index) => (
-
                     <div
                       key={index}
-                      className="grid md:grid-cols-12 gap-4 items-start border rounded-lg p-4"
+                      className="grid grid-cols-12 gap-3 items-end p-3.5 bg-white border border-gray-200 rounded-xl shadow-2xs"
                     >
-
-                      <div className="md:col-span-5">
-
-                        <label className="font-medium">
-                          Language
+                      <div className="col-span-6">
+                        <label className="block text-xs font-semibold text-[#5A5F69] uppercase tracking-wider mb-1">
+                          Language *
                         </label>
-
                         <Field
                           name={`languages.${index}.language`}
-                          className="mt-2 w-full border rounded-lg p-3"
-                          placeholder="English"
+                          className="w-full border border-gray-300 rounded-lg px-3.5 py-2 text-sm text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#0F5B78] focus:border-transparent transition-all"
+                          placeholder="e.g. English, Hindi, German"
                         />
-
                         <ErrorMessage
                           name={`languages.${index}.language`}
                           component="p"
-                          className="text-red-500 text-sm"
+                          className="text-red-500 text-xs mt-1 font-medium"
                         />
-
                       </div>
 
-                      <div className="md:col-span-5">
-
-                        <label className="font-medium">
+                      <div className="col-span-5">
+                        <label className="block text-xs font-semibold text-[#5A5F69] uppercase tracking-wider mb-1">
                           Proficiency
                         </label>
-
                         <Field
                           as="select"
                           name={`languages.${index}.proficiency`}
-                          className="mt-2 w-full border rounded-lg p-3"
+                          className="w-full border border-gray-300 rounded-lg px-3.5 py-2 text-sm text-[#000000] bg-white focus:outline-none focus:ring-2 focus:ring-[#0F5B78] focus:border-transparent transition-all"
                         >
-                          <option value="">
-                            Select
-                          </option>
-
-                          <option value="Beginner">
-                            Beginner
-                          </option>
-
-                          <option value="Intermediate">
-                            Intermediate
-                          </option>
-
-                          <option value="Professional">
-                            Professional
-                          </option>
-
-                          <option value="Native">
-                            Native
-                          </option>
-
+                          <option value="Elementary">Elementary proficiency</option>
+                          <option value="Limited working">Limited working proficiency</option>
+                          <option value="Professional working">Professional working proficiency</option>
+                          <option value="Full professional">Full professional proficiency</option>
+                          <option value="Native or bilingual">Native or bilingual proficiency</option>
                         </Field>
-
-                        <ErrorMessage
-                          name={`languages.${index}.proficiency`}
-                          component="p"
-                          className="text-red-500 text-sm"
-                        />
-
                       </div>
 
-                      <div className="md:col-span-2 flex justify-end pt-8">
-
-                        <button
-                          type="button"
-                          onClick={() => remove(index)}
-                          className="text-red-500"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-
+                      <div className="col-span-1 flex justify-center pb-2">
+                        {values.languages.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => remove(index)}
+                            className="text-[#5A5F69] hover:text-[#B40F24] transition-colors p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
+                            title="Remove Language"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
                       </div>
-
                     </div>
-
                   ))}
-
                 </div>
 
                 <button
                   type="button"
-                  className="mt-6 flex items-center gap-2 text-blue-600"
                   onClick={() =>
                     push({
                       language: "",
-                      proficiency: "Beginner",
+                      proficiency: "Full professional",
                     })
                   }
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0F5B78] hover:underline cursor-pointer pt-1"
                 >
-                  <Plus size={18} />
-                  Add Language
+                  <Plus size={16} />
+                  Add another language
                 </button>
-
               </>
             )}
           </FieldArray>
 
-          <div className="flex justify-end mt-8">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <button
               type="submit"
               disabled={loading || isSubmitting}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+              className="bg-[#0F5B78] hover:bg-[#0b445a] text-white px-6 py-2.5 rounded-full text-sm font-bold transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer shadow-sm"
             >
-              {loading || isSubmitting
-                ? "Saving..."
-                : "Save Languages"}
+              {(loading || isSubmitting) && <Loader2 size={16} className="animate-spin" />}
+              Save
             </button>
           </div>
-
         </Form>
       )}
     </Formik>

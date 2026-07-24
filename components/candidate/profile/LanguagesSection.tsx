@@ -1,6 +1,6 @@
 "use client";
 
-import { Languages, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 
 type Language = {
   id: number;
@@ -20,74 +20,50 @@ export default function LanguagesSection({
   onEditClick,
 }: Props) {
   return (
-    <div className="bg-white rounded-lg border border-[#e0e0e0] p-6 shadow-sm relative">
+    <div className="bg-white rounded-xl border border-[#e0e0e0] p-6 shadow-sm relative">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold text-[#000000]">
+          Languages {languages.length > 0 && <span className="text-[#5A5F69] font-normal">({languages.length})</span>}
+        </h2>
 
-      {(!editable && onEditClick) && (
-        <button
-          onClick={onEditClick}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
-          title="Edit Languages"
-        >
-          <Pencil size={16} />
-        </button>
-      )}
+        {!editable && onEditClick && (
+          <button
+            onClick={onEditClick}
+            title="Edit Languages"
+            className="text-[#5A5F69] hover:text-[#0F5B78] transition-colors p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
+          >
+            <Pencil size={16} />
+          </button>
+        )}
 
-      {editable && (
-        <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 cursor-pointer">
-          <Pencil
-            size={16}
-          />
-        </button>
-      )}
-
-      <h2 className="text-lg font-semibold mb-5">
-        Languages
-      </h2>
+        {editable && (
+          <button
+            className="text-[#5A5F69] hover:text-[#0F5B78] transition-colors p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
+          >
+            <Pencil size={16} />
+          </button>
+        )}
+      </div>
 
       {languages.length === 0 ? (
-        <p className="text-sm text-gray-500">
-          No languages added.
-        </p>
+        <p className="text-sm text-[#5A5F69] italic">No languages added.</p>
       ) : (
-        <div className="space-y-4">
-
+        <div className="divide-y divide-gray-100">
           {languages.map((lang) => (
-
-            <div
-              key={lang.id}
-              className="flex items-center gap-4 border-b last:border-none pb-4"
-            >
-
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-
-                <Languages
-                  size={18}
-                  className="text-[#0a66c2]"
-                />
-
-              </div>
-
-              <div className="flex-1">
-
-                <h3 className="font-semibold">
-                  {lang.language}
-                </h3>
-
-                {lang.proficiency && (
-                  <p className="text-sm text-gray-500">
-                    {lang.proficiency}
-                  </p>
-                )}
-
-              </div>
-
+            <div key={lang.id || Math.random()} className="py-3.5 first:pt-0 last:pb-0">
+              <h3 className="font-bold text-sm text-[#000000]">
+                {lang.language}
+              </h3>
+              {lang.proficiency && (
+                <p className="text-xs text-[#5A5F69] mt-0.5 font-medium">
+                  {lang.proficiency}
+                </p>
+              )}
             </div>
-
           ))}
-
         </div>
       )}
-
     </div>
   );
 }

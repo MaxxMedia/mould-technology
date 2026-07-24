@@ -67,33 +67,34 @@ export default function ProfileModals({
   if (!activeModal) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 overflow-y-auto backdrop-blur-xs">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative animate-in fade-in zoom-in-95 duration-200">
-        {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-5">
-          <h3 className="text-xl font-bold text-[#000000]">
-            {activeModal === "intro" && "Edit Intro"}
-            {activeModal === "about" && "Edit Summary"}
-            {activeModal === "experience" && "Edit Experience"}
-            {activeModal === "education" && "Edit Education"}
-            {activeModal === "skills" && "Edit Skills"}
-            {activeModal === "projects" && "Edit Projects"}
-            {activeModal === "certifications" && "Edit Certifications"}
-            {activeModal === "languages" && "Edit Languages"}
-            {activeModal === "achievements" && "Edit Achievements"}
-            {activeModal === "interests" && "Edit Interests"}
-            {activeModal === "socials" && "Edit Contact & Social Links"}
+    <div className="fixed inset-0 bg-[#000000]/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden relative animate-in fade-in zoom-in-95 duration-200">
+        {/* Sticky LinkedIn Modal Header */}
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-white shrink-0">
+          <h3 className="text-lg sm:text-xl font-bold text-[#000000]">
+            {activeModal === "intro" && "Edit intro"}
+            {activeModal === "about" && "Edit about"}
+            {activeModal === "experience" && "Edit experience"}
+            {activeModal === "education" && "Edit education"}
+            {activeModal === "skills" && "Edit skills"}
+            {activeModal === "projects" && "Edit projects"}
+            {activeModal === "certifications" && "Edit certifications"}
+            {activeModal === "languages" && "Edit languages"}
+            {activeModal === "achievements" && "Edit accomplishments"}
+            {activeModal === "interests" && "Edit interests"}
+            {activeModal === "socials" && "Edit contact & social links"}
           </h3>
           <button
             onClick={onClose}
             className="text-[#5A5F69] hover:text-[#000000] p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+            title="Close"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Modal Body */}
-        <div>
+        {/* Scrollable Modal Body */}
+        <div className="p-6 overflow-y-auto space-y-4 max-h-[calc(90vh-70px)]">
           {activeModal === "intro" && (
             <BasicInfoForm
               initialValues={initialBasicInfo}
@@ -178,7 +179,13 @@ export default function ProfileModals({
 
           {activeModal === "interests" && (
             <InterestsForm
-              initialValues={candidate?.interests || []}
+              initialValues={(candidate?.interests || []).map((i: any) => ({
+                id: i.id,
+                name: i.name || i.title || i.interestName || "",
+                category: i.category || i.type || "",
+                followersCount: i.followersCount,
+                imageUrl: i.imageUrl,
+              }))}
               onSubmit={onSaveInterests}
               loading={modalSaving}
             />

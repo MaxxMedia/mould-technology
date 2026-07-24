@@ -34,14 +34,14 @@ export async function createExperience(data: any) {
     // Transform the data to match backend expectations
     const payload = {
       companyId: data.companyId || null,
-      companyName: data.company,
-      designation: data.title, // Map 'title' to 'designation'
-      employmentType: data.employmentType,
-      location: data.location,
-      startDate: data.startDate,
-      endDate: data.currentlyWorking ? null : data.endDate,
-      currentlyWorking: data.currentlyWorking || false,
-      description: data.description,
+      companyName: data.companyName || data.company || "",
+      designation: data.designation || data.title || "",
+      employmentType: data.employmentType || "",
+      location: data.location || "",
+      startDate: data.startDate || null,
+      endDate: data.currentlyWorking ? null : data.endDate || null,
+      currentlyWorking: Boolean(data.currentlyWorking),
+      description: data.description || "",
     };
 
     const res = await fetch(`${API}/api/candidate-experience`, {
@@ -68,14 +68,14 @@ export async function updateExperience(id: number, data: any) {
     // Transform the data to match backend expectations
     const payload = {
       companyId: data.companyId || null,
-      companyName: data.company,
-      designation: data.title, // Map 'title' to 'designation'
-      employmentType: data.employmentType,
-      location: data.location,
-      startDate: data.startDate,
-      endDate: data.currentlyWorking ? null : data.endDate,
-      currentlyWorking: data.currentlyWorking || false,
-      description: data.description,
+      companyName: data.companyName || data.company || "",
+      designation: data.designation || data.title || "",
+      employmentType: data.employmentType || "",
+      location: data.location || "",
+      startDate: data.startDate || null,
+      endDate: data.currentlyWorking ? null : data.endDate || null,
+      currentlyWorking: Boolean(data.currentlyWorking),
+      description: data.description || "",
     };
 
     const res = await fetch(`${API}/api/candidate-experience/${id}`, {

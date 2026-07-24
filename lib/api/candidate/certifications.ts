@@ -26,7 +26,11 @@ export async function createCertification(data: any) {
     body: JSON.stringify(data),
   });
 
-  if (!res.ok) throw new Error("Failed to create certification");
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error("Server response:", errorText);
+    throw new Error(`Failed to create certification: ${res.status} ${errorText}`);
+  }
 
   return res.json();
 }
@@ -38,7 +42,11 @@ export async function updateCertification(id: number, data: any) {
     body: JSON.stringify(data),
   });
 
-  if (!res.ok) throw new Error("Failed to update certification");
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error("Server response:", errorText);
+    throw new Error(`Failed to update certification: ${res.status} ${errorText}`);
+  }
 
   return res.json();
 }

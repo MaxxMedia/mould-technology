@@ -1,8 +1,8 @@
 "use client";
 
-import { Formik, Form, Field, FieldArray, ErrorMessage } from "formik";
+import { Formik, Form, Field, FieldArray, ErrorMessage, useField } from "formik";
 import * as Yup from "yup";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Loader2 } from "lucide-react";
 
 export interface Education {
   id?: number;
@@ -24,7 +24,7 @@ interface Props {
 const validationSchema = Yup.object({
   education: Yup.array().of(
     Yup.object({
-      institution: Yup.string().required("Institution is required"),
+      institution: Yup.string().required("School or University is required"),
       degree: Yup.string().required("Degree is required"),
       fieldOfStudy: Yup.string().required("Field of study is required"),
       grade: Yup.string(),
@@ -40,9 +40,30 @@ export default function EducationForm({
   onSubmit,
   loading = false,
 }: Props) {
+  const sanitizedInitialValues = (initialValues.length > 0 ? initialValues : [
+    {
+      institution: "",
+      degree: "",
+      fieldOfStudy: "",
+      grade: "",
+      startYear: "",
+      endYear: "",
+      description: "",
+    }
+  ]).map((edu) => ({
+    ...edu,
+    institution: edu.institution || "",
+    degree: edu.degree || "",
+    fieldOfStudy: edu.fieldOfStudy || "",
+    grade: edu.grade || "",
+    startYear: edu.startYear ? String(edu.startYear) : "",
+    endYear: edu.endYear ? String(edu.endYear) : "",
+    description: edu.description || "",
+  }));
+
   return (
     <Formik
-      initialValues={{ education: initialValues }}
+      initialValues={{ education: sanitizedInitialValues }}
       validationSchema={validationSchema}
       enableReinitialize
       onSubmit={async (values) => {
@@ -50,91 +71,89 @@ export default function EducationForm({
       }}
     >
       {({ values, isSubmitting }) => (
-        <Form className="bg-white rounded-xl border shadow p-6">
-
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Education</h2>
-          </div>
-
+        <Form className="space-y-6">
           <FieldArray name="education">
             {({ push, remove }) => (
               <>
-                <div className="space-y-8">
+                <div className="space-y-6">
                   {values.education.map((_, index) => (
-                    <div
-                      key={index}
-                      className="border rounded-lg p-5 relative"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => remove(index)}
-                        className="absolute top-4 right-4 text-red-500"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                    <div key={index} className="border border-gray-200 rounded-xl p-5 bg-white relative space-y-4 shadow-2xs">
+                      {values.education.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => remove(index)}
+                          className="absolute top-4 right-4 text-[#5A5F69] hover:text-[#B40F24] transition-colors p-1 rounded-full hover:bg-gray-100 cursor-pointer"
+                          title="Remove Education"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
 
-                      <div className="grid md:grid-cols-2 gap-4">
+                      <h4 className="font-bold text-sm text-[#000000]">
+                        Education #{index + 1}
+                      </h4>
 
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input
-                          label="Institution"
+                          label="School / University *"
                           name={`education.${index}.institution`}
+                          placeholder="e.g. Stanford University, VTU"
                         />
 
                         <Input
-                          label="Degree"
+                          label="Degree *"
                           name={`education.${index}.degree`}
+                          placeholder="e.g. Bachelor of Engineering (B.E.)"
                         />
 
                         <Input
-                          label="Field of Study"
+                          label="Field of Study *"
                           name={`education.${index}.fieldOfStudy`}
+                          placeholder="e.g. Computer Science & Engineering"
                         />
 
                         <Input
                           label="Grade / CGPA"
                           name={`education.${index}.grade`}
+                          placeholder="e.g. 8.5 CGPA or First Class"
                         />
 
                         <Input
-                          type="number"
-                          label="Start Year"
+                          label="Start Year *"
                           name={`education.${index}.startYear`}
+                          placeholder="e.g. 2020"
                         />
 
                         <Input
-                          type="number"
-                          label="End Year"
+                          label="End Year *"
                           name={`education.${index}.endYear`}
+                          placeholder="e.g. 2024"
                         />
-
                       </div>
 
-                      <div className="mt-4">
-                        <label className="font-medium">
-                          Description
+                      <div>
+                        <label className="block text-xs font-semibold text-[#5A5F69] uppercase tracking-wider mb-1.5">
+                          Activities and Societies / Description
                         </label>
-
                         <Field
                           as="textarea"
-                          rows={4}
+                          rows={3}
                           name={`education.${index}.description`}
-                          className="mt-2 w-full border rounded-lg p-3"
+                          placeholder="Activities, societies, coursework, or honors..."
+                          className="w-full border border-gray-300 rounded-lg p-3 text-sm text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#0F5B78] focus:border-transparent transition-all"
                         />
-
                         <ErrorMessage
                           name={`education.${index}.description`}
                           component="p"
-                          className="text-red-500 text-sm"
+                          className="text-red-500 text-xs mt-1 font-medium"
                         />
                       </div>
-
                     </div>
                   ))}
                 </div>
 
                 <button
                   type="button"
-                  className="mt-6 flex items-center gap-2 text-blue-600"
                   onClick={() =>
                     push({
                       institution: "",
@@ -146,26 +165,25 @@ export default function EducationForm({
                       description: "",
                     })
                   }
+                  className="inline-flex items-center gap-2 text-xs font-bold text-[#0F5B78] hover:underline cursor-pointer pt-1"
                 >
-                  <Plus size={18} />
-                  Add Education
+                  <Plus size={16} />
+                  Add another education
                 </button>
               </>
             )}
           </FieldArray>
 
-          <div className="flex justify-end mt-8">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <button
               type="submit"
               disabled={loading || isSubmitting}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+              className="bg-[#0F5B78] hover:bg-[#0b445a] text-white px-6 py-2.5 rounded-full text-sm font-bold transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer shadow-sm"
             >
-              {loading || isSubmitting
-                ? "Saving..."
-                : "Save Education"}
+              {(loading || isSubmitting) && <Loader2 size={16} className="animate-spin" />}
+              Save
             </button>
           </div>
-
         </Form>
       )}
     </Formik>
@@ -175,27 +193,28 @@ export default function EducationForm({
 function Input({
   label,
   name,
-  type = "text",
+  placeholder = "",
 }: {
   label: string;
   name: string;
-  type?: string;
+  placeholder?: string;
 }) {
+  const [field, meta] = useField(name);
+
   return (
     <div>
-      <label className="font-medium">{label}</label>
-
-      <Field
-        name={name}
-        type={type}
-        className="mt-2 w-full border rounded-lg p-3"
+      <label className="block text-xs font-semibold text-[#5A5F69] uppercase tracking-wider mb-1.5">
+        {label}
+      </label>
+      <input
+        {...field}
+        value={field.value || ""}
+        placeholder={placeholder}
+        className="w-full border border-gray-300 rounded-lg px-3.5 py-2 text-sm text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#0F5B78] focus:border-transparent transition-all"
       />
-
-      <ErrorMessage
-        name={name}
-        component="p"
-        className="text-red-500 text-sm"
-      />
+      {meta.touched && meta.error && (
+        <p className="text-red-500 text-xs mt-1 font-medium">{meta.error}</p>
+      )}
     </div>
   );
 }
