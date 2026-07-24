@@ -150,7 +150,7 @@ export default function CreateJobPage() {
     const fetchJob = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/jobs/${id}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/jobs/recruiter/me/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
