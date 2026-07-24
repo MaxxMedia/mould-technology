@@ -16,7 +16,7 @@ interface Props {
 
 export default function LanguagesSection({
   editable = false,
-  languages,
+  languages = [],
   onEditClick,
 }: Props) {
   return (
@@ -27,7 +27,7 @@ export default function LanguagesSection({
           Languages {languages.length > 0 && <span className="text-[#5A5F69] font-normal">({languages.length})</span>}
         </h2>
 
-        {!editable && onEditClick && (
+        {(!editable && onEditClick) && (
           <button
             onClick={onEditClick}
             title="Edit Languages"
@@ -49,16 +49,18 @@ export default function LanguagesSection({
       {languages.length === 0 ? (
         <p className="text-sm text-[#5A5F69] italic">No languages added.</p>
       ) : (
-        <div className="divide-y divide-gray-100">
+        /* Horizontal Languages Layout */
+        <div className="flex flex-wrap gap-2.5">
           {languages.map((lang) => (
-            <div key={lang.id || Math.random()} className="py-3.5 first:pt-0 last:pb-0">
-              <h3 className="font-bold text-sm text-[#000000]">
-                {lang.language}
-              </h3>
+            <div
+              key={lang.id || Math.random()}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full border border-gray-200 bg-white hover:border-[#0F5B78] hover:bg-[#0F5B78]/5 transition-all shadow-2xs"
+            >
+              <span className="font-bold text-sm text-[#000000]">{lang.language}</span>
               {lang.proficiency && (
-                <p className="text-xs text-[#5A5F69] mt-0.5 font-medium">
+                <span className="text-xs text-[#5A5F69] bg-gray-100 px-2.5 py-0.5 rounded-full font-medium">
                   {lang.proficiency}
-                </p>
+                </span>
               )}
             </div>
           ))}
