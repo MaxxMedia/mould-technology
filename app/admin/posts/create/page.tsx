@@ -208,7 +208,7 @@ async function handleImageUpload(file: File) {
   label="Featured Image"
   value={form.imageUrl}
   onUpload={handleImageUpload}
-  height="h-64"
+  // height="h-64"
 />
 
 

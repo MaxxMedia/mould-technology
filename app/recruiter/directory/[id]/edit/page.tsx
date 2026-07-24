@@ -690,9 +690,7 @@ export default function EditDirectoryPage() {
         <UploadBox
           label="Company Logo"
           value={directory.logoUrl}
-          onUpload={(file) => {
-            uploadFile(file).then(url => setDirectory({ ...directory, logoUrl: url }));
-          }}
+          onUpload={(file) => uploadFile(file).then(url => setDirectory({ ...directory, logoUrl: url }))}
         />
       </div>
 
@@ -1640,7 +1638,7 @@ function GallerySection({
           <UploadBox
             label={`${uploadLabel} ${i + 1}`}
             value={item}
-            onUpload={(file) => onUpload(field, i, file)}
+            onUpload={async (file) => onUpload(field, i, file)}
           />
           {(i > 0 || allowRemoveFirst) && (
             <button type="button" onClick={() => onRemove(field, i)}>

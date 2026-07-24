@@ -222,8 +222,8 @@ export default function CreateMagazinePage() {
       <UploadBox
         label="Cover Image"
         value={form.coverImageUrl}
-        height="h-52"
-        accept="image/*"
+        // height="h-52"
+        // accept="image/*"
         onUpload={(file) => uploadFile(file, "coverImageUrl")}
       />
 
@@ -231,17 +231,17 @@ export default function CreateMagazinePage() {
       <UploadBox
         label="Magazine PDF"
         value={form.pdfUrl}
-        height="h-40"
-        accept="application/pdf"
+        // height="h-40"
+        // accept="application/pdf"
         onUpload={(file) => uploadFile(file, "pdfUrl")}
       />
 
       {/* FLIPBOOK PAGES */}
       <UploadBox
         label="Flipbook Pages"
-        multiple
-        accept="image/*"
-        height="h-32"
+        // multiple
+        // accept="image/*"
+        // height="h-32"
         onUpload={(file) => uploadFlipbookPage(file)}
       />
 

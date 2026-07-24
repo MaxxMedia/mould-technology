@@ -5,7 +5,11 @@ import * as Yup from "yup"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import UploadBox from "@/components/UploadBox"
+import EventMediaFields from "@/components/events/EventMediaFields"
 import { Facebook, Twitter, Linkedin, Youtube, Trash2 } from "lucide-react"
+
+const YOUTUBE_REGEX =
+  /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/|shorts\/)|youtu\.be\/)[a-zA-Z0-9_-]{11}/
 
 const EventSchema = Yup.object({
   title: Yup.string().required("Event name is required"),
@@ -28,6 +32,13 @@ const EventSchema = Yup.object({
   email: Yup.string().email("Invalid email").required("Email is required"),
   mobileNumber: Yup.string().required("Mobile number is required"),
   address: Yup.string().required("Address is required"),
+  videoGallery: Yup.array().of(
+    Yup.string().test(
+      "is-youtube-url",
+      "Enter a valid YouTube URL",
+      value => !value || YOUTUBE_REGEX.test(value)
+    )
+  ),
   agreeTerms: Yup.boolean().oneOf([true], "You must agree to continue"),
 })
 
@@ -57,6 +68,7 @@ const initialValues = {
   country: "",
   websiteUrl: "",
   logoUrl: "",
+  bannerUrl: "",
   shortDescription: "",
   description: "",
   highlights: ["", "", ""],
@@ -69,6 +81,7 @@ const initialValues = {
   address: "",
   brochureUrl: "",
   otherImages: [] as string[],
+  videoGallery: [] as string[],
   facebookUrl: "",
   twitterUrl: "",
   linkedinUrl: "",
@@ -78,17 +91,27 @@ const initialValues = {
 
 export default function CreateEventPage() {
   const router = useRouter()
-  const [submitAction, setSubmitAction] = useState<"REVIEW" | "DRAFT">("DRAFT")
+  const [submitAction, setSubmitAction] = useState<"submit" | "draft">("draft")
 
+  /**
+   * fileType picks the right endpoint + response key:
+   * - "image": logo, banner, otherImages → /api/upload → { imageUrl }
+   * - "document": brochure (PDF) → /api/upload/document → { documentUrl }
+   */
   const uploadFile = async (
     file: File,
     setFieldValue: any,
-    fieldName: string
+    fieldName: string,
+    fileType: "image" | "document" = "image"
   ) => {
     const formData = new FormData()
-    formData.append("image", file)
+    const endpoint =
+      fileType === "document"
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/upload/document`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/upload`
+    formData.append(fileType === "document" ? "document" : "image", file)
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, {
+    const res = await fetch(endpoint, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -99,35 +122,40 @@ export default function CreateEventPage() {
     if (!res.ok) {
       const text = await res.text()
       console.error("Upload failed:", text)
-      alert("Upload failed")
+      alert("Upload failed. Please check the file type/size and try again.")
       return
     }
 
     const data = await res.json()
-    setFieldValue(fieldName, data.imageUrl)
+    setFieldValue(fieldName, fileType === "document" ? data.documentUrl : data.imageUrl)
   }
 
   const handleSubmit = async (values: typeof initialValues) => {
     const token = localStorage.getItem("token")
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/events`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        ...values,
-        status: submitAction === "REVIEW" ? "PENDING_REVIEW" : "DRAFT",
-      }),
-    })
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...values,
+          action: submitAction, // "submit" | "draft" — matches backend exactly
+        }),
+      })
 
-    const data = await res.json()
+      const data = await res.json()
 
-    if (res.ok) {
-      router.push("/admin/events")
-    } else {
-      alert(data.message || "Failed to create event")
+      if (res.ok) {
+        router.push(`/recruiter/events?created=${data.event.id}`)
+      } else {
+        alert(data.message || "Failed to create event")
+      }
+    } catch (err) {
+      console.error("Create event failed:", err)
+      alert("Something went wrong. Please check your connection and try again.")
     }
   }
 
@@ -261,13 +289,24 @@ export default function CreateEventPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Event Logo / Banner</label>
+                  <label className="block text-sm font-medium mb-1">Event Logo</label>
                   <UploadBox
                     label="PNG, JPG, WEBP (Max. 2MB)"
                     value={values.logoUrl}
-                    onUpload={file => uploadFile(file, setFieldValue, "logoUrl")}
+                    onUpload={file => uploadFile(file, setFieldValue, "logoUrl", "image")}
                   />
                 </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">
+                  Event Banner (hero image on the event page)
+                </label>
+                <UploadBox
+                  label="PNG, JPG, WEBP (Max. 2MB, wide image recommended)"
+                  value={values.bannerUrl}
+                  onUpload={file => uploadFile(file, setFieldValue, "bannerUrl", "image")}
+                />
               </div>
 
               <div className="mb-4">
@@ -282,7 +321,6 @@ export default function CreateEventPage() {
                   name="shortDescription"
                   rows={3}
                   maxLength={250}
-                  placeholder=""
                   className="input w-full border border-gray-300 rounded-lg p-2.5 text-sm resize-y"
                 />
                 <p className="text-right text-xs text-gray-400 mt-1">
@@ -327,8 +365,9 @@ export default function CreateEventPage() {
                         />
                         <button
                           type="button"
-                          onClick={() => remove(index)}
-                          className="text-red-500 border border-red-200 rounded-lg p-2.5 hover:bg-red-50 flex items-center justify-center"
+                          onClick={() => values.highlights.length > 3 && remove(index)}
+                          disabled={values.highlights.length <= 3}
+                          className="text-red-500 border border-red-200 rounded-lg p-2.5 hover:bg-red-50 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -442,66 +481,64 @@ export default function CreateEventPage() {
                 4. Additional Information
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Brochure / Media Kit</label>
-                  <UploadBox
-                    label="PDF (Max. 5MB)"
-                    value={values.brochureUrl}
-                    onUpload={file => uploadFile(file, setFieldValue, "brochureUrl")}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Other Images (Optional)</label>
-                  <UploadBox
-                    label="JPG, PNG (Max. 5MB each)"
-                    value={values.otherImages?.[0] || ""}
-                    onUpload={file =>
-                      uploadFile(file, setFieldValue, "otherImages[0]")
-                    }
-                  />
-                </div>
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-1">Brochure / Media Kit</label>
+                <UploadBox
+                  label="PDF (Max. 5MB)"
+                  value={values.brochureUrl}
+                  onUpload={file => uploadFile(file, setFieldValue, "brochureUrl", "document")}
+                />
+              </div>
+
+              {/* Images Gallery + Video Gallery (YouTube), both with "add more" */}
+              <div className="mb-6">
+                <EventMediaFields
+                  initialImages={values.otherImages}
+                  initialVideos={values.videoGallery}
+                  onImagesChange={(urls) => setFieldValue("otherImages", urls)}
+                  onVideosChange={(urls) => setFieldValue("videoGallery", urls)}
+                />
               </div>
 
               <div>
-  <label className="block text-sm font-medium mb-2">
-    Social Media Links (Optional)
-  </label>
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div className="flex items-center gap-2">
-      <Facebook size={18} className="text-[#1877F2] shrink-0" />
-      <Field
-        name="facebookUrl"
-        placeholder="https://facebook.com/yourpage"
-        className="input flex-1 border border-gray-300 rounded-lg p-2.5 text-sm"
-      />
-    </div>
-    <div className="flex items-center gap-2">
-      <Twitter size={18} className="text-[#1DA1F2] shrink-0" />
-      <Field
-        name="twitterUrl"
-        placeholder="https://twitter.com/yourpage"
-        className="input flex-1 border border-gray-300 rounded-lg p-2.5 text-sm"
-      />
-    </div>
-    <div className="flex items-center gap-2">
-      <Linkedin size={18} className="text-[#0A66C2] shrink-0" />
-      <Field
-        name="linkedinUrl"
-        placeholder="https://linkedin.com/company/yourpage"
-        className="input flex-1 border border-gray-300 rounded-lg p-2.5 text-sm"
-      />
-    </div>
-    <div className="flex items-center gap-2">
-      <Youtube size={18} className="text-[#FF0000] shrink-0" />
-      <Field
-        name="youtubeUrl"
-        placeholder="https://youtube.com/yourchannel"
-        className="input flex-1 border border-gray-300 rounded-lg p-2.5 text-sm"
-      />
-    </div>
-  </div>
-</div>
+                <label className="block text-sm font-medium mb-2">
+                  Social Media Links (Optional)
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    <Facebook size={18} className="text-[#1877F2] shrink-0" />
+                    <Field
+                      name="facebookUrl"
+                      placeholder="https://facebook.com/yourpage"
+                      className="input flex-1 border border-gray-300 rounded-lg p-2.5 text-sm"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Twitter size={18} className="text-[#1DA1F2] shrink-0" />
+                    <Field
+                      name="twitterUrl"
+                      placeholder="https://twitter.com/yourpage"
+                      className="input flex-1 border border-gray-300 rounded-lg p-2.5 text-sm"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Linkedin size={18} className="text-[#0A66C2] shrink-0" />
+                    <Field
+                      name="linkedinUrl"
+                      placeholder="https://linkedin.com/company/yourpage"
+                      className="input flex-1 border border-gray-300 rounded-lg p-2.5 text-sm"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Youtube size={18} className="text-[#FF0000] shrink-0" />
+                    <Field
+                      name="youtubeUrl"
+                      placeholder="https://youtube.com/yourchannel"
+                      className="input flex-1 border border-gray-300 rounded-lg p-2.5 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
             </section>
 
             {/* Terms */}
@@ -521,19 +558,19 @@ export default function CreateEventPage() {
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 type="submit"
-                onClick={() => setSubmitAction("REVIEW")}
+                onClick={() => setSubmitAction("submit")}
                 disabled={isSubmitting}
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium disabled:opacity-60"
               >
-                {isSubmitting ? "Submitting..." : "Submit Event for Review"}
+                {isSubmitting && submitAction === "submit" ? "Submitting..." : "Submit Event for Review"}
               </button>
               <button
                 type="submit"
-                onClick={() => setSubmitAction("DRAFT")}
+                onClick={() => setSubmitAction("draft")}
                 disabled={isSubmitting}
                 className="bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-lg text-sm font-medium disabled:opacity-60"
               >
-                {isSubmitting ? "Saving..." : "Save as Draft"}
+                {isSubmitting && submitAction === "draft" ? "Saving..." : "Save as Draft"}
               </button>
               <button
                 type="button"

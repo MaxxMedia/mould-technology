@@ -21,8 +21,8 @@ type Event = {
   calendarUrl?: string
   email?: string
   phone?: string
-  images?: string[]
-  videoUrl?: string
+  otherImages?: string[]
+  videoGallery?: string[]
   frequency?: string
   edition?: string
   expectedVisitors?: string
@@ -95,6 +95,7 @@ export default async function EventDetailsPage({
           {event.logoUrl && (
             <div className="bg-white p-2 rounded-lg w-24 flex-shrink-0">
               <Image src={event.logoUrl} alt={event.title} width={90} height={50} className="object-contain" />
+
             </div>
           )}
 
@@ -158,7 +159,25 @@ export default async function EventDetailsPage({
       <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
 
         <main className="lg:col-span-8">
-          <EventTabs event={event} />
+          <EventTabs
+            event={{
+              title: event.title,
+              description: event.description,
+              images: event.otherImages ?? [],
+              videos: event.videoGallery ?? [],
+              // provide a primary video URL if EventTabs expects videoUrl
+              videoUrl: event.videoGallery && event.videoGallery.length > 0 ? event.videoGallery[0] : undefined,
+              frequency: event.frequency,
+              edition: event.edition,
+              expectedVisitors: event.expectedVisitors,
+              exhibitors: event.exhibitors,
+              organizer: event.organizer,
+              websiteUrl: event.websiteUrl,
+              email: event.email,
+              phone: event.phone,
+              highlights: event.highlights,
+            }}
+          />
         </main>
 
         <aside className="lg:col-span-4 space-y-6">
@@ -204,7 +223,7 @@ export default async function EventDetailsPage({
                   <Link key={e.id} href={`/events/${e.slug}`} className="block">
                     {e.bannerUrl && (
                       <div className="relative w-full h-28 rounded-lg overflow-hidden mb-2">
-                        <Image src={e.bannerUrl} alt={e.title} fill className="object-cover" />
+                        <Image src={e.bannerUrl} alt={e.title} fill className="object-cover" unoptimized />
                       </div>
                     )}
                     <p className="text-sm font-semibold text-gray-900 mb-1">{e.title}</p>

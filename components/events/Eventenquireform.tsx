@@ -1,3 +1,4 @@
+// app/components/events/EventEnquireForm.tsx
 "use client"
 
 import { useState } from "react"
@@ -6,6 +7,7 @@ export default function EventEnquireForm({ slug }: { slug: string }) {
   const [values, setValues] = useState({ name: "", email: "", mobile: "", message: "" })
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const update = (key: keyof typeof values, value: string) => {
     setValues(prev => ({ ...prev, [key]: value }))
@@ -14,6 +16,7 @@ export default function EventEnquireForm({ slug }: { slug: string }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
+    setError(null)
 
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/events/${slug}/enquire`, {
@@ -22,15 +25,17 @@ export default function EventEnquireForm({ slug }: { slug: string }) {
         body: JSON.stringify(values),
       })
 
+      const data = await res.json().catch(() => null)
+
       if (!res.ok) {
-        throw new Error("Failed to submit enquiry")
+        throw new Error(data?.message || "Failed to submit enquiry")
       }
 
       setSubmitted(true)
       setValues({ name: "", email: "", mobile: "", message: "" })
     } catch (err) {
       console.error(err)
-      alert("Something went wrong. Please try again.")
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
     } finally {
       setSubmitting(false)
     }
@@ -72,10 +77,14 @@ export default function EventEnquireForm({ slug }: { slug: string }) {
       <textarea
         placeholder="Message / Query"
         rows={4}
+        required
         value={values.message}
         onChange={e => update("message", e.target.value)}
         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-indigo-500"
       />
+
+      {error && <p className="text-sm text-red-600">{error}</p>}
+
       <button
         type="submit"
         disabled={submitting}

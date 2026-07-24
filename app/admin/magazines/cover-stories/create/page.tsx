@@ -263,7 +263,7 @@ export default function CreateCoverStoryPage() {
       {/* EXTRA IMAGES */}
       <UploadBox
         label="Additional Images"
-        multiple
+        // multiple
         onUpload={uploadExtraImage}
       />
 

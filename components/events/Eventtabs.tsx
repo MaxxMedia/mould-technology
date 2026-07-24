@@ -5,10 +5,11 @@ import Image from "next/image"
 import { ChevronRight } from "lucide-react"
 
 type Event = {
+  videoUrl: any
   title: string
   description: string
   images?: string[]
-  videoUrl?: string
+  videos?: string[]
   frequency?: string
   edition?: string
   expectedVisitors?: string
@@ -27,10 +28,23 @@ const TABS = [
   { label: "Other Details", id: "details" },
 ]
 
+
+function scrollToSection(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })
+}
+
+function getYoutubeEmbedUrl(url: string): string {
+  const match = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  )
+  return match ? `https://www.youtube.com/embed/${match[1]}` : url
+}
+
 export default function EventTabs({ event }: { event: Event }) {
   const [imgIndex, setImgIndex] = useState(0)
   const [activeTab, setActiveTab] = useState(TABS[0].id)
   const images = event.images ?? []
+  const videos = event.videos ?? []
 
   return (
     <div className="space-y-6">
@@ -151,70 +165,82 @@ export default function EventTabs({ event }: { event: Event }) {
       )}
 
       {/* IMAGES GALLERY */}
-      {activeTab === "gallery" && (
-        <section className="bg-white rounded-xl border border-gray-100 p-6">
-          <h2 className="text-lg font-bold border-b-2 border-red-600 inline-block pb-1 mb-4">
-            Images Gallery
-          </h2>
-          {images.length > 0 ? (
-            <div>
-              <div className="relative w-full h-80 rounded-lg overflow-hidden mb-3">
-                <Image src={images[imgIndex]} alt={event.title} fill className="object-cover" />
-                {images.length > 1 && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setImgIndex(i => (i - 1 + images.length) % images.length)}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-red-600 text-white w-8 h-8 rounded-full"
-                    >
-                      ←
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setImgIndex(i => (i + 1) % images.length)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-red-600 text-white w-8 h-8 rounded-full"
-                    >
-                      →
-                    </button>
-                  </>
-                )}
-              </div>
-              <div className="flex gap-2 overflow-x-auto">
-                {images.map((img, i) => (
+
+      <section id="gallery" className="bg-white rounded-xl border border-gray-100 p-6 scroll-mt-20">
+        <h2 className="text-lg font-bold border-b-2 border-red-600 inline-block pb-1 mb-4">
+          Images Gallery
+        </h2>
+        {images.length > 0 ? (
+          <div>
+            <div className="relative w-full h-80 rounded-lg overflow-hidden mb-3 bg-gray-100">
+              <Image
+                src={images[imgIndex]}
+                alt={event.title}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+              {images.length > 1 && (
+                <>
                   <button
                     type="button"
-                    key={i}
-                    onClick={() => setImgIndex(i)}
-                    className={`relative w-28 h-16 flex-shrink-0 rounded overflow-hidden border-2 ${
-                      i === imgIndex ? "border-red-600" : "border-transparent"
-                    }`}
+                    onClick={() => setImgIndex((prev) => (prev - 1 + images.length) % images.length)}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-red-600 text-white w-8 h-8 rounded-full"
                   >
-                    <Image src={img} alt="" fill className="object-cover" />
+                    ←
                   </button>
-                ))}
-              </div>
+                  <button
+                    type="button"
+                    onClick={() => setImgIndex((prev) => (prev + 1) % images.length)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-red-600 text-white w-8 h-8 rounded-full"
+                  >
+                    →
+                  </button>
+                </>
+              )}
             </div>
-          ) : (
-            <p className="text-gray-500">No images available.</p>
-          )}
-        </section>
-      )}
+
+            <div className="flex gap-2 overflow-x-auto">
+              {images.map((img, i) => (
+                <button
+                  type="button"
+                  key={i}
+                  onClick={() => setImgIndex(i)}
+                  className={`relative w-28 h-16 flex-shrink-0 rounded overflow-hidden border-2 bg-gray-100 ${i === imgIndex ? "border-red-600" : "border-transparent"
+                    }`}
+                >
+                  <Image src={img} alt="" fill className="object-cover" unoptimized />
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="text-gray-500">No images available.</p>
+        )}
+      </section>
 
       {/* VIDEOS */}
-      {activeTab === "video" && (
-        <section className="bg-white rounded-xl border border-gray-100 p-6">
-          <h2 className="text-lg font-bold border-b-2 border-red-600 inline-block pb-1 mb-4">
-            Videos
-          </h2>
-          {event.videoUrl ? (
-            <div className="aspect-video rounded-lg overflow-hidden">
-              <iframe src={event.videoUrl} className="w-full h-full" allowFullScreen />
-            </div>
-          ) : (
-            <p className="text-gray-500">No video available.</p>
-          )}
-        </section>
-      )}
+      <section id="video" className="bg-white rounded-xl border border-gray-100 p-6 scroll-mt-20">
+        <h2 className="text-lg font-bold border-b-2 border-red-600 inline-block pb-1 mb-4">
+          Videos
+        </h2>
+        {videos.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {videos.map((url, i) => (
+              <div key={i} className="aspect-video rounded-lg overflow-hidden">
+                <iframe
+                  src={getYoutubeEmbedUrl(url)}
+                  className="w-full h-full"
+                  allowFullScreen
+                  title={`${event.title} video ${i + 1}`}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500">No video available.</p>
+        )}
+      </section>
 
       {/* OTHER DETAILS */}
       {activeTab === "details" && (
