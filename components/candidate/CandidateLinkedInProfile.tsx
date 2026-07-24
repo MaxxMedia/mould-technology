@@ -28,19 +28,16 @@ import {
   ShieldCheck,
   Layers,
   Heart,
-  Bell,
   Bookmark,
   FileText,
-  Rss,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  FolderKanban
 } from "lucide-react";
 import CandidateAvatar from "@/components/candidate/CandidateAvatar";
 import JobFeed from "@/components/job/JobFeed";
-import PopularArticlesFeed from "@/components/articles/PopularArticlesFeed";
 import SavedJobs from "@/components/job/SavedJobs";
 import MyApplicationsPage from "@/app/candidate/applications/page";
-import JobAlertsPage from "@/app/candidate/job-alerts/page";
 
 import SkillsSection from "@/components/candidate/profile/SkillsSection";
 import ExperienceSection from "@/components/candidate/profile/ExperienceSection";
@@ -79,6 +76,7 @@ import SocialLinksForm, { type SocialLink } from "@/components/candidate/profile
 
 type CandidateProfileData = {
   username: string;
+  email?: string;
   fullName?: string;
   headline?: string;
   about?: string;
@@ -114,7 +112,7 @@ function getEducationDisplay(education: any, educationList?: any[]): string {
   if (Array.isArray(educationList) && educationList.length > 0) {
     return getEducationDisplay(educationList[0]);
   }
-  return "Cal Poly San Luis Obispo";
+  return "";
 }
 
 function getCompanyDisplay(company: any): string {
@@ -122,12 +120,12 @@ function getCompanyDisplay(company: any): string {
     return company;
   }
   if (company && typeof company === "object" && !Array.isArray(company)) {
-    return company.name || company.companyName || company.title || "Maxx Business Media";
+    return company.name || company.companyName || company.title || "";
   }
   if (Array.isArray(company) && company.length > 0) {
     return getCompanyDisplay(company[0]);
   }
-  return "Maxx Business Media";
+  return "";
 }
 
 function getLocationDisplay(location: any): string {
@@ -140,10 +138,10 @@ function getLocationDisplay(location: any): string {
     );
     if (parts.length > 0) return parts.join(", ");
   }
-  return "Bengaluru, Karnataka, India";
+  return "";
 }
 
-function getSafeString(val: any, fallback: string): string {
+function getSafeString(val: any, fallback: string = ""): string {
   if (typeof val === "string" && val.trim()) {
     return val;
   }
@@ -178,10 +176,8 @@ export default function CandidateLinkedInProfile({ username }: Props) {
     | "projects"
     | "connections"
     | "feed"
-    | "articles"
     | "saved"
-    | "applications"
-    | "alerts";
+    | "applications";
 
   const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [activeModal, setActiveModal] = useState<ModalType>(null);
@@ -283,14 +279,14 @@ export default function CandidateLinkedInProfile({ username }: Props) {
         });
       } else {
         setCandidate({
-          username: username || "gopinath2322002",
-          fullName: username.includes("gopinath") ? "Gopinath Candidate" : username,
-          headline: "Certified PMP with 7 years of experience leading cross-functional teams in agile environments. Successfully delivered 15+ large-scale IT projects on time and 10% under budget.",
-          about: "Art-minded, creative visionary, design-focused, digital content creator passionate about manufacturing technology, sales execution, moulding dynamics, entrepreneurship, branding, and smart engineering.",
-          location: "Bengaluru, Karnataka, India",
-          company: "Maxx Business Media",
-          education: "BMS College of Engineering / Cal Poly",
-          websiteUrl: "https://toolingtrends.com",
+          username: username || "",
+          fullName: username || "",
+          headline: "",
+          about: "",
+          location: "",
+          company: "",
+          education: "",
+          websiteUrl: "",
           skills: skillsData || [],
           experiences: expData || [],
           educationList: eduData || [],
@@ -313,18 +309,12 @@ export default function CandidateLinkedInProfile({ username }: Props) {
     loadCandidate();
   }, [username]);
 
-  const displayName = getSafeString(candidate?.fullName, candidate?.username || "Gopinath Candidate");
-  const displayHeadline = getSafeString(
-    candidate?.headline,
-    "Certified PMP with 7 years of experience leading cross-functional teams in agile environments. Successfully delivered 15+ large-scale IT projects on time and 10% under budget."
-  );
+  const displayName = getSafeString(candidate?.fullName, candidate?.username || username);
+  const displayHeadline = getSafeString(candidate?.headline, "");
   const displayCompany = getCompanyDisplay(candidate?.company);
   const displayEducation = getEducationDisplay(candidate?.education, candidate?.educationList);
   const displayLocation = getLocationDisplay(candidate?.location);
-  const displayAbout = getSafeString(
-    candidate?.about,
-    "Art-minded, creative visionary, design-focused, digital content creator passionate about design, photography, storytelling, entrepreneurship, branding, marketing, tech."
-  );
+  const displayAbout = getSafeString(candidate?.about, "");
 
   // --- Modal Form Submit Handlers ---
   const handleSaveIntro = async (values: BasicInfoValues) => {
@@ -649,10 +639,10 @@ export default function CandidateLinkedInProfile({ username }: Props) {
 
   if (loading) {
     return (
-      <div className="bg-[#f3f2ef] min-h-screen flex items-center justify-center">
+      <div className="bg-[#FFFFFF] min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#0a66c2] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="mt-4 text-gray-600 font-medium text-sm">Loading candidate profile...</p>
+          <div className="w-12 h-12 border-4 border-[#B40F24] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="mt-4 text-[#5A5F69] font-medium text-sm">Loading candidate profile...</p>
         </div>
       </div>
     );
@@ -667,16 +657,18 @@ export default function CandidateLinkedInProfile({ username }: Props) {
     location: typeof candidate?.location === "string" ? candidate.location : (candidate?.location?.city || ""),
     website: candidate?.websiteUrl || "",
     phone: "",
-    email: "",
+    email: candidate?.email || "",
     about: candidate?.about || "",
     avatar: candidate?.avatarUrl || "",
   };
 
+  const candidateProjects = candidate?.projectsList ?? [];
+
   return (
-    <div className="bg-[#f3f2ef] min-h-screen text-[#1d1d1d] relative">
+    <div className="bg-[#f8f9fa] min-h-screen text-[#000000] relative">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-medium animate-bounce">
+        <div className="fixed bottom-6 right-6 z-50 bg-[#000000] text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-medium animate-bounce">
           <CheckCircle2 size={18} className="text-green-400" />
           <span>{toastMessage}</span>
         </div>
@@ -685,13 +677,13 @@ export default function CandidateLinkedInProfile({ username }: Props) {
       <div className="max-w-[1180px] mx-auto px-4 py-6 pb-16">
 
         {/* ================= SHARED HEADER CARD ================= */}
-        <div className="bg-white rounded-lg border border-[#e0e0e0] shadow-sm overflow-hidden mb-4 relative">
-          {/* Cover Banner */}
-          <div className="h-36 sm:h-44 bg-gradient-to-r from-[#0f5b78] via-[#0a66c2] to-[#1769ff] relative">
+        <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden mb-4 relative">
+          {/* Cover Banner using Secondary Brand Color #0F5B78 */}
+          <div className="h-36 sm:h-44 bg-gradient-to-r from-[#0F5B78] via-[#0F5B78] to-[#B40F24] relative">
             {isOwner && (
               <button
                 onClick={() => setActiveModal("intro")}
-                className="absolute top-3 right-3 bg-white/90 hover:bg-white p-2 rounded-full shadow text-gray-700 transition-colors flex items-center gap-1.5 text-xs font-semibold px-3 cursor-pointer"
+                className="absolute top-3 right-3 bg-white/90 hover:bg-white p-2 rounded-full shadow text-[#5A5F69] hover:text-[#000000] transition-colors flex items-center gap-1.5 text-xs font-semibold px-3 cursor-pointer"
                 title="Edit Banner & Intro"
               >
                 <Pencil size={14} />
@@ -717,7 +709,7 @@ export default function CandidateLinkedInProfile({ username }: Props) {
                     className="absolute bottom-1 right-1 bg-white rounded-full p-1.5 shadow border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
                     title="Edit Photo"
                   >
-                    <Camera size={13} className="text-gray-600" />
+                    <Camera size={13} className="text-[#5A5F69]" />
                   </button>
                 )}
               </div>
@@ -727,57 +719,58 @@ export default function CandidateLinkedInProfile({ username }: Props) {
             <div className="pt-14 sm:pt-4 flex flex-col md:flex-row md:items-start justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{displayName}</h1>
-                  <CheckCircle size={20} className="text-[#0a66c2] fill-[#0a66c2]/10" />
+                  <h1 className="text-2xl sm:text-3xl font-bold text-[#000000]">{displayName}</h1>
+                  <CheckCircle size={20} className="text-[#B40F24] fill-[#B40F24]/10" />
                   {isOwner && (
                     <button
                       onClick={() => setActiveModal("intro")}
-                      className="text-gray-400 hover:text-[#0a66c2] transition-colors p-1 rounded-full hover:bg-gray-100 cursor-pointer ml-1"
+                      className="text-[#5A5F69] hover:text-[#B40F24] transition-colors p-1 rounded-full hover:bg-gray-100 cursor-pointer ml-1"
                       title="Edit Intro"
                     >
                       <Pencil size={16} />
                     </button>
                   )}
                 </div>
-                <p className="text-sm sm:text-base text-gray-700 font-medium mt-1 max-w-2xl leading-relaxed">
-                  {displayHeadline}
-                </p>
-                <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 mt-2 flex-wrap">
-                  <span className="font-semibold text-gray-800">{displayCompany}</span>
-                  <span>•</span>
-                  <span>{displayEducation}</span>
-                  <span>•</span>
-                  <span className="flex items-center gap-1">
-                    <MapPin size={13} className="text-gray-400" />
-                    {displayLocation}
-                  </span>
+                {displayHeadline && (
+                  <p className="text-sm sm:text-base text-[#5A5F69] font-medium mt-1 max-w-2xl leading-relaxed">
+                    {displayHeadline}
+                  </p>
+                )}
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-[#5A5F69] mt-2 flex-wrap">
+                  {displayCompany && <span className="font-semibold text-[#000000]">{displayCompany}</span>}
+                  {displayCompany && displayEducation && <span>•</span>}
+                  {displayEducation && <span>{displayEducation}</span>}
+                  {(displayCompany || displayEducation) && displayLocation && <span>•</span>}
+                  {displayLocation && (
+                    <span className="flex items-center gap-1">
+                      <MapPin size={13} className="text-[#5A5F69]" />
+                      {displayLocation}
+                    </span>
+                  )}
                 </div>
-                <p className="text-xs sm:text-sm font-semibold text-[#0a66c2] mt-1.5 cursor-pointer hover:underline">
-                  500+ connections
-                </p>
               </div>
 
-              {/* Action Buttons */}
+              {/* Action Buttons using Primary #B40F24 */}
               <div className="flex items-center gap-2 self-start flex-wrap mt-2 md:mt-0">
                 {isOwner ? (
                   <button
                     onClick={() => setActiveModal("intro")}
-                    className="bg-[#0a66c2] hover:bg-[#084e96] text-white px-5 py-2 rounded-full font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
+                    className="bg-[#B40F24] hover:bg-[#8e0c1c] text-white px-5 py-2 rounded-full font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
                   >
                     <Pencil size={15} />
-                    Edit Intro
+                    Edit Profile
                   </button>
                 ) : (
                   <>
-                    <button className="bg-[#0a66c2] hover:bg-[#084e96] text-white px-5 py-2 rounded-full font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer">
+                    <button className="bg-[#B40F24] hover:bg-[#8e0c1c] text-white px-5 py-2 rounded-full font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer">
                       <UserPlus size={16} />
                       Connect
                     </button>
-                    <button className="border-2 border-[#0a66c2] text-[#0a66c2] hover:bg-[#0a66c2]/10 px-5 py-2 rounded-full font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5">
+                    <button className="border-2 border-[#0F5B78] text-[#0F5B78] hover:bg-[#0F5B78]/10 px-5 py-2 rounded-full font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer">
                       <MessageSquare size={16} />
                       Message
                     </button>
-                    <button className="border border-gray-300 hover:bg-gray-100 text-gray-700 px-4 py-2 rounded-full font-semibold text-sm transition-colors">
+                    <button className="border border-gray-300 hover:bg-gray-100 text-[#5A5F69] px-4 py-2 rounded-full font-semibold text-sm transition-colors cursor-pointer">
                       More...
                     </button>
                   </>
@@ -788,13 +781,13 @@ export default function CandidateLinkedInProfile({ username }: Props) {
         </div>
 
         {/* ================= SHARED TAB BAR ================= */}
-        <div className="bg-white rounded-lg border border-[#e0e0e0] shadow-sm mb-4">
+        <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-sm mb-4">
           <div className="flex items-center gap-8 px-6 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => setActiveTab("profile")}
-              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "profile"
-                ? "border-[#0a66c2] text-[#0a66c2]"
-                : "border-transparent text-gray-600 hover:text-gray-900"
+              className={`py-3.5 text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "profile"
+                ? "border-[#B40F24] text-[#B40F24]"
+                : "border-transparent text-[#5A5F69] hover:text-[#000000]"
                 }`}
             >
               Profile
@@ -802,9 +795,9 @@ export default function CandidateLinkedInProfile({ username }: Props) {
 
             <button
               onClick={() => setActiveTab("projects")}
-              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "projects"
-                ? "border-[#0a66c2] text-[#0a66c2]"
-                : "border-transparent text-gray-600 hover:text-gray-900"
+              className={`py-3.5 text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "projects"
+                ? "border-[#B40F24] text-[#B40F24]"
+                : "border-transparent text-[#5A5F69] hover:text-[#000000]"
                 }`}
             >
               Projects
@@ -812,9 +805,9 @@ export default function CandidateLinkedInProfile({ username }: Props) {
 
             <button
               onClick={() => setActiveTab("connections")}
-              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "connections"
-                ? "border-[#0a66c2] text-[#0a66c2]"
-                : "border-transparent text-gray-600 hover:text-gray-900"
+              className={`py-3.5 text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "connections"
+                ? "border-[#B40F24] text-[#B40F24]"
+                : "border-transparent text-[#5A5F69] hover:text-[#000000]"
                 }`}
             >
               Connections
@@ -822,29 +815,19 @@ export default function CandidateLinkedInProfile({ username }: Props) {
 
             <button
               onClick={() => setActiveTab("feed")}
-              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "feed"
-                ? "border-[#0a66c2] text-[#0a66c2]"
-                : "border-transparent text-gray-600 hover:text-gray-900"
+              className={`py-3.5 text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "feed"
+                ? "border-[#B40F24] text-[#B40F24]"
+                : "border-transparent text-[#5A5F69] hover:text-[#000000]"
                 }`}
             >
               Home Feed
             </button>
 
             <button
-              onClick={() => setActiveTab("articles")}
-              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "articles"
-                ? "border-[#0a66c2] text-[#0a66c2]"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-                }`}
-            >
-              Popular Articles
-            </button>
-
-            <button
               onClick={() => setActiveTab("saved")}
-              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "saved"
-                ? "border-[#0a66c2] text-[#0a66c2]"
-                : "border-transparent text-gray-600 hover:text-gray-900"
+              className={`py-3.5 text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "saved"
+                ? "border-[#B40F24] text-[#B40F24]"
+                : "border-transparent text-[#5A5F69] hover:text-[#000000]"
                 }`}
             >
               Saved Jobs
@@ -852,22 +835,12 @@ export default function CandidateLinkedInProfile({ username }: Props) {
 
             <button
               onClick={() => setActiveTab("applications")}
-              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "applications"
-                ? "border-[#0a66c2] text-[#0a66c2]"
-                : "border-transparent text-gray-600 hover:text-gray-900"
+              className={`py-3.5 text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "applications"
+                ? "border-[#B40F24] text-[#B40F24]"
+                : "border-transparent text-[#5A5F69] hover:text-[#000000]"
                 }`}
             >
               My Applications
-            </button>
-
-            <button
-              onClick={() => setActiveTab("alerts")}
-              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "alerts"
-                ? "border-[#0a66c2] text-[#0a66c2]"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-                }`}
-            >
-              Job Alerts
             </button>
           </div>
         </div>
@@ -878,80 +851,70 @@ export default function CandidateLinkedInProfile({ username }: Props) {
             {/* MAIN COLUMN */}
             <div className="lg:col-span-8 space-y-4">
               {/* SUMMARY CARD */}
-              <div className="bg-white rounded-lg border border-[#e0e0e0] p-6 shadow-sm relative">
+              <div className="bg-white rounded-xl border border-[#e0e0e0] p-6 shadow-sm relative">
                 {isOwner && (
                   <button
                     onClick={() => setActiveModal("about")}
                     title="Edit Summary"
-                    className="absolute top-4 right-4 text-gray-400 hover:text-[#0a66c2] transition-colors p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
+                    className="absolute top-4 right-4 text-[#5A5F69] hover:text-[#B40F24] transition-colors p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
                   >
                     <Pencil size={16} />
                   </button>
                 )}
-                <h2 className="text-lg font-semibold text-gray-900 mb-3">Summary</h2>
-                <p className="text-sm text-gray-700 leading-relaxed mb-4">
-                  {displayAbout}
-                </p>
+                <h2 className="text-lg font-bold text-[#000000] mb-3">Summary</h2>
+                {displayAbout ? (
+                  <p className="text-sm text-[#5A5F69] leading-relaxed mb-4 whitespace-pre-line">
+                    {displayAbout}
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-400 italic mb-4">No summary added yet.</p>
+                )}
 
-                <div className="mb-6">
-                  <a
-                    href={candidate?.websiteUrl || "#"}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-block px-5 py-2 border-2 border-[#0a66c2] text-[#0a66c2] font-semibold text-sm rounded-full hover:bg-[#0a66c2]/10 transition-colors"
+                {candidate?.websiteUrl && (
+                  <div className="mb-6">
+                    <a
+                      href={candidate.websiteUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-block px-5 py-2 border-2 border-[#0F5B78] text-[#0F5B78] font-semibold text-sm rounded-full hover:bg-[#0F5B78]/10 transition-colors"
+                    >
+                      Visit Website
+                    </a>
+                  </div>
+                )}
+
+                {/* Real Projects Thumbnails from Candidate Data */}
+                {candidateProjects.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-100 pt-4">
+                    {candidateProjects.slice(0, 3).map((proj: any) => (
+                      <figure key={proj.id} className="group cursor-pointer" onClick={() => setActiveTab("projects")}>
+                        <div className="overflow-hidden rounded-md bg-gray-100 h-28 border border-gray-200 flex items-center justify-center">
+                          {proj.imageUrl ? (
+                            <img
+                              src={proj.imageUrl}
+                              alt={proj.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <FolderKanban className="text-[#5A5F69]" size={32} />
+                          )}
+                        </div>
+                        <figcaption className="text-xs text-[#000000] font-medium mt-2 text-center group-hover:text-[#B40F24] transition-colors line-clamp-2">
+                          {proj.title}
+                        </figcaption>
+                      </figure>
+                    ))}
+                  </div>
+                )}
+
+                {candidateProjects.length > 0 && (
+                  <button
+                    onClick={() => setActiveTab("projects")}
+                    className="w-full text-center text-sm font-semibold text-[#0F5B78] hover:underline mt-4 pt-2 border-t border-gray-100 cursor-pointer"
                   >
-                    Visit Website
-                  </a>
-                </div>
-
-                {/* 3 Project Thumbnails */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-100 pt-4">
-                  <figure className="group cursor-pointer">
-                    <div className="overflow-hidden rounded-md bg-gray-100 h-28 border border-gray-200">
-                      <img
-                        src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=300&h=200&fit=crop"
-                        alt="UI/UX Design"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <figcaption className="text-xs text-gray-800 font-medium mt-2 text-center group-hover:text-[#0a66c2] transition-colors line-clamp-2">
-                      UI/UX Design: Award Winning Public Safety App
-                    </figcaption>
-                  </figure>
-
-                  <figure className="group cursor-pointer">
-                    <div className="overflow-hidden rounded-md bg-gray-100 h-28 border border-gray-200">
-                      <img
-                        src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&h=200&fit=crop&sat=-100"
-                        alt="Branding & Art Direction"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <figcaption className="text-xs text-gray-800 font-medium mt-2 text-center group-hover:text-[#0a66c2] transition-colors line-clamp-2">
-                      Branding & Art Direction: Tooling Dynamics
-                    </figcaption>
-                  </figure>
-
-                  <figure className="group cursor-pointer">
-                    <div className="overflow-hidden rounded-md bg-gray-100 h-28 border border-gray-200">
-                      <img
-                        src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=300&h=200&fit=crop"
-                        alt="Architectural Design"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <figcaption className="text-xs text-gray-800 font-medium mt-2 text-center group-hover:text-[#0a66c2] transition-colors line-clamp-2">
-                      Architectural Design: Smart Tooling Academy
-                    </figcaption>
-                  </figure>
-                </div>
-
-                <button
-                  onClick={() => setActiveTab("projects")}
-                  className="w-full text-center text-sm font-semibold text-[#0a66c2] hover:underline mt-4 pt-2 border-t border-gray-100 cursor-pointer"
-                >
-                  See all projects →
-                </button>
+                    See all projects →
+                  </button>
+                )}
               </div>
 
               {/* SKILLS CARD */}
@@ -976,8 +939,8 @@ export default function CandidateLinkedInProfile({ username }: Props) {
               />
 
               {/* ACCOMPLISHMENTS CARD */}
-              <div className="bg-white rounded-lg border border-[#e0e0e0] p-6 shadow-sm relative">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Accomplishments</h2>
+              <div className="bg-white rounded-xl border border-[#e0e0e0] p-6 shadow-sm relative">
+                <h2 className="text-lg font-bold text-[#000000] mb-4">Accomplishments</h2>
                 <div className="space-y-4 divide-y divide-gray-100">
                   <div className="pt-2 first:pt-0">
                     <AchievementsSection
@@ -1013,16 +976,18 @@ export default function CandidateLinkedInProfile({ username }: Props) {
               />
             </div>
 
-            {/* SIDEBAR COLUMN */}
+            {/* SIDEBAR COLUMN WITH 3 SIDEBAR CARDS */}
             <div className="lg:col-span-4 space-y-4">
+              <HomeFeedCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <SavedJobsCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <MyApplicationsCard activeTab={activeTab} setActiveTab={setActiveTab} />
               <TrendingArticlesCard />
-              <JobAlertsCard activeTab={activeTab} setActiveTab={setActiveTab} />
               <ContactCard
-                username={candidate?.username}
+                candidate={candidate}
                 isOwner={isOwner}
                 onEditClick={isOwner ? () => setActiveModal("socials") : undefined}
               />
-              <PublicUrlCard username={candidate?.username} />
+              <PublicUrlCard username={candidate?.username || username} />
             </div>
           </div>
         )}
@@ -1038,14 +1003,16 @@ export default function CandidateLinkedInProfile({ username }: Props) {
               />
             </div>
             <div className="lg:col-span-4 space-y-4">
+              <HomeFeedCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <SavedJobsCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <MyApplicationsCard activeTab={activeTab} setActiveTab={setActiveTab} />
               <TrendingArticlesCard />
-              <JobAlertsCard activeTab={activeTab} setActiveTab={setActiveTab} />
               <ContactCard
-                username={candidate?.username}
+                candidate={candidate}
                 isOwner={isOwner}
                 onEditClick={isOwner ? () => setActiveModal("socials") : undefined}
               />
-              <PublicUrlCard username={candidate?.username} />
+              <PublicUrlCard username={candidate?.username || username} />
             </div>
           </div>
         )}
@@ -1054,25 +1021,27 @@ export default function CandidateLinkedInProfile({ username }: Props) {
         {activeTab === "connections" && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
             <div className="lg:col-span-8 space-y-4">
-              <div className="bg-white rounded-lg border border-[#e0e0e0] p-12 text-center shadow-sm">
-                <div className="w-16 h-16 bg-blue-50 text-[#0a66c2] rounded-full flex items-center justify-center mx-auto mb-3">
+              <div className="bg-white rounded-xl border border-[#e0e0e0] p-12 text-center shadow-sm">
+                <div className="w-16 h-16 bg-[#0F5B78]/10 text-[#0F5B78] rounded-full flex items-center justify-center mx-auto mb-3">
                   <Users size={28} />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800">Connections</h3>
-                <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">
+                <h3 className="text-lg font-bold text-[#000000]">Connections</h3>
+                <p className="text-sm text-[#5A5F69] mt-1 max-w-md mx-auto">
                   Connect with {displayName} to expand your professional network.
                 </p>
               </div>
             </div>
             <div className="lg:col-span-4 space-y-4">
+              <HomeFeedCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <SavedJobsCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <MyApplicationsCard activeTab={activeTab} setActiveTab={setActiveTab} />
               <TrendingArticlesCard />
-              <JobAlertsCard activeTab={activeTab} setActiveTab={setActiveTab} />
               <ContactCard
-                username={candidate?.username}
+                candidate={candidate}
                 isOwner={isOwner}
                 onEditClick={isOwner ? () => setActiveModal("socials") : undefined}
               />
-              <PublicUrlCard username={candidate?.username} />
+              <PublicUrlCard username={candidate?.username || username} />
             </div>
           </div>
         )}
@@ -1084,90 +1053,58 @@ export default function CandidateLinkedInProfile({ username }: Props) {
               <JobFeed />
             </div>
             <div className="lg:col-span-4 space-y-4">
+              <HomeFeedCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <SavedJobsCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <MyApplicationsCard activeTab={activeTab} setActiveTab={setActiveTab} />
               <TrendingArticlesCard />
-              <JobAlertsCard activeTab={activeTab} setActiveTab={setActiveTab} />
               <ContactCard
-                username={candidate?.username}
+                candidate={candidate}
                 isOwner={isOwner}
                 onEditClick={isOwner ? () => setActiveModal("socials") : undefined}
               />
-              <PublicUrlCard username={candidate?.username} />
+              <PublicUrlCard username={candidate?.username || username} />
             </div>
           </div>
         )}
 
-        {/* ================= TAB 5: POPULAR ARTICLES ================= */}
-        {activeTab === "articles" && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-            <div className="lg:col-span-8 space-y-4">
-              <PopularArticlesFeed />
-            </div>
-            <div className="lg:col-span-4 space-y-4">
-              <TrendingArticlesCard />
-              <JobAlertsCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <ContactCard
-                username={candidate?.username}
-                isOwner={isOwner}
-                onEditClick={isOwner ? () => setActiveModal("socials") : undefined}
-              />
-              <PublicUrlCard username={candidate?.username} />
-            </div>
-          </div>
-        )}
-
-        {/* ================= TAB 6: SAVED JOBS ================= */}
+        {/* ================= TAB 5: SAVED JOBS ================= */}
         {activeTab === "saved" && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
             <div className="lg:col-span-8 space-y-4">
               <SavedJobs />
             </div>
             <div className="lg:col-span-4 space-y-4">
+              <HomeFeedCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <SavedJobsCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <MyApplicationsCard activeTab={activeTab} setActiveTab={setActiveTab} />
               <TrendingArticlesCard />
-              <JobAlertsCard activeTab={activeTab} setActiveTab={setActiveTab} />
               <ContactCard
-                username={candidate?.username}
+                candidate={candidate}
                 isOwner={isOwner}
                 onEditClick={isOwner ? () => setActiveModal("socials") : undefined}
               />
-              <PublicUrlCard username={candidate?.username} />
+              <PublicUrlCard username={candidate?.username || username} />
             </div>
           </div>
         )}
 
-        {/* ================= TAB 7: MY APPLICATIONS ================= */}
+        {/* ================= TAB 6: MY APPLICATIONS ================= */}
         {activeTab === "applications" && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
             <div className="lg:col-span-8 space-y-4">
               <MyApplicationsPage />
             </div>
             <div className="lg:col-span-4 space-y-4">
+              <HomeFeedCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <SavedJobsCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <MyApplicationsCard activeTab={activeTab} setActiveTab={setActiveTab} />
               <TrendingArticlesCard />
-              <JobAlertsCard activeTab={activeTab} setActiveTab={setActiveTab} />
               <ContactCard
-                username={candidate?.username}
+                candidate={candidate}
                 isOwner={isOwner}
                 onEditClick={isOwner ? () => setActiveModal("socials") : undefined}
               />
-              <PublicUrlCard username={candidate?.username} />
-            </div>
-          </div>
-        )}
-
-        {/* ================= TAB 8: JOB ALERTS ================= */}
-        {activeTab === "alerts" && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-            <div className="lg:col-span-8 space-y-4">
-              <JobAlertsPage />
-            </div>
-            <div className="lg:col-span-4 space-y-4">
-              <TrendingArticlesCard />
-              <JobAlertsCard activeTab={activeTab} setActiveTab={setActiveTab} />
-              <ContactCard
-                username={candidate?.username}
-                isOwner={isOwner}
-                onEditClick={isOwner ? () => setActiveModal("socials") : undefined}
-              />
-              <PublicUrlCard username={candidate?.username} />
+              <PublicUrlCard username={candidate?.username || username} />
             </div>
           </div>
         )}
@@ -1180,7 +1117,7 @@ export default function CandidateLinkedInProfile({ username }: Props) {
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-5">
-              <h3 className="text-xl font-bold text-gray-900">
+              <h3 className="text-xl font-bold text-[#000000]">
                 {activeModal === "intro" && "Edit Intro"}
                 {activeModal === "about" && "Edit Summary"}
                 {activeModal === "experience" && "Edit Experience"}
@@ -1195,7 +1132,7 @@ export default function CandidateLinkedInProfile({ username }: Props) {
               </h3>
               <button
                 onClick={() => setActiveModal(null)}
-                className="text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+                className="text-[#5A5F69] hover:text-[#000000] p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -1309,97 +1246,308 @@ export default function CandidateLinkedInProfile({ username }: Props) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   HELPER SIDEBAR COMPONENTS
+   SIDEBAR CARDS (BRAND PALETTE & REAL DATA ONLY)
    ═══════════════════════════════════════════════════════ */
-function JobAlertsCard({
-  activeTab,
-  setActiveTab,
-}: {
-  activeTab: string;
-  setActiveTab: (tab: any) => void;
-}) {
+
+function HomeFeedCard({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (t: any) => void }) {
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadJobs() {
+      try {
+        let fetchedJobs: any[] = [];
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/jobs?page=1&limit=20`, { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          fetchedJobs = data.jobs || (Array.isArray(data) ? data : []);
+        }
+        if (fetchedJobs.length === 0) {
+          const fallbackRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/jobs/approved`, { cache: "no-store" });
+          if (fallbackRes.ok) {
+            const data = await fallbackRes.json();
+            fetchedJobs = Array.isArray(data) ? data : data.jobs || [];
+          }
+        }
+        setJobs(fetchedJobs.slice(0, 4));
+      } catch (err) {
+        console.error("Failed to fetch jobs for Recommended Jobs card", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadJobs();
+  }, []);
+
   return (
-    <div
-      className={`bg-white rounded-lg border border-[#e0e0e0] p-6 shadow-sm ${activeTab === "alerts" ? "ring-2 ring-[#0a66c2]" : ""
-        }`}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-          <Bell size={18} className="text-[#0a66c2]" />
-          Job Alerts
+    <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-md overflow-hidden">
+      <div className="bg-[#B40F24] px-5 py-3.5 flex items-center justify-between">
+        <h3 className="text-white font-bold text-base tracking-wide flex items-center gap-2">
+          <Briefcase size={18} />
+          Recommended Jobs
         </h3>
-        <span className="text-[11px] font-semibold text-[#0a66c2] bg-blue-50 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-          Active
+        <span className="text-[11px] font-semibold text-white bg-white/20 px-2.5 py-0.5 rounded-full">
+          {jobs.length > 0 ? `${jobs.length} Available` : "Jobs"}
         </span>
       </div>
 
-      <p className="text-xs text-gray-600 mb-4 leading-relaxed">
-        Get instant notifications when new moulding technology, mechanical engineering, and sales roles match your profile.
-      </p>
+      {loading ? (
+        <div className="p-4 text-center text-xs text-[#5A5F69]">Loading jobs...</div>
+      ) : jobs.length === 0 ? (
+        <div className="p-5 text-center text-xs text-[#5A5F69]">No recommended jobs available.</div>
+      ) : (
+        <div className="divide-y divide-gray-100">
+          {jobs.map((job) => (
+            <div
+              key={job.id}
+              onClick={() => setActiveTab("feed")}
+              className="p-3.5 block hover:bg-red-50/30 transition-colors cursor-pointer group"
+            >
+              <h4 className="text-xs sm:text-sm font-bold text-[#000000] group-hover:text-[#B40F24] transition-colors truncate">
+                {job.title}
+              </h4>
+              <div className="flex items-center justify-between text-xs text-[#5A5F69] mt-1">
+                <span className="font-medium text-[#0F5B78]">{job.Company?.name || job.companyName || ""}</span>
+                {job.location && (
+                  <span className="flex items-center gap-1">
+                    <MapPin size={11} className="text-[#5A5F69]" />
+                    {job.location}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-      <button
-        onClick={() => setActiveTab("alerts")}
-        className={`w-full py-2 px-4 rounded-full text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === "alerts"
-          ? "bg-[#0a66c2] text-white"
-          : "border-2 border-[#0a66c2] text-[#0a66c2] hover:bg-[#0a66c2]/10"
-          }`}
-      >
-        <Bell size={14} />
-        {activeTab === "alerts" ? "Viewing Job Alerts" : "Manage Job Alerts"}
-      </button>
+      <div className="border-t border-gray-100 bg-white p-2">
+        <button
+          onClick={() => setActiveTab("feed")}
+          className="w-full text-center font-bold text-xs text-[#B40F24] hover:underline py-2 block hover:bg-red-50/40 rounded transition-colors cursor-pointer"
+        >
+          View all jobs in feed →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SavedJobsCard({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (t: any) => void }) {
+  const [savedJobs, setSavedJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadSaved() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/jobs/saved/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (Array.isArray(data)) setSavedJobs(data.slice(0, 3));
+      } catch {
+        // Fallback
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadSaved();
+  }, []);
+
+  return (
+    <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-md overflow-hidden">
+      <div className="bg-[#0F5B78] px-5 py-3.5 flex items-center justify-between">
+        <h3 className="text-white font-bold text-base tracking-wide flex items-center gap-2">
+          <Bookmark size={18} />
+          Saved Jobs
+        </h3>
+        <span className="text-[11px] font-semibold text-white bg-white/20 px-2.5 py-0.5 rounded-full">
+          {savedJobs.length} Saved
+        </span>
+      </div>
+
+      {loading ? (
+        <div className="p-4 text-center text-xs text-[#5A5F69]">Loading saved jobs...</div>
+      ) : savedJobs.length === 0 ? (
+        <div className="p-5 text-center text-xs text-[#5A5F69]">
+          <p className="font-semibold text-[#000000]">No saved jobs yet</p>
+          <p className="mt-1">Bookmark jobs to view them here</p>
+        </div>
+      ) : (
+        <div className="divide-y divide-gray-100">
+          {savedJobs.map((item) => {
+            const job = item.Job || item;
+            return (
+              <div
+                key={item.id || job.id}
+                onClick={() => setActiveTab("saved")}
+                className="p-3.5 block hover:bg-blue-50/40 transition-colors cursor-pointer group"
+              >
+                <h4 className="text-xs sm:text-sm font-bold text-[#000000] group-hover:text-[#0F5B78] transition-colors truncate">
+                  {job.title}
+                </h4>
+                <div className="flex items-center justify-between text-xs text-[#5A5F69] mt-1">
+                  <span className="font-medium text-[#0F5B78]">{job.Company?.name || job.companyName || ""}</span>
+                  <span>{job.location || ""}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="border-t border-gray-100 bg-white p-2">
+        <button
+          onClick={() => setActiveTab("saved")}
+          className="w-full text-center font-bold text-xs text-[#0F5B78] hover:underline py-2 block hover:bg-blue-50/50 rounded transition-colors cursor-pointer"
+        >
+          Manage saved jobs →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function MyApplicationsCard({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (t: any) => void }) {
+  const [applications, setApplications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadApplications() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/applications/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (Array.isArray(data)) setApplications(data.slice(0, 3));
+      } catch {
+        // Fallback
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadApplications();
+  }, []);
+
+  return (
+    <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-md overflow-hidden">
+      <div className="bg-[#000000] px-5 py-3.5 flex items-center justify-between">
+        <h3 className="text-white font-bold text-base tracking-wide flex items-center gap-2">
+          <FileText size={18} />
+          My Applications
+        </h3>
+        <span className="text-[11px] font-semibold text-white bg-white/20 px-2.5 py-0.5 rounded-full">
+          {applications.length} Active
+        </span>
+      </div>
+
+      {loading ? (
+        <div className="p-4 text-center text-xs text-[#5A5F69]">Loading applications...</div>
+      ) : applications.length === 0 ? (
+        <div className="p-5 text-center text-xs text-[#5A5F69]">
+          <p className="font-semibold text-[#000000]">No applications submitted</p>
+          <p className="mt-1">Applied roles will appear here</p>
+        </div>
+      ) : (
+        <div className="divide-y divide-gray-100">
+          {applications.map((app) => {
+            const job = app.Job || {};
+            return (
+              <div
+                key={app.id}
+                onClick={() => setActiveTab("applications")}
+                className="p-3.5 flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                <div className="min-w-0 flex-1 pr-2">
+                  <h4 className="text-xs sm:text-sm font-bold text-[#000000] truncate">{job.title || "Applied Role"}</h4>
+                  <p className="text-xs text-[#5A5F69] mt-0.5 truncate">{job.Company?.name || ""}</p>
+                </div>
+                <span className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                  {app.status || "APPLIED"}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="border-t border-gray-100 bg-white p-2">
+        <button
+          onClick={() => setActiveTab("applications")}
+          className="w-full text-center font-bold text-xs text-[#000000] hover:underline py-2 block hover:bg-gray-100 rounded transition-colors cursor-pointer"
+        >
+          Track all applications →
+        </button>
+      </div>
     </div>
   );
 }
 
 function ContactCard({
-  username,
+  candidate,
   isOwner,
   onEditClick,
 }: {
-  username?: string;
+  candidate?: CandidateProfileData | null;
   isOwner?: boolean;
   onEditClick?: () => void;
 }) {
   return (
-    <div className="bg-white rounded-lg border border-[#e0e0e0] p-6 shadow-sm relative">
+    <div className="bg-white rounded-xl border border-[#e0e0e0] p-6 shadow-sm relative">
       {isOwner && onEditClick && (
         <button
           onClick={onEditClick}
           title="Edit Contact & Social Links"
-          className="absolute top-4 right-4 text-gray-400 hover:text-[#0a66c2] transition-colors p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
+          className="absolute top-4 right-4 text-[#5A5F69] hover:text-[#B40F24] transition-colors p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
         >
           <Pencil size={16} />
         </button>
       )}
 
-      <h3 className="text-base font-semibold text-gray-900 mb-4">Contact & Socials</h3>
+      <h3 className="text-base font-bold text-[#000000] mb-4">Contact & Socials</h3>
 
       <div className="space-y-3.5 text-xs sm:text-sm">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-[#0a66c2] shrink-0">
+          <div className="w-8 h-8 rounded-full bg-[#0F5B78]/10 flex items-center justify-center text-[#0F5B78] shrink-0">
             <Mail size={16} />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-gray-500 font-medium">Email</p>
-            <p className="font-semibold text-gray-900 truncate">candidate@mouldtech.com</p>
+            <p className="text-xs text-[#5A5F69] font-medium">Email</p>
+            <p className="font-semibold text-[#000000] truncate">
+              {candidate?.email || "Not specified"}
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-[#0a66c2] shrink-0">
+          <div className="w-8 h-8 rounded-full bg-[#0F5B78]/10 flex items-center justify-center text-[#0F5B78] shrink-0">
             <Globe size={16} />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-gray-500 font-medium">Website</p>
-            <a
-              href="https://toolingtrends.com"
-              target="_blank"
-              rel="noreferrer"
-              className="font-semibold text-[#0a66c2] hover:underline truncate block"
-            >
-              https://toolingtrends.com
-            </a>
+            <p className="text-xs text-[#5A5F69] font-medium">Website</p>
+            {candidate?.websiteUrl ? (
+              <a
+                href={candidate.websiteUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="font-semibold text-[#0F5B78] hover:underline truncate block"
+              >
+                {candidate.websiteUrl}
+              </a>
+            ) : (
+              <p className="font-semibold text-[#5A5F69] truncate">Not specified</p>
+            )}
           </div>
         </div>
       </div>
@@ -1409,10 +1557,10 @@ function ContactCard({
 
 function PublicUrlCard({ username }: { username?: string }) {
   return (
-    <div className="bg-white rounded-lg border border-[#e0e0e0] p-5 shadow-sm">
-      <h4 className="font-semibold text-xs text-gray-500 uppercase tracking-wider mb-2">Public Profile & URL</h4>
-      <p className="text-xs text-[#0a66c2] font-mono break-all font-medium">
-        {typeof window !== 'undefined' ? `${window.location.origin}/candidate/${username || 'gopinath2322002'}` : `/candidate/${username || 'gopinath2322002'}`}
+    <div className="bg-white rounded-xl border border-[#e0e0e0] p-5 shadow-sm">
+      <h4 className="font-bold text-xs text-[#5A5F69] uppercase tracking-wider mb-2">Public Profile & URL</h4>
+      <p className="text-xs text-[#0F5B78] font-mono break-all font-medium">
+        {typeof window !== 'undefined' ? `${window.location.origin}/candidate/${username || ''}` : `/candidate/${username || ''}`}
       </p>
     </div>
   );
@@ -1420,6 +1568,7 @@ function PublicUrlCard({ username }: { username?: string }) {
 
 function TrendingArticlesCard() {
   const [articles, setArticles] = useState<{ id: number; title: string; slug: string; views?: number }[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadTrending() {
@@ -1435,79 +1584,59 @@ function TrendingArticlesCard() {
         setArticles(sorted);
       } catch {
         // Fallback
+      } finally {
+        setLoading(false);
       }
     }
     loadTrending();
   }, []);
 
-  const displayArticles =
-    articles.length > 0
-      ? articles.slice(0, 4)
-      : [
-        {
-          id: 1,
-          title: "Why Upskilling Is the Key to Career Growth in 2026",
-          slug: "why-upskilling-is-the-key-to-career-growth-in-2026",
-          views: 3,
-        },
-        {
-          id: 2,
-          title: "Top 7 Digital Marketing Trends Every Business Should Watch in 2029",
-          slug: "top-7-digital-marketing-trends-every-business-should-watch-in-2029",
-          views: 2,
-        },
-        {
-          id: 3,
-          title: "How Artificial Intelligence Is Transforming Modern Recruitment",
-          slug: "how-artificial-intelligence-is-transforming-modern-recruitment",
-          views: 2,
-        },
-        {
-          id: 4,
-          title: "The Future of Remote Work: Building High-Performance Distributed Teams",
-          slug: "the-future-of-remote-work-building-high-performance-distributed-teams",
-          views: 0,
-        },
-      ];
-
   return (
     <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-md overflow-hidden">
-      <div className="bg-[#be1823] px-5 py-3.5">
-        <h3 className="text-white font-bold text-lg sm:text-xl tracking-wide">
+      <div className="bg-[#B40F24] px-5 py-3.5">
+        <h3 className="text-white font-bold text-base sm:text-lg tracking-wide">
           Trending Articles
         </h3>
       </div>
 
-      <div className="divide-y divide-gray-100">
-        {displayArticles.map((article, index) => (
-          <Link
-            key={article.id}
-            href={`/post/${article.slug}`}
-            className="px-5 py-3.5 flex items-start gap-3.5 hover:bg-gray-50/80 transition-colors group block"
-          >
-            <div className="w-7 h-7 rounded-md bg-[#be1823] text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-              {index + 1}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-bold text-[#0f172a] group-hover:text-[#be1823] transition-colors leading-snug line-clamp-2">
-                {article.title}
-              </h4>
-              <p className="text-xs text-gray-500 mt-0.5 font-medium">
-                {(article.views ?? 0).toLocaleString()} views
-              </p>
-            </div>
-          </Link>
-        ))}
-      </div>
+      {loading ? (
+        <div className="p-4 text-center text-xs text-[#5A5F69]">Loading trending articles...</div>
+      ) : articles.length === 0 ? (
+        <div className="p-5 text-center text-xs text-[#5A5F69]">No trending articles at the moment.</div>
+      ) : (
+        <div className="divide-y divide-gray-100">
+          {articles.slice(0, 4).map((article, index) => (
+            <Link
+              key={article.id}
+              href={`/post/${article.slug}`}
+              className="px-5 py-3.5 flex items-start gap-3.5 hover:bg-gray-50/80 transition-colors group block"
+            >
+              <div className="w-7 h-7 rounded-md bg-[#B40F24] text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                {index + 1}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-bold text-[#000000] group-hover:text-[#B40F24] transition-colors leading-snug line-clamp-2">
+                  {article.title}
+                </h4>
+                <p className="text-xs text-[#5A5F69] mt-0.5 font-medium">
+                  {(article.views ?? 0).toLocaleString()} views
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
 
-      <div className="border-t border-gray-100 bg-white">
-        <Link
-          href="/articles"
-          className="text-center font-bold text-sm text-[#be1823] hover:underline py-3.5 block hover:bg-red-50/40 transition-colors"
-        >
-          View all articles →
-        </Link>
-      </div>
+      {articles.length > 0 && (
+        <div className="border-t border-gray-100 bg-white">
+          <Link
+            href="/articles"
+            className="text-center font-bold text-sm text-[#B40F24] hover:underline py-3.5 block hover:bg-red-50/40 transition-colors"
+          >
+            View all articles →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
