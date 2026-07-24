@@ -27,9 +27,20 @@ import {
   TrendingUp,
   ShieldCheck,
   Layers,
-  Heart
+  Heart,
+  Bell,
+  Bookmark,
+  FileText,
+  Rss
 } from "lucide-react";
 import CandidateAvatar from "@/components/candidate/CandidateAvatar";
+import JobFeed from "@/components/job/JobFeed";
+import PopularArticlesFeed from "@/components/articles/PopularArticlesFeed";
+import SavedJobs from "@/components/job/SavedJobs";
+import MyApplicationsPage from "@/app/candidate/applications/page";
+import JobAlertsPage from "@/app/candidate/job-alerts/page";
+import CandidateProfileEditCard from "@/components/candidate/CandidateProfileEditCard";
+
 import SkillsSection from "@/components/candidate/profile/SkillsSection";
 import ExperienceSection from "@/components/candidate/profile/ExperienceSection";
 import EducationSection from "@/components/candidate/profile/EducationSection";
@@ -40,149 +51,16 @@ import AchievementsSection from "@/components/candidate/profile/AchievementsSect
 import InterestsSection from "@/components/candidate/profile/InterestsSection";
 import SocialLinksSection from "@/components/candidate/profile/SocialLinksSection";
 
-// Import API functions with safe error handling
-import {
-  getMyProfile,
-  updateMyProfile,
-} from "@/lib/api/candidate/profile";
-import {
-  getSkills,
-  createSkill,
-  updateSkill,
-  deleteSkill,
-} from "@/lib/api/candidate/skills";
-import {
-  getExperiences,
-  createExperience,
-  updateExperience,
-  deleteExperience,
-} from "@/lib/api/candidate/experience";
-import {
-  getEducation,
-  createEducation,
-  updateEducation,
-  deleteEducation,
-} from "@/lib/api/candidate/education";
-import {
-  getProjects,
-  createProject,
-  updateProject,
-  deleteProject,
-} from "@/lib/api/candidate/projects";
-import {
-  getCertifications,
-  createCertification,
-  updateCertification,
-  deleteCertification,
-} from "@/lib/api/candidate/certifications";
-import {
-  getLanguages,
-  createLanguage,
-  updateLanguage,
-  deleteLanguage,
-} from "@/lib/api/candidate/languages";
-import {
-  getAchievements,
-  createAchievement,
-  updateAchievement,
-  deleteAchievement,
-} from "@/lib/api/candidate/achievements";
-import {
-  getInterests,
-  createInterest,
-  updateInterest,
-  deleteInterest,
-} from "@/lib/api/candidate/interests";
-import {
-  getSocials,
-  createSocial,
-  updateSocial,
-  deleteSocial,
-} from "@/lib/api/candidate/socials";
-
-// Types
-type CandidateEducation = {
-  id: number;
-  institution: string;
-  degree: string;
-  fieldOfStudy?: string;
-  startYear?: number;
-  endYear?: number;
-  grade?: string;
-  description?: string;
-};
-
-type CandidateLanguage = {
-  id: number;
-  language: string;
-  proficiency?: string;
-};
-
-type CandidateSkill = {
-  id: number;
-  name: string;
-  level?: string;
-};
-
-type CandidateProject = {
-  id: number;
-  title: string;
-  description?: string;
-  imageUrl?: string;
-  projectUrl?: string;
-  startDate?: string;
-  endDate?: string;
-  technologies?: string;
-};
-
-type CandidateCertification = {
-  id: number;
-  name: string;
-  issuingOrganization: string;
-  issueDate?: string;
-  expirationDate?: string;
-  credentialId?: string;
-  credentialUrl?: string;
-};
-
-type CandidateExperience = {
-  id: number;
-  title: string;
-  employmentType?: string;
-  location?: string;
-  description?: string;
-  startDate: string;
-  endDate?: string | null;
-  currentlyWorking?: boolean;
-  company?: {
-    id: number;
-    name: string;
-    logo?: string;
-  };
-};
-
-type CandidateAchievement = {
-  id: number;
-  title: string;
-  description?: string;
-  issuer?: string;
-  achievementDate?: string;
-};
-
-type CandidateInterest = {
-  id: number;
-  name: string;
-  category?: string;
-  followersCount?: number;
-  imageUrl?: string;
-};
-
-type CandidateSocial = {
-  id: number;
-  platform: string;
-  url: string;
-  username?: string;
-};
+import { getMyProfile } from "@/lib/api/candidate/profile";
+import { getSkills } from "@/lib/api/candidate/skills";
+import { getExperiences } from "@/lib/api/candidate/experience";
+import { getEducation } from "@/lib/api/candidate/education";
+import { getProjects } from "@/lib/api/candidate/projects";
+import { getCertifications } from "@/lib/api/candidate/certifications";
+import { getLanguages } from "@/lib/api/candidate/languages";
+import { getAchievements } from "@/lib/api/candidate/achievements";
+import { getInterests } from "@/lib/api/candidate/interests";
+import { getSocials } from "@/lib/api/candidate/socials";
 
 type CandidateProfileData = {
   username: string;
@@ -192,182 +70,150 @@ type CandidateProfileData = {
   location?: string;
   avatarUrl?: string;
   company?: string;
+  education?: string;
   websiteUrl?: string;
-  skills?: CandidateSkill[];
-  experiences?: CandidateExperience[];
-  education?: CandidateEducation[];
-  projects?: CandidateProject[];
-  certifications?: CandidateCertification[];
-  languages?: CandidateLanguage[];
-  achievements?: CandidateAchievement[];
-  interests?: CandidateInterest[];
-  socials?: CandidateSocial[];
+  skills?: any[];
+  experiences?: any[];
+  educationList?: any[];
+  projectsList?: any[];
+  certifications?: any[];
+  languages?: any[];
+  achievements?: any[];
+  interests?: any[];
+  socials?: any[];
 };
 
 interface Props {
   username: string;
 }
 
-// Helper function for safe API calls
-const safeApiCall = async <T,>(fn: () => Promise<T>, fallback: T): Promise<T> => {
-  try {
-    return await fn();
-  } catch (err) {
-    console.warn("API call failed, using fallback:", err);
-    return fallback;
-  }
-};
-
 export default function CandidateLinkedInProfile({ username }: Props) {
   const [candidate, setCandidate] = useState<CandidateProfileData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"profile" | "projects" | "activity" | "connections">("profile");
+
+  type TabType =
+    | "profile"
+    | "edit"
+    | "projects"
+    | "connections"
+    | "feed"
+    | "articles"
+    | "saved"
+    | "applications"
+    | "alerts";
+
+  const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [connectionsSubTab, setConnectionsSubTab] = useState<"all" | "people" | "companies">("all");
   const [connectionSearch, setConnectionSearch] = useState("");
   const [projectSearch, setProjectSearch] = useState("");
-  const [showBanner, setShowBanner] = useState(true);
 
-  useEffect(() => {
-    async function loadCandidateData() {
+  const loadCandidate = async () => {
+    try {
+      let baseData: any = null;
       try {
-        setLoading(true);
-        setError(null);
-
-        // Load profile data with fallback
-        let profileData;
-        try {
-          profileData = await getMyProfile();
-        } catch (err) {
-          console.warn("Failed to load profile, using fallback:", err);
-          profileData = {
-            fullName: username,
-            headline: "",
-            about: "",
-            location: "",
-            avatarUrl: "",
-            company: "",
-            websiteUrl: "",
-          };
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/candidates/${username}`,
+          { cache: "no-store" }
+        );
+        if (res.ok) {
+          baseData = await res.json();
         }
+      } catch {
+        // fallback below
+      }
 
-        // Load all sections with fallbacks
-        const [
-          skillsData,
-          experiencesData,
-          educationData,
-          projectsData,
-          certificationsData,
-          languagesData,
-          achievementsData,
-          interestsData,
-          socialsData,
-        ] = await Promise.all([
-          safeApiCall(getSkills, []),
-          safeApiCall(getExperiences, []),
-          safeApiCall(getEducation, []),
-          safeApiCall(getProjects, []),
-          safeApiCall(getCertifications, []),
-          safeApiCall(getLanguages, []),
-          safeApiCall(getAchievements, []),
-          safeApiCall(getInterests, []),
-          safeApiCall(getSocials, []),
-        ]);
+      const safeFetch = async (fn: () => Promise<any>) => {
+        try {
+          return await fn();
+        } catch {
+          return [];
+        }
+      };
 
-        // Combine all data
-        const combinedData: CandidateProfileData = {
-          username: username,
-          fullName: profileData.fullName || username,
-          headline: profileData.headline || "",
-          about: profileData.about || "",
-          location: profileData.location || "",
-          avatarUrl: profileData.avatarUrl || "",
-          company: profileData.company || "",
-          websiteUrl: profileData.websiteUrl || "",
+      const [
+        skillsData,
+        expData,
+        eduData,
+        projData,
+        certsData,
+        langsData,
+        achievementsData,
+        interestsData,
+        socialsData,
+      ] = await Promise.all([
+        safeFetch(getSkills),
+        safeFetch(getExperiences),
+        safeFetch(getEducation),
+        safeFetch(getProjects),
+        safeFetch(getCertifications),
+        safeFetch(getLanguages),
+        safeFetch(getAchievements),
+        safeFetch(getInterests),
+        safeFetch(getSocials),
+      ]);
+
+      if (baseData) {
+        setCandidate({
+          ...baseData,
           skills: skillsData || [],
-          experiences: experiencesData || [],
-          education: educationData || [],
-          projects: projectsData || [],
-          certifications: certificationsData || [],
-          languages: languagesData || [],
+          experiences: expData || [],
+          educationList: eduData || [],
+          projectsList: projData || [],
+          certifications: certsData || [],
+          languages: langsData || [],
           achievements: achievementsData || [],
           interests: interestsData || [],
           socials: socialsData || [],
-        };
-
-        setCandidate(combinedData);
-      } catch (err) {
-        console.error("Failed to load candidate data:", err);
-        setError("Failed to load profile data. Please try again.");
-        
-        // Fallback data
+        });
+      } else {
         setCandidate({
-          username: username,
+          username: username || "gopinath2322002",
           fullName: username.includes("gopinath") ? "Gopinath Candidate" : username,
-          headline: "Certified PMP with 7 years of experience leading cross-functional teams in agile environments.",
-          about: "Art-minded, creative visionary, design-focused, digital content creator passionate about manufacturing technology.",
+          headline: "Certified PMP with 7 years of experience leading cross-functional teams in agile environments. Successfully delivered 15+ large-scale IT projects on time and 10% under budget.",
+          about: "Art-minded, creative visionary, design-focused, digital content creator passionate about manufacturing technology, sales execution, moulding dynamics, entrepreneurship, branding, and smart engineering.",
           location: "Bengaluru, Karnataka, India",
           company: "Maxx Business Media",
+          education: "BMS College of Engineering / Cal Poly",
           websiteUrl: "https://toolingtrends.com",
-          skills: [],
-          experiences: [],
-          education: [
-            {
-              id: 1,
-              institution: "BMS College of Engineering",
-              degree: "B.Tech",
-              fieldOfStudy: "Computer Science",
-              startYear: 2020,
-              endYear: 2024,
-            }
-          ],
-          projects: [],
-          certifications: [],
-          languages: [],
-          achievements: [],
-          interests: [],
-          socials: [],
+          skills: skillsData || [],
+          experiences: expData || [],
+          educationList: eduData || [],
+          projectsList: projData || [],
+          certifications: certsData || [],
+          languages: langsData || [],
+          achievements: achievementsData || [],
+          interests: interestsData || [],
+          socials: socialsData || [],
         });
-      } finally {
-        setLoading(false);
       }
+    } catch (err) {
+      console.error("Failed to load candidate data", err);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    loadCandidateData();
+  useEffect(() => {
+    loadCandidate();
   }, [username]);
 
-  // Display fallback values if data is missing
   const displayName = candidate?.fullName || candidate?.username || "Gopinath Candidate";
-  const displayHeadline = candidate?.headline || "Certified PMP with 7 years of experience leading cross-functional teams in agile environments.";
+  const displayHeadline =
+    candidate?.headline ||
+    "Certified PMP with 7 years of experience leading cross-functional teams in agile environments. Successfully delivered 15+ large-scale IT projects on time and 10% under budget.";
   const displayCompany = candidate?.company || "Maxx Business Media";
-  const displayEducation = candidate?.education?.[0]?.institution || "Cal Poly San Luis Obispo";
+  const displayEducation = candidate?.education || "Cal Poly San Luis Obispo";
   const displayLocation = candidate?.location || "Bengaluru, Karnataka, India";
-  const displayAbout = candidate?.about || "Art-minded, creative visionary, design-focused, digital content creator passionate about design, photography, storytelling, entrepreneurship, branding, marketing, tech.";
+  const displayAbout =
+    candidate?.about ||
+    "Art-minded, creative visionary, design-focused, digital content creator passionate about design, photography, storytelling, entrepreneurship, branding, marketing, tech.";
 
   if (loading) {
     return (
       <div className="bg-[#f3f2ef] min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#0a66c2] border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading profile...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error && !candidate) {
-    return (
-      <div className="bg-[#f3f2ef] min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-lg p-8 max-w-md text-center shadow-lg">
-          <div className="text-red-500 text-5xl mb-4">⚠️</div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h3>
-          <p className="text-gray-600">{error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="mt-4 bg-[#0a66c2] text-white px-6 py-2 rounded-full hover:bg-[#084e96] transition-colors"
-          >
-            Try Again
-          </button>
+          <div className="w-12 h-12 border-4 border-[#0a66c2] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="mt-4 text-gray-600 font-medium text-sm">Loading candidate profile...</p>
         </div>
       </div>
     );
@@ -381,8 +227,12 @@ export default function CandidateLinkedInProfile({ username }: Props) {
         <div className="bg-white rounded-lg border border-[#e0e0e0] shadow-sm overflow-hidden mb-4">
           {/* Cover Banner */}
           <div className="h-36 sm:h-44 bg-gradient-to-r from-[#0f5b78] via-[#0a66c2] to-[#1769ff] relative">
-            <button className="absolute top-3 right-3 bg-white/90 hover:bg-white p-2 rounded-full shadow text-gray-700 transition-colors">
-              <Pencil size={15} />
+            <button
+              onClick={() => setActiveTab("edit")}
+              className="absolute top-3 right-3 bg-white/90 hover:bg-white p-2 rounded-full shadow text-gray-700 transition-colors flex items-center gap-1.5 text-xs font-semibold px-3 cursor-pointer"
+            >
+              <Pencil size={14} />
+              <span>Edit Banner</span>
             </button>
           </div>
 
@@ -397,7 +247,10 @@ export default function CandidateLinkedInProfile({ username }: Props) {
                   size="xl"
                   borderClassName="border-4 border-white shadow-md"
                 />
-                <button className="absolute bottom-1 right-1 bg-white rounded-full p-1.5 shadow border border-gray-200 hover:bg-gray-100 transition-colors">
+                <button
+                  onClick={() => setActiveTab("edit")}
+                  className="absolute bottom-1 right-1 bg-white rounded-full p-1.5 shadow border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
+                >
                   <Camera size={13} className="text-gray-600" />
                 </button>
               </div>
@@ -424,17 +277,20 @@ export default function CandidateLinkedInProfile({ username }: Props) {
                   </span>
                 </div>
                 <p className="text-xs sm:text-sm font-semibold text-[#0a66c2] mt-1.5 cursor-pointer hover:underline">
-                  {candidate?.skills?.length || 0} skills • {candidate?.experiences?.length || 0} experiences
+                  500+ connections
                 </p>
               </div>
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2 self-start flex-wrap mt-2 md:mt-0">
-                <button className="bg-[#0a66c2] hover:bg-[#084e96] text-white px-5 py-2 rounded-full font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5">
-                  <MessageSquare size={16} />
-                  Message
+                <button
+                  onClick={() => setActiveTab("edit")}
+                  className="bg-[#0a66c2] hover:bg-[#084e96] text-white px-5 py-2 rounded-full font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Pencil size={15} />
+                  Edit Profile
                 </button>
-                <button className="border-2 border-[#0a66c2] text-[#0a66c2] hover:bg-[#0a66c2]/10 px-5 py-2 rounded-full font-semibold text-sm transition-colors flex items-center gap-1.5">
+                <button className="border-2 border-[#0a66c2] text-[#0a66c2] hover:bg-[#0a66c2]/10 px-5 py-2 rounded-full font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5">
                   <UserPlus size={16} />
                   Connect
                 </button>
@@ -451,43 +307,93 @@ export default function CandidateLinkedInProfile({ username }: Props) {
           <div className="flex items-center gap-8 px-6 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => setActiveTab("profile")}
-              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
-                activeTab === "profile"
-                  ? "border-[#0a66c2] text-[#0a66c2]"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
+              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "profile"
+                ? "border-[#0a66c2] text-[#0a66c2]"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
             >
               Profile
             </button>
+
+            <button
+              onClick={() => setActiveTab("edit")}
+              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${activeTab === "edit"
+                ? "border-[#0a66c2] text-[#0a66c2]"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+            >
+              <Pencil size={14} />
+              Edit Profile
+            </button>
+
             <button
               onClick={() => setActiveTab("projects")}
-              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
-                activeTab === "projects"
-                  ? "border-[#0a66c2] text-[#0a66c2]"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
+              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "projects"
+                ? "border-[#0a66c2] text-[#0a66c2]"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
             >
               Projects
             </button>
-            <button
-              onClick={() => setActiveTab("activity")}
-              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
-                activeTab === "activity"
-                  ? "border-[#0a66c2] text-[#0a66c2]"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Activity
-            </button>
+
             <button
               onClick={() => setActiveTab("connections")}
-              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
-                activeTab === "connections"
-                  ? "border-[#0a66c2] text-[#0a66c2]"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
+              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "connections"
+                ? "border-[#0a66c2] text-[#0a66c2]"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
             >
               Connections
+            </button>
+
+            <button
+              onClick={() => setActiveTab("feed")}
+              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "feed"
+                ? "border-[#0a66c2] text-[#0a66c2]"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+            >
+              Home Feed
+            </button>
+
+            <button
+              onClick={() => setActiveTab("articles")}
+              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "articles"
+                ? "border-[#0a66c2] text-[#0a66c2]"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+            >
+              Popular Articles
+            </button>
+
+            <button
+              onClick={() => setActiveTab("saved")}
+              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "saved"
+                ? "border-[#0a66c2] text-[#0a66c2]"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+            >
+              Saved Jobs
+            </button>
+
+            <button
+              onClick={() => setActiveTab("applications")}
+              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "applications"
+                ? "border-[#0a66c2] text-[#0a66c2]"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+            >
+              My Applications
+            </button>
+
+            <button
+              onClick={() => setActiveTab("alerts")}
+              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "alerts"
+                ? "border-[#0a66c2] text-[#0a66c2]"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+            >
+              Job Alerts
             </button>
           </div>
         </div>
@@ -497,10 +403,13 @@ export default function CandidateLinkedInProfile({ username }: Props) {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
             {/* MAIN COLUMN */}
             <div className="lg:col-span-8 space-y-4">
-
               {/* SUMMARY CARD */}
               <div className="bg-white rounded-lg border border-[#e0e0e0] p-6 shadow-sm relative">
-                <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition-colors">
+                <button
+                  onClick={() => setActiveTab("edit")}
+                  title="Edit Summary"
+                  className="absolute top-4 right-4 text-gray-400 hover:text-[#0a66c2] transition-colors p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
+                >
                   <Pencil size={16} />
                 </button>
                 <h2 className="text-lg font-semibold text-gray-900 mb-3">Summary</h2>
@@ -508,141 +417,148 @@ export default function CandidateLinkedInProfile({ username }: Props) {
                   {displayAbout}
                 </p>
 
-                {candidate?.websiteUrl && (
-                  <div className="mb-6">
-                    <a
-                      href={candidate.websiteUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-block px-5 py-2 border-2 border-[#0a66c2] text-[#0a66c2] font-semibold text-sm rounded-full hover:bg-[#0a66c2]/10 transition-colors"
-                    >
-                      Visit Website
-                    </a>
-                  </div>
-                )}
+                <div className="mb-6">
+                  <a
+                    href={candidate?.websiteUrl || "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-block px-5 py-2 border-2 border-[#0a66c2] text-[#0a66c2] font-semibold text-sm rounded-full hover:bg-[#0a66c2]/10 transition-colors"
+                  >
+                    Visit Website
+                  </a>
+                </div>
 
-                {/* Project Thumbnails */}
-                {candidate?.projects && candidate.projects.length > 0 && (
-                  <>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-100 pt-4">
-                      {candidate.projects.slice(0, 3).map((project, index) => (
-                        <figure key={project.id || index} className="group cursor-pointer">
-                          <div className="overflow-hidden rounded-md bg-gray-100 h-28 border border-gray-200">
-                            {project.imageUrl ? (
-                              <img
-                                src={project.imageUrl}
-                                alt={project.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                                No image
-                              </div>
-                            )}
-                          </div>
-                          <figcaption className="text-xs text-gray-800 font-medium mt-2 text-center group-hover:text-[#0a66c2] transition-colors line-clamp-2">
-                            {project.title}
-                          </figcaption>
-                        </figure>
-                      ))}
+                {/* 3 Project Thumbnails */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-100 pt-4">
+                  <figure className="group cursor-pointer">
+                    <div className="overflow-hidden rounded-md bg-gray-100 h-28 border border-gray-200">
+                      <img
+                        src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=300&h=200&fit=crop"
+                        alt="UI/UX Design"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
                     </div>
+                    <figcaption className="text-xs text-gray-800 font-medium mt-2 text-center group-hover:text-[#0a66c2] transition-colors line-clamp-2">
+                      UI/UX Design: Award Winning Public Safety App
+                    </figcaption>
+                  </figure>
 
-                    <button
-                      onClick={() => setActiveTab("projects")}
-                      className="w-full text-center text-sm font-semibold text-[#0a66c2] hover:underline mt-4 pt-2 border-t border-gray-100"
-                    >
-                      See all projects →
-                    </button>
-                  </>
-                )}
+                  <figure className="group cursor-pointer">
+                    <div className="overflow-hidden rounded-md bg-gray-100 h-28 border border-gray-200">
+                      <img
+                        src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&h=200&fit=crop&sat=-100"
+                        alt="Branding & Art Direction"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <figcaption className="text-xs text-gray-800 font-medium mt-2 text-center group-hover:text-[#0a66c2] transition-colors line-clamp-2">
+                      Branding & Art Direction: Tooling Dynamics
+                    </figcaption>
+                  </figure>
+
+                  <figure className="group cursor-pointer">
+                    <div className="overflow-hidden rounded-md bg-gray-100 h-28 border border-gray-200">
+                      <img
+                        src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=300&h=200&fit=crop"
+                        alt="Architectural Design"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <figcaption className="text-xs text-gray-800 font-medium mt-2 text-center group-hover:text-[#0a66c2] transition-colors line-clamp-2">
+                      Architectural Design: Smart Tooling Academy
+                    </figcaption>
+                  </figure>
+                </div>
+
+                <button
+                  onClick={() => setActiveTab("projects")}
+                  className="w-full text-center text-sm font-semibold text-[#0a66c2] hover:underline mt-4 pt-2 border-t border-gray-100 cursor-pointer"
+                >
+                  See all projects →
+                </button>
               </div>
 
               {/* SKILLS CARD */}
               <SkillsSection
                 editable={false}
                 skills={candidate?.skills ?? []}
+                onEditClick={() => setActiveTab("edit")}
               />
 
               {/* EXPERIENCE CARD */}
               <ExperienceSection
                 editable={false}
                 experiences={candidate?.experiences ?? []}
+                onEditClick={() => setActiveTab("edit")}
               />
 
               {/* EDUCATION CARD */}
               <EducationSection
                 editable={false}
-                education={candidate?.education ?? []}
+                education={candidate?.educationList ?? []}
+                onEditClick={() => setActiveTab("edit")}
               />
 
               {/* ACCOMPLISHMENTS CARD */}
-              {(candidate?.achievements?.length || candidate?.languages?.length || candidate?.certifications?.length) && (
-                <div className="bg-white rounded-lg border border-[#e0e0e0] p-6 shadow-sm">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Accomplishments</h2>
-                  <div className="space-y-4 divide-y divide-gray-100">
-                    
-                    {candidate?.achievements && candidate.achievements.length > 0 && (
-                      <div className="flex items-start gap-4 pt-2 first:pt-0">
-                        <span className="text-xl font-extrabold text-[#0a66c2] w-6 shrink-0 text-center">
-                          {candidate.achievements.length}
-                        </span>
-                        <AchievementsSection
-                          editable={false}
-                          achievements={candidate.achievements}
-                        />
-                      </div>
-                    )}
+              <div className="bg-white rounded-lg border border-[#e0e0e0] p-6 shadow-sm relative">
+                <button
+                  onClick={() => setActiveTab("edit")}
+                  title="Edit Accomplishments"
+                  className="absolute top-4 right-4 text-gray-400 hover:text-[#0a66c2] transition-colors p-1.5 rounded-full hover:bg-gray-100 cursor-pointer"
+                >
+                  <Pencil size={16} />
+                </button>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Accomplishments</h2>
+                <div className="space-y-4 divide-y divide-gray-100">
+                  <div className="pt-2 first:pt-0">
+                    <AchievementsSection
+                      editable={false}
+                      achievements={candidate?.achievements ?? []}
+                    />
+                  </div>
 
-                    {candidate?.languages && candidate.languages.length > 0 && (
-                      <div className="flex items-start gap-4 pt-4">
-                        <span className="text-xl font-extrabold text-[#0a66c2] w-6 shrink-0 text-center">
-                          {candidate.languages.length}
-                        </span>
-                        <LanguagesSection
-                          editable={false}
-                          languages={candidate.languages}
-                        />
-                      </div>
-                    )}
+                  <div className="pt-4">
+                    <LanguagesSection
+                      editable={false}
+                      languages={candidate?.languages ?? []}
+                    />
+                  </div>
 
-                    {candidate?.certifications && candidate.certifications.length > 0 && (
-                      <div className="flex items-start gap-4 pt-4">
-                        <span className="text-xl font-extrabold text-[#0a66c2] w-6 shrink-0 text-center">
-                          {candidate.certifications.length}
-                        </span>
-                        <CertificationsSection
-                          editable={false}
-                          certifications={candidate.certifications}
-                        />
-                      </div>
-                    )}
+                  <div className="pt-4">
+                    <CertificationsSection
+                      editable={false}
+                      certifications={candidate?.certifications ?? []}
+                    />
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* INTERESTS CARD */}
               <InterestsSection
                 editable={false}
                 interests={candidate?.interests ?? []}
+                onEditClick={() => setActiveTab("edit")}
               />
-
             </div>
 
             {/* SIDEBAR COLUMN */}
             <div className="lg:col-span-4 space-y-4">
-              <SocialLinksSection
-                socials={candidate?.socials ?? []}
-              />
-
-              {/* PUBLIC PROFILE URL CARD */}
-              <div className="bg-white rounded-lg border border-[#e0e0e0] p-5 shadow-sm">
-                <h4 className="font-semibold text-xs text-gray-500 uppercase tracking-wider mb-2">Public Profile & URL</h4>
-                <p className="text-xs text-[#0a66c2] font-mono break-all font-medium">
-                  {typeof window !== 'undefined' ? `${window.location.origin}/candidate/${candidate?.username}` : `/candidate/${candidate?.username}`}
-                </p>
-              </div>
+              <TrendingArticlesCard />
+              <JobAlertsCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <ContactCard username={candidate?.username} />
+              <PublicUrlCard username={candidate?.username} />
             </div>
           </div>
+        )}
+
+        {/* ================= TAB: EDIT PROFILE ================= */}
+        {activeTab === "edit" && (
+          <CandidateProfileEditCard
+            onProfileUpdated={() => {
+              loadCandidate();
+              setActiveTab("profile");
+            }}
+          />
         )}
 
         {/* ================= TAB 2: PROJECTS ================= */}
@@ -651,38 +567,303 @@ export default function CandidateLinkedInProfile({ username }: Props) {
             <div className="lg:col-span-8 space-y-4">
               <ProjectsSection
                 editable={false}
-                projects={candidate?.projects ?? []}
+                projects={candidate?.projectsList ?? []}
+                onEditClick={() => setActiveTab("edit")}
               />
             </div>
-          </div>
-        )}
-
-        {/* ================= TAB 3: ACTIVITY ================= */}
-        {activeTab === "activity" && (
-          <div className="bg-white rounded-lg border border-[#e0e0e0] p-12 text-center shadow-sm">
-            <div className="w-16 h-16 bg-blue-50 text-[#0a66c2] rounded-full flex items-center justify-center mx-auto mb-3">
-              <Layers size={28} />
+            <div className="lg:col-span-4 space-y-4">
+              <TrendingArticlesCard />
+              <JobAlertsCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <ContactCard username={candidate?.username} />
+              <PublicUrlCard username={candidate?.username} />
             </div>
-            <h3 className="text-lg font-semibold text-gray-800">No activity to show yet</h3>
-            <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">
-              Posts, comments, and articles shared by {displayName} will appear here.
-            </p>
           </div>
         )}
 
-        {/* ================= TAB 4: CONNECTIONS ================= */}
+        {/* ================= TAB 3: CONNECTIONS ================= */}
         {activeTab === "connections" && (
-          <div className="bg-white rounded-lg border border-[#e0e0e0] p-12 text-center shadow-sm">
-            <div className="w-16 h-16 bg-blue-50 text-[#0a66c2] rounded-full flex items-center justify-center mx-auto mb-3">
-              <Users size={28} />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+            <div className="lg:col-span-8 space-y-4">
+              <div className="bg-white rounded-lg border border-[#e0e0e0] p-12 text-center shadow-sm">
+                <div className="w-16 h-16 bg-blue-50 text-[#0a66c2] rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Users size={28} />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">Connections</h3>
+                <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">
+                  Connect with {displayName} to expand your professional network.
+                </p>
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-gray-800">Connections</h3>
-            <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">
-              Connect with {displayName} to see their network.
-            </p>
+            <div className="lg:col-span-4 space-y-4">
+              <TrendingArticlesCard />
+              <JobAlertsCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <ContactCard username={candidate?.username} />
+              <PublicUrlCard username={candidate?.username} />
+            </div>
           </div>
         )}
 
+        {/* ================= TAB 4: HOME FEED ================= */}
+        {activeTab === "feed" && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+            <div className="lg:col-span-8 space-y-4">
+              <JobFeed />
+            </div>
+            <div className="lg:col-span-4 space-y-4">
+              <TrendingArticlesCard />
+              <JobAlertsCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <ContactCard username={candidate?.username} />
+              <PublicUrlCard username={candidate?.username} />
+            </div>
+          </div>
+        )}
+
+        {/* ================= TAB 5: POPULAR ARTICLES ================= */}
+        {activeTab === "articles" && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+            <div className="lg:col-span-8 space-y-4">
+              <PopularArticlesFeed />
+            </div>
+            <div className="lg:col-span-4 space-y-4">
+              <TrendingArticlesCard />
+              <JobAlertsCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <ContactCard username={candidate?.username} />
+              <PublicUrlCard username={candidate?.username} />
+            </div>
+          </div>
+        )}
+
+        {/* ================= TAB 6: SAVED JOBS ================= */}
+        {activeTab === "saved" && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+            <div className="lg:col-span-8 space-y-4">
+              <SavedJobs />
+            </div>
+            <div className="lg:col-span-4 space-y-4">
+              <TrendingArticlesCard />
+              <JobAlertsCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <ContactCard username={candidate?.username} />
+              <PublicUrlCard username={candidate?.username} />
+            </div>
+          </div>
+        )}
+
+        {/* ================= TAB 7: MY APPLICATIONS ================= */}
+        {activeTab === "applications" && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+            <div className="lg:col-span-8 space-y-4">
+              <MyApplicationsPage />
+            </div>
+            <div className="lg:col-span-4 space-y-4">
+              <TrendingArticlesCard />
+              <JobAlertsCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <ContactCard username={candidate?.username} />
+              <PublicUrlCard username={candidate?.username} />
+            </div>
+          </div>
+        )}
+
+        {/* ================= TAB 8: JOB ALERTS ================= */}
+        {activeTab === "alerts" && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+            <div className="lg:col-span-8 space-y-4">
+              <JobAlertsPage />
+            </div>
+            <div className="lg:col-span-4 space-y-4">
+              <TrendingArticlesCard />
+              <JobAlertsCard activeTab={activeTab} setActiveTab={setActiveTab} />
+              <ContactCard username={candidate?.username} />
+              <PublicUrlCard username={candidate?.username} />
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
+   HELPER SIDEBAR COMPONENTS
+   ═══════════════════════════════════════════════════════ */
+function JobAlertsCard({
+  activeTab,
+  setActiveTab,
+}: {
+  activeTab: string;
+  setActiveTab: (tab: any) => void;
+}) {
+  return (
+    <div
+      className={`bg-white rounded-lg border border-[#e0e0e0] p-6 shadow-sm ${activeTab === "alerts" ? "ring-2 ring-[#0a66c2]" : ""
+        }`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+          <Bell size={18} className="text-[#0a66c2]" />
+          Job Alerts
+        </h3>
+        <span className="text-[11px] font-semibold text-[#0a66c2] bg-blue-50 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+          Active
+        </span>
+      </div>
+
+      <p className="text-xs text-gray-600 mb-4 leading-relaxed">
+        Get instant notifications when new moulding technology, mechanical engineering, and sales roles match your profile.
+      </p>
+
+      <button
+        onClick={() => setActiveTab("alerts")}
+        className={`w-full py-2 px-4 rounded-full text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === "alerts"
+          ? "bg-[#0a66c2] text-white"
+          : "border-2 border-[#0a66c2] text-[#0a66c2] hover:bg-[#0a66c2]/10"
+          }`}
+      >
+        <Bell size={14} />
+        {activeTab === "alerts" ? "Viewing Job Alerts" : "Manage Job Alerts"}
+      </button>
+    </div>
+  );
+}
+
+function ContactCard({ username }: { username?: string }) {
+  return (
+    <div className="bg-white rounded-lg border border-[#e0e0e0] p-6 shadow-sm relative">
+      <h3 className="text-base font-semibold text-gray-900 mb-4">Contact & Socials</h3>
+
+      <div className="space-y-3.5 text-xs sm:text-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-[#0a66c2] shrink-0">
+            <Mail size={16} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-gray-500 font-medium">Email</p>
+            <p className="font-semibold text-gray-900 truncate">candidate@mouldtech.com</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-[#0a66c2] shrink-0">
+            <Globe size={16} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-gray-500 font-medium">Website</p>
+            <a
+              href="https://toolingtrends.com"
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-[#0a66c2] hover:underline truncate block"
+            >
+              https://toolingtrends.com
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PublicUrlCard({ username }: { username?: string }) {
+  return (
+    <div className="bg-white rounded-lg border border-[#e0e0e0] p-5 shadow-sm">
+      <h4 className="font-semibold text-xs text-gray-500 uppercase tracking-wider mb-2">Public Profile & URL</h4>
+      <p className="text-xs text-[#0a66c2] font-mono break-all font-medium">
+        {typeof window !== 'undefined' ? `${window.location.origin}/candidate/${username || 'gopinath2322002'}` : `/candidate/${username || 'gopinath2322002'}`}
+      </p>
+    </div>
+  );
+}
+
+function TrendingArticlesCard() {
+  const [articles, setArticles] = useState<{ id: number; title: string; slug: string; views?: number }[]>([]);
+
+  useEffect(() => {
+    async function loadTrending() {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/articles/approved`,
+          { cache: "no-store" }
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : [];
+        const sorted = [...list].sort((a, b) => (b.views ?? 0) - (a.views ?? 0));
+        setArticles(sorted);
+      } catch {
+        // Fallback
+      }
+    }
+    loadTrending();
+  }, []);
+
+  const displayArticles =
+    articles.length > 0
+      ? articles.slice(0, 4)
+      : [
+        {
+          id: 1,
+          title: "Why Upskilling Is the Key to Career Growth in 2026",
+          slug: "why-upskilling-is-the-key-to-career-growth-in-2026",
+          views: 3,
+        },
+        {
+          id: 2,
+          title: "Top 7 Digital Marketing Trends Every Business Should Watch in 2029",
+          slug: "top-7-digital-marketing-trends-every-business-should-watch-in-2029",
+          views: 2,
+        },
+        {
+          id: 3,
+          title: "How Artificial Intelligence Is Transforming Modern Recruitment",
+          slug: "how-artificial-intelligence-is-transforming-modern-recruitment",
+          views: 2,
+        },
+        {
+          id: 4,
+          title: "The Future of Remote Work: Building High-Performance Distributed Teams",
+          slug: "the-future-of-remote-work-building-high-performance-distributed-teams",
+          views: 0,
+        },
+      ];
+
+  return (
+    <div className="bg-white rounded-xl border border-[#e0e0e0] shadow-md overflow-hidden">
+      <div className="bg-[#be1823] px-5 py-3.5">
+        <h3 className="text-white font-bold text-lg sm:text-xl tracking-wide">
+          Trending Articles
+        </h3>
+      </div>
+
+      <div className="divide-y divide-gray-100">
+        {displayArticles.map((article, index) => (
+          <Link
+            key={article.id}
+            href={`/post/${article.slug}`}
+            className="px-5 py-3.5 flex items-start gap-3.5 hover:bg-gray-50/80 transition-colors group block"
+          >
+            <div className="w-7 h-7 rounded-md bg-[#be1823] text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+              {index + 1}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-bold text-[#0f172a] group-hover:text-[#be1823] transition-colors leading-snug line-clamp-2">
+                {article.title}
+              </h4>
+              <p className="text-xs text-gray-500 mt-0.5 font-medium">
+                {(article.views ?? 0).toLocaleString()} views
+              </p>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      <div className="border-t border-gray-100 bg-white">
+        <Link
+          href="/articles"
+          className="text-center font-bold text-sm text-[#be1823] hover:underline py-3.5 block hover:bg-red-50/40 transition-colors"
+        >
+          View all articles →
+        </Link>
       </div>
     </div>
   );
