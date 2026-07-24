@@ -13,6 +13,7 @@ import {
   CalendarCheck,
   Globe2,
 } from "lucide-react"
+import EventCalendar from "@/components/events/Eventcalendar"
 
 type Event = {
   id: number
@@ -51,20 +52,30 @@ function formatDateRange(start: string, end: string) {
   return `${s} – ${e}`
 }
 
+function isOnDate(event: Event, dateStr: string) {
+  const d = new Date(dateStr)
+  d.setHours(0, 0, 0, 0)
+  const s = new Date(event.startDate)
+  s.setHours(0, 0, 0, 0)
+  const e = new Date(event.endDate)
+  e.setHours(0, 0, 0, 0)
+  return d >= s && d <= e
+}
+
 type PageProps = {
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<{ q?: string; date?: string }>
 }
 
 export default async function EventsPage({ searchParams }: PageProps) {
-  const { q = "" } = await searchParams
-  const events = await getEvents(q)
+  const { q = "", date } = await searchParams
+  const allEvents = await getEvents(q)
+  const events = date ? allEvents.filter(e => isOnDate(e, date)) : allEvents
 
   return (
-    <div className="w-full bg-gray-50">
+    <div className="w-full bg-gray-50" >
       {/* ================= HERO ================= */}
-      <div className="relative bg-[#0b1f4d] text-white">
-        <div className="absolute inset-0 bg-[#0b1f4d]/85" />
-        <div className="relative max-w-7xl mx-auto px-6 py-14 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+      <div className="bg-gradient-to-br from-[#0f5b78] via-black to-[#b30f24] text-white">
+        <div className="max-w-7xl mx-auto px-6 py-14 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
           <div>
             <h1 className="text-4xl font-bold mb-3">Events</h1>
             <p className="text-blue-100 max-w-xl">
@@ -102,30 +113,34 @@ export default async function EventsPage({ searchParams }: PageProps) {
                 name="q"
                 defaultValue={q}
                 placeholder="Search events by name, venue or keyword..."
-                className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0f5b78]"
               />
             </div>
             <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
               <option>All Categories</option>
             </select>
-            <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
+            {/* <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
               <option>All Locations</option>
-            </select>
-            <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
+            </select> */}
+            {/* <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
               <option>Date (Newest First)</option>
-            </select>
+            </select> */}
           </form>
 
           <div className="flex items-center justify-between mb-6 text-sm">
-            <span className="text-gray-500">Showing 1 to {events.length} of {events.length} events</span>
-            <button type="button" className="text-indigo-600 font-medium hover:underline">
+            <span className="text-gray-500">
+              {date
+                ? `Showing ${events.length} event${events.length === 1 ? "" : "s"} on ${new Date(date).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })}`
+                : `Showing 1 to ${events.length} of ${events.length} events`}
+            </span>
+            <Link href="/events" className="text-[#0f5b78] font-medium hover:underline">
               Clear Filters
-            </button>
+            </Link>
           </div>
 
           {/* EVENT CARDS */}
           {events.length === 0 ? (
-            <p className="text-gray-500">No events found.</p>
+            <p className="text-gray-500">No events found{date ? " on this date" : ""}.</p>
           ) : (
             <div className="space-y-5">
               {events.map((event, i) => (
@@ -147,7 +162,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
                       </div>
                     )}
                     {i === 0 && (
-                      <span className="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-semibold px-2 py-1 rounded">
+                      <span className="absolute top-2 left-2 bg-[#b30f24] text-white text-[10px] font-semibold px-2 py-1 rounded">
                         FEATURED
                       </span>
                     )}
@@ -160,9 +175,9 @@ export default async function EventsPage({ searchParams }: PageProps) {
                           {event.title}
                         </Link>
                       </h3>
-                      <button type="button" aria-label="Save event" className="text-gray-300 hover:text-yellow-400">
+                      {/* <button type="button" aria-label="Save event" className="text-gray-300 hover:text-yellow-400">
                         <Star size={18} />
-                      </button>
+                      </button> */}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 mb-2">
@@ -202,7 +217,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
                       </div>
                       <Link
                         href={`/events/${event.slug}`}
-                        className="bg-[#0b1f4d] text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-[#0b1f4d]/90"
+                        className="bg-[#0f5b78] text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-[#0f5b78]/90"
                       >
                         View Details
                       </Link>
@@ -223,7 +238,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
                 key={p}
                 className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium ${
                   p === 1
-                    ? "bg-red-600 text-white"
+                    ? "bg-[#0f5b78] text-white"
                     : "border border-gray-300 text-gray-600 hover:bg-gray-50"
                 }`}
               >
@@ -244,47 +259,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
         <aside className="lg:col-span-4 space-y-6">
 
           {/* CALENDAR */}
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-            <div className="bg-[#0b1f4d] text-white text-sm font-semibold px-4 py-3">
-              Event Calendar
-            </div>
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <ChevronLeft size={16} className="text-gray-400" />
-                <span className="text-sm font-medium">May 2025</span>
-                <ChevronRight size={16} className="text-gray-400" />
-              </div>
-              <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-400 mb-1">
-                {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(d => (
-                  <span key={d}>{d}</span>
-                ))}
-              </div>
-              <div className="grid grid-cols-7 gap-1 text-center text-xs">
-                {Array.from({ length: 35 }, (_, i) => {
-                  const day = i - 3 // offset so 1st falls on Thursday, matching mockup
-                  const inMonth = day >= 1 && day <= 31
-                  const isToday = day === 29
-                  return (
-                    <span
-                      key={i}
-                      className={`h-7 flex items-center justify-center rounded-full ${
-                        isToday
-                          ? "bg-[#0b1f4d] text-white"
-                          : inMonth
-                          ? "text-gray-700"
-                          : "text-gray-300"
-                      }`}
-                    >
-                      {((day - 1 + 31) % 31) + 1}
-                    </span>
-                  )
-                })}
-              </div>
-              <button className="w-full mt-4 border border-gray-300 rounded-lg py-2 text-sm text-gray-700 hover:bg-gray-50">
-                View Full Calendar
-              </button>
-            </div>
-          </div>
+          <EventCalendar events={allEvents.map(e => ({ startDate: e.startDate, endDate: e.endDate }))} />
 
           {/* SUBSCRIBE */}
           <div className="bg-white border border-gray-200 rounded-xl p-4">
@@ -295,9 +270,9 @@ export default async function EventsPage({ searchParams }: PageProps) {
             <input
               type="email"
               placeholder="Enter your email"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#0f5b78]"
             />
-            <button className="w-full bg-red-600 text-white text-sm font-medium py-2 rounded-lg hover:bg-red-700">
+            <button className="w-full bg-[#b30f24] text-white text-sm font-medium py-2 rounded-lg hover:bg-[#b30f24]/90">
               Subscribe
             </button>
           </div>
@@ -320,7 +295,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
                 </li>
               ))}
             </ul>
-            <button className="text-indigo-600 text-sm font-medium mt-3 hover:underline">
+            <button className="text-[#0f5b78] text-sm font-medium mt-3 hover:underline">
               View All Categories →
             </button>
           </div>
@@ -338,7 +313,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
             </div>
             <Link
               href="/events/create"
-              className="block text-center border border-red-500 text-red-600 text-sm font-medium py-2 rounded-lg mt-2 hover:bg-red-50"
+              className="block text-center border border-[#b30f24] text-[#b30f24] text-sm font-medium py-2 rounded-lg mt-2 hover:bg-red-50"
             >
               List Your Event
             </Link>
