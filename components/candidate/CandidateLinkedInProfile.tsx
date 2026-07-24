@@ -67,10 +67,10 @@ type CandidateProfileData = {
   fullName?: string;
   headline?: string;
   about?: string;
-  location?: string;
+  location?: any;
   avatarUrl?: string;
-  company?: string;
-  education?: string;
+  company?: any;
+  education?: any;
   websiteUrl?: string;
   skills?: any[];
   experiences?: any[];
@@ -82,6 +82,58 @@ type CandidateProfileData = {
   interests?: any[];
   socials?: any[];
 };
+
+function getEducationDisplay(education: any, educationList?: any[]): string {
+  if (typeof education === "string" && education.trim()) {
+    return education;
+  }
+  if (education && typeof education === "object" && !Array.isArray(education)) {
+    const parts = [education.institution, education.degree, education.fieldOfStudy].filter(
+      (p) => typeof p === "string" && p.trim()
+    );
+    if (parts.length > 0) return parts.join(" • ");
+  }
+  if (Array.isArray(education) && education.length > 0) {
+    return getEducationDisplay(education[0]);
+  }
+  if (Array.isArray(educationList) && educationList.length > 0) {
+    return getEducationDisplay(educationList[0]);
+  }
+  return "Cal Poly San Luis Obispo";
+}
+
+function getCompanyDisplay(company: any): string {
+  if (typeof company === "string" && company.trim()) {
+    return company;
+  }
+  if (company && typeof company === "object" && !Array.isArray(company)) {
+    return company.name || company.companyName || company.title || "Maxx Business Media";
+  }
+  if (Array.isArray(company) && company.length > 0) {
+    return getCompanyDisplay(company[0]);
+  }
+  return "Maxx Business Media";
+}
+
+function getLocationDisplay(location: any): string {
+  if (typeof location === "string" && location.trim()) {
+    return location;
+  }
+  if (location && typeof location === "object" && !Array.isArray(location)) {
+    const parts = [location.city, location.state, location.country].filter(
+      (p) => typeof p === "string" && p.trim()
+    );
+    if (parts.length > 0) return parts.join(", ");
+  }
+  return "Bengaluru, Karnataka, India";
+}
+
+function getSafeString(val: any, fallback: string): string {
+  if (typeof val === "string" && val.trim()) {
+    return val;
+  }
+  return fallback;
+}
 
 interface Props {
   username: string;
@@ -157,7 +209,9 @@ export default function CandidateLinkedInProfile({ username }: Props) {
           ...baseData,
           skills: skillsData || [],
           experiences: expData || [],
-          educationList: eduData || [],
+          educationList: (eduData && eduData.length > 0)
+            ? eduData
+            : (Array.isArray(baseData.education) ? baseData.education : (baseData.education && typeof baseData.education === "object" ? [baseData.education] : [])),
           projectsList: projData || [],
           certifications: certsData || [],
           languages: langsData || [],
@@ -197,16 +251,18 @@ export default function CandidateLinkedInProfile({ username }: Props) {
     loadCandidate();
   }, [username]);
 
-  const displayName = candidate?.fullName || candidate?.username || "Gopinath Candidate";
-  const displayHeadline =
-    candidate?.headline ||
-    "Certified PMP with 7 years of experience leading cross-functional teams in agile environments. Successfully delivered 15+ large-scale IT projects on time and 10% under budget.";
-  const displayCompany = candidate?.company || "Maxx Business Media";
-  const displayEducation = candidate?.education || "Cal Poly San Luis Obispo";
-  const displayLocation = candidate?.location || "Bengaluru, Karnataka, India";
-  const displayAbout =
-    candidate?.about ||
-    "Art-minded, creative visionary, design-focused, digital content creator passionate about design, photography, storytelling, entrepreneurship, branding, marketing, tech.";
+  const displayName = getSafeString(candidate?.fullName, candidate?.username || "Gopinath Candidate");
+  const displayHeadline = getSafeString(
+    candidate?.headline,
+    "Certified PMP with 7 years of experience leading cross-functional teams in agile environments. Successfully delivered 15+ large-scale IT projects on time and 10% under budget."
+  );
+  const displayCompany = getCompanyDisplay(candidate?.company);
+  const displayEducation = getEducationDisplay(candidate?.education, candidate?.educationList);
+  const displayLocation = getLocationDisplay(candidate?.location);
+  const displayAbout = getSafeString(
+    candidate?.about,
+    "Art-minded, creative visionary, design-focused, digital content creator passionate about design, photography, storytelling, entrepreneurship, branding, marketing, tech."
+  );
 
   if (loading) {
     return (
