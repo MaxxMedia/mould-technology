@@ -57,7 +57,7 @@ export default function MagazineArchive() {
           </h2>
 
           <Link
-            href="/magazines"
+            href="/articles/issues"
             className="inline-flex items-center gap-2 border border-[#003B5C] px-6 py-3 text-sm font-semibold text-[#003B5C] hover:bg-[#003B5C] hover:text-white transition w-fit"
           >
             SEE MORE ISSUES <span aria-hidden="true">›</span>

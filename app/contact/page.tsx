@@ -78,7 +78,7 @@ export default function ContactPage() {
       {/* ================= LOCATIONS ================= */}
       <section className="py-24">
         <div className="max-w-[1320px] mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-1 xl:grid-cols-1 gap-8">
             {[
               {
                 title: "California",
@@ -86,24 +86,13 @@ export default function ContactPage() {
                 address: "Madison Avenue, New York",
                 phone: "+990 123 456 789",
               },
-              {
-                title: "New York City",
-                img: "/images/newyork.png",
-                address: "Washington Ave, Manchester, Kentucky",
-                phone: "+89 (308) 555-0121",
-              },
-              {
-                title: "New Hampshire",
-                img: "/images/newyork.png",
-                address: "Parker Rd. Allentown, New Mexico",
-                phone: "(907) 555-0101",
-              },
+
             ].map((item) => (
               <div
                 key={item.title}
-                className="bg-white rounded-2xl shadow-sm p-8 text-center"
+                className="bg-white rounded-xl shadow-sm p-8 text-center"
               >
-                <div className="relative w-full h-[220px] rounded-full overflow-hidden mx-auto mb-6">
+                <div className="relative w-full h-[220px] rounded-sm overflow-hidden mx-auto mb-6">
                   <Image
                     src={item.img}
                     alt={`${item.title} office`}
