@@ -219,9 +219,9 @@ export default function TrendingSection({ posts }: Props) {
             </span>
           )}
 
-          <h3 className="text-[15px] leading-snug group-hover:text-gray-300 transition line-clamp-2">
-            {post.title}
-          </h3>
+          <h3 className="text-[20px] leading-snug group-hover:text-gray-300 transition line-clamp-2">
+  {post.title}
+</h3>
 
           <div className="flex items-center gap-3 mt-1 text-[12px] text-white/70">
             {authorName && <span>By {authorName}</span>}
