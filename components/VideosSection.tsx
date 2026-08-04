@@ -192,23 +192,22 @@ export default function VideosSection({ posts }: Props) {
   /* ================= RENDER ================= */
 
   return (
-    <section className="bg-[#171A1E] pt-[70px] pb-[80px] text-white">
-      <div className="max-w-[1320px] mx-auto px-4">
-        {/* HEADER */}
-        <div className="flex items-center justify-between mb-12">
-          <h2 className="text-[24px] font-semibold">Featured Videos</h2>
+    <section className="bg-[#0b0e13] text-white py-12 sm:py-16">
+      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl sm:text-3xl font-semibold">Watch Videos</h2>
 
           <Link
             href="/videos"
-            className="text-[12px] font-medium flex items-center gap-2 hover:underline"
+            className="text-[12px] font-medium flex items-center gap-2 hover:underline text-gray-300 hover:text-white"
           >
             View All →
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[8fr_4fr] gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[8fr_4fr] gap-6 lg:gap-8">
           {/* FEATURED VIDEO - LEFT SIDE */}
-          <div className="relative h-[420px] rounded-md overflow-hidden bg-black">
+          <div className="relative h-[260px] sm:h-[360px] md:h-[420px] lg:h-[450px] rounded-md overflow-hidden bg-black">
             {selectedVideo?.youtubeUrl ? (
               <iframe
                 key={selectedVideo.id}

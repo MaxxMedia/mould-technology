@@ -26,10 +26,9 @@ export default function Footer() {
                 <Image
                   src="/images/tooling new34 (1).png"
                   alt="Tooling Technology Logo"
-                  width={200}
-                  height={67}
-                  style={{ width: 'auto', height: '64px' }}
-                  className="sm:h-16"
+                  width={300}
+                  height={127}
+                  className="h-[54px] sm:h-[65px] lg:h-[75px] w-auto max-w-full object-contain"
                 />
               </Link>
 
@@ -49,7 +48,7 @@ export default function Footer() {
                   <Link
                     key={i}
                     href={href}
-                    className={`w-10 h-10 flex items-center justify-center rounded-md text-white transition-all duration-300 transform hover:scale-110 ${bg} ${hover}`}
+                    className={`w-11 h-11 flex items-center justify-center rounded-md text-white transition-all duration-300 transform hover:scale-110 ${bg} ${hover}`}
                     aria-label={`Social media link ${i + 1}`}
                   >
                     <Icon size={18} strokeWidth={2} />
@@ -163,9 +162,9 @@ export default function Footer() {
                 <Image
                   src="/images/tooling new34 (1).png"
                   alt="Tooling Technology Logo"
-                  width={240}
-                  height={80}
-                  style={{ width: 'auto', height: '80px' }}
+                  width={300}
+                  height={127}
+                  className="h-[54px] sm:h-[65px] lg:h-[75px] w-auto max-w-full object-contain"
                 />
               </Link>
 
@@ -185,7 +184,7 @@ export default function Footer() {
                   <Link
                     key={i}
                     href={href}
-                    className={`w-10 h-10 flex items-center justify-center rounded-md text-white transition-all duration-300 transform hover:scale-110 ${bg} ${hover}`}
+                    className={`w-11 h-11 flex items-center justify-center rounded-md text-white transition-all duration-300 transform hover:scale-110 ${bg} ${hover}`}
                     aria-label={`Social media link ${i + 1}`}
                   >
                     <Icon size={18} strokeWidth={2} />

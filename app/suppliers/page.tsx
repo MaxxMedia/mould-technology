@@ -132,7 +132,7 @@ function SuppliersPageContent() {
   }
 
   return (
-    <div className="min-h-screen w-full">
+    <div className="min-h-screen w-full pt-[30px]">
       <div className="w-full max-w-full mx-auto px-4 lg:px-6 lg:pr-8 pt-0 pb-4 md:py-6">
 
         {/* MOBILE FILTER BUTTON resgg*/}

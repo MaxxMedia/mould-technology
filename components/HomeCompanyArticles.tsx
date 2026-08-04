@@ -90,8 +90,8 @@ export default function CompanyArticles({ posts }: Props) {
 
   return (
     <section className="pt-4 sm:pt-8 w-full">
-      <div className="max-w-[1320px] mx-auto px-4">
-        <div className="flex gap-8">
+      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col xl:flex-row gap-6 sm:gap-8">
           {/* ══ LEFT: Articles ══ */}
           <div
             className="flex-1 min-w-0"

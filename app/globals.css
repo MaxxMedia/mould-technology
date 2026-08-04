@@ -205,9 +205,21 @@
 }
 
 /* ======================================================
-   RESPONSIVE TYPOGRAPHY
+   RESPONSIVE TYPOGRAPHY & BREAKPOINTS
 ====================================================== */
-@media (max-width: 768px) {
+@media (max-width: 480px) {
+  :root {
+    --fs-h1: 24px;
+    --fs-h2: 20px;
+    --fs-h3: 18px;
+    --fs-h4: 16px;
+    --fs-h5: 15px;
+    --fs-body-lg: 15px;
+    --fs-body: 15px;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
   :root {
     --fs-h1: 28px;
     --fs-h2: 24px;
@@ -220,8 +232,30 @@
 }
 
 /* ======================================================
-   UTILITIES
+   UTILITIES & RESPONSIVE LAYOUT
 ====================================================== */
+.app-container {
+  width: 100%;
+  max-width: 1320px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .app-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
 .text-meta {
   font-size: var(--fs-meta);
   line-height: var(--lh-meta);

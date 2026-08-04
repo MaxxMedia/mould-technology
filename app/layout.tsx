@@ -202,7 +202,7 @@ export default function RootLayout({
       <body className="antialiased" suppressHydrationWarning>
         <Header />
 
-        <main className="pt-[90px] pb-24">
+        <main className="pt-[90px] md:pt-[118px] pb-16 sm:pb-24">
           {children}
         </main>
 

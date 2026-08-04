@@ -155,9 +155,11 @@ export default function Header() {
       `}</style>
 
       {/* ================= TOP BAR ================= */}
-      <div className="flex h-[90px] w-full">
+      <div className="flex h-[90px] w-full relative z-30 bg-[#0F5B78]">
 
-        <div className="bg-white flex items-center px-[45px] shrink-0 border-r border-gray-200">
+        {/* White Logo Section with Slanted / Right Edge */}
+        <div className="bg-white flex items-center px-3 sm:px-5 lg:px-6 xl:px-8 shrink-0 relative z-20 h-full pr-6 sm:pr-8 lg:pr-8 xl:pr-12">
+          {/* LOGO IMAGE */}
           <Link href="/" className="flex items-center">
             <Image
               src="/images/tooling new34 (1).png"
@@ -165,18 +167,21 @@ export default function Header() {
               width={300}
               height={127}
               priority
-              className="h-[75px] w-auto"
+              className="h-[46px] sm:h-[58px] lg:h-[60px] xl:h-[75px] w-auto max-w-full object-contain"
             />
           </Link>
+
+          {/* Slanted / diagonal transition line extending outwards into blue bar */}
+          <div className="absolute right-[-14px] top-0 h-full w-8 bg-white skew-x-[-20deg] z-10 pointer-events-none" />
         </div>
 
-        <div className="relative flex-1 bg-[#0F5B78]">
+        {/* Blue Navigation & Action Section */}
+        <div className="relative flex-1 bg-[#0F5B78] z-10 h-full flex items-center justify-end px-3 sm:px-5 lg:px-6 xl:px-8">
 
-          <div className="absolute left-0 top-0 h-full w-12 bg-[#0F5B78] -translate-x-6 skew-x-[-20deg]" />
+          {/* RIGHT ALIGNED NAV + USER DESIGN GROUP */}
+          <div className="flex items-center gap-3 lg:gap-4 xl:gap-6 shrink-0 ml-auto">
 
-          <div className={`${container} h-full flex items-center justify-between relative`}>
-
-            <nav className="hidden lg:flex items-center ml-16 gap-8 text-white font-semibold text-sm tracking-wide uppercase">
+            <nav className="hidden lg:flex items-center gap-3 lg:gap-3.5 xl:gap-6 text-white font-semibold text-xs xl:text-sm tracking-tight xl:tracking-wide uppercase">
 
               <button
                 onMouseEnter={() => {
@@ -229,34 +234,36 @@ export default function Header() {
 
             </nav>
 
-            <div className="flex items-center gap-3 relative">
+            {/* USER DESIGN & HAMBURGER */}
+            <div className="flex items-center gap-2 sm:gap-3 relative shrink-0">
 
               {!user && (
                 <Link
                   href="/login"
-                  className="hidden md:flex h-10 px-5 bg-[#B30F24] text-white rounded-md font-semibold items-center hover:bg-[#C41524] transition-colors shadow-md"
+                  className="flex h-9 sm:h-10 px-3 lg:px-4 xl:px-5 bg-[#B30F24] text-white rounded-md font-semibold items-center hover:bg-[#C41524] transition-colors shadow-md text-xs sm:text-sm"
                 >
                   Login
                 </Link>
               )}
 
               {user && (
-                <div className="relative hidden md:block">
+                <div className="relative block shrink-0">
                   <button
                     onClick={() => setOpenUserMenu(!openUserMenu)}
-                    className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-md text-white hover:bg-white/20 transition border border-white/20"
+                    className="flex items-center gap-2 sm:gap-2.5 bg-white/15 hover:bg-white/25 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-white transition border border-white/25 shadow-sm min-h-[40px] sm:min-h-[44px]"
+                    aria-label="User account menu"
                   >
-                    <div className="relative w-8 h-8">
+                    <div className="relative w-8 h-8 sm:w-9 sm:h-9 shrink-0">
                       {user.avatarUrl ? (
                         <Image
                           src={user.avatarUrl}
                           alt="User avatar"
                           fill
-                          className="rounded-full object-cover border-2 border-white/30"
-                          sizes="32px"
+                          className="rounded-full object-cover border-2 border-white/40 shadow-sm"
+                          sizes="36px"
                         />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-semibold border-2 border-white/30">
+                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs sm:text-sm font-bold border-2 border-white/40 shadow-sm">
                           {user.email
                             .split("@")[0]
                             .replace(/[^a-zA-Z]/g, "")
@@ -266,11 +273,11 @@ export default function Header() {
                       )}
                     </div>
 
-                    <div className="text-left">
-                      <p className="text-sm font-semibold">
+                    <div className="text-left hidden min-[380px]:block max-w-[75px] lg:max-w-[100px] xl:max-w-[180px]">
+                      <p className="text-xs sm:text-sm font-semibold truncate leading-tight text-white">
                         {user.companyName || user.email.split("@")[0]}
                       </p>
-                      <p className="text-xs text-gray-300 uppercase">
+                      <p className="text-[10px] sm:text-xs text-gray-300 uppercase truncate leading-tight hidden min-[480px]:block">
                         {user.role === "recruiter"
                           ? "COMPANY"
                           : user.role === "candidate"
@@ -279,46 +286,90 @@ export default function Header() {
                       </p>
                     </div>
 
-                    <ChevronDown size={14} />
+                    <ChevronDown size={14} className="shrink-0 text-white/80" />
                   </button>
 
                   {openUserMenu && (
                     <>
                       <div
-                        className="fixed inset-0 z-40"
+                        className="fixed inset-0 z-40 bg-black/20 sm:bg-transparent"
                         onClick={() => setOpenUserMenu(false)}
                       />
 
-                      <div className="absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-2xl border border-gray-200 text-black z-50 overflow-hidden">
-                        <Link
-                          href={
-                            user.role === "admin"
-                              ? "/admin/dashboard"
-                              : user.role === "recruiter"
-                                ? "/recruiter/dashboard"
-                                : `/candidate/${user.username || user.email?.split("@")[0] || "gopinath2322002"}`
-                          }
-                          className="block px-4 py-3 hover:bg-gray-100 text-sm transition border-b font-semibold text-[#0a66c2]"
-                          onClick={() => setOpenUserMenu(false)}
-                        >
-                          {user.role === "candidate" ? "My Candidate Profile" : "Dashboard"}
-                        </Link>
+                      <div className="absolute right-0 mt-2 w-56 sm:w-60 bg-white rounded-lg shadow-2xl border border-gray-200 text-black z-50 overflow-hidden max-w-[calc(100vw-24px)]">
+                        {/* User Header Info in Dropdown */}
+                        <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
+                          <div className="relative w-9 h-9 shrink-0">
+                            {user.avatarUrl ? (
+                              <Image
+                                src={user.avatarUrl}
+                                alt="User avatar"
+                                fill
+                                className="rounded-full object-cover border border-gray-300"
+                                sizes="36px"
+                              />
+                            ) : (
+                              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-semibold">
+                                {user.email
+                                  .split("@")[0]
+                                  .replace(/[^a-zA-Z]/g, "")
+                                  .slice(0, 2)
+                                  .toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-gray-900 truncate">
+                              {user.companyName || user.email.split("@")[0]}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                            <span className="inline-block mt-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 uppercase tracking-wide">
+                              {user.role === "recruiter"
+                                ? "Company"
+                                : user.role === "candidate"
+                                  ? "Candidate"
+                                  : "Admin"}
+                            </span>
+                          </div>
+                        </div>
 
-                        <button
-                          onClick={handleLogout}
-                          className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition font-medium"
-                        >
-                          Logout
-                        </button>
+                        {/* Navigation Link */}
+                        <div className="py-1">
+                          <Link
+                            href={
+                              user.role === "admin"
+                                ? "/admin/dashboard"
+                                : user.role === "recruiter"
+                                  ? "/recruiter/dashboard"
+                                  : `/candidate/${user.username || user.email?.split("@")[0] || "gopinath2322002"}`
+                            }
+                            className="block px-4 py-2.5 hover:bg-gray-50 text-sm font-semibold text-[#0a66c2] transition"
+                            onClick={() => setOpenUserMenu(false)}
+                          >
+                            {user.role === "candidate" ? "My Candidate Profile" : "Dashboard"}
+                          </Link>
+                        </div>
+
+                        {/* Logout Button */}
+                        <div className="py-1 border-t border-gray-100">
+                          <button
+                            onClick={handleLogout}
+                            className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition font-medium"
+                          >
+                            Logout
+                          </button>
+                        </div>
                       </div>
                     </>
                   )}
                 </div>
               )}
 
+              {/* HAMBURGER BUTTON ON RIGHTMOST END */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="lg:hidden h-10 w-10 border border-white/30 rounded-md flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+                className="lg:hidden h-10 w-10 border border-white/30 rounded-md flex items-center justify-center text-white hover:bg-white/10 transition-colors shrink-0"
+                aria-label="Toggle menu"
               >
                 {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
               </button>
@@ -327,7 +378,6 @@ export default function Header() {
 
           </div>
         </div>
-
       </div>
 
       {showHighlight && !openMega && (
@@ -558,15 +608,70 @@ export default function Header() {
           />
 
           <div className="fixed top-[90px] left-0 right-0 bottom-0 bg-[#0F5B78] lg:hidden z-50 overflow-y-auto">
+
             <nav className="py-4 text-white font-semibold">
 
-              <Link href="/articles" className="block px-6 py-4 border-b border-white/10 hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>Magazine</Link>
+              <Link href="/magazines" className="block px-6 py-4 border-b border-white/10 hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>Magazine</Link>
               <Link href="/suppliers" className="block px-6 py-4 border-b border-white/10 hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>Directory</Link>
               <Link href="/mmtchats" className="block px-6 py-4 border-b border-white/10 hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>Industry Talks</Link>
               <Link href="/events" className="block px-6 py-4 border-b border-white/10 hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>Events</Link>
               <Link href="/feed" className="block px-6 py-4 border-b border-white/10 hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>Jobs</Link>
 
-              {!user && (
+              {user ? (
+                <div className="px-6 py-5 border-t border-white/10 mt-2 bg-black/20">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="relative w-10 h-10 shrink-0">
+                      {user.avatarUrl ? (
+                        <Image
+                          src={user.avatarUrl}
+                          alt="User avatar"
+                          fill
+                          className="rounded-full object-cover border border-white/30"
+                          sizes="40px"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold border border-white/30">
+                          {user.email
+                            .split("@")[0]
+                            .replace(/[^a-zA-Z]/g, "")
+                            .slice(0, 2)
+                            .toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-white truncate">
+                        {user.companyName || user.email.split("@")[0]}
+                      </p>
+                      <p className="text-xs text-gray-300 truncate">{user.email}</p>
+                    </div>
+                  </div>
+
+                  <Link
+                    href={
+                      user.role === "admin"
+                        ? "/admin/dashboard"
+                        : user.role === "recruiter"
+                          ? "/recruiter/dashboard"
+                          : `/candidate/${user.username || user.email?.split("@")[0] || "gopinath2322002"}`
+                    }
+                    className="block w-full py-2.5 px-4 bg-white/15 text-white rounded-md text-center font-semibold text-sm hover:bg-white/25 mb-2 transition"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {user.role === "candidate" ? "My Candidate Profile" : "Dashboard"}
+                  </Link>
+
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="block w-full py-2.5 px-4 bg-red-600 text-white rounded-md text-center font-semibold text-sm hover:bg-red-700 transition"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
                 <div className="px-6 py-5">
                   <Link
                     href="/login"
