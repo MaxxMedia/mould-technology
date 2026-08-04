@@ -223,15 +223,15 @@ export default function LatestHero({ post, posts }: LatestHeroProps) {
   }
 
   return (
-    <section className="pt-[40px] w-full">
-      <div className="max-w-[1320px] mx-auto px-[12px]">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-8 items-start">
+    <section className="pt-6 sm:pt-10 w-full">
+      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-6 lg:gap-8 items-start">
 
           {/* ================= LEFT FEATURED CARD ================= */}
           <Link
             key={heroPost.id}
             href={`/post/${heroPost.slug}`}
-            className="relative h-[420px] rounded-md overflow-hidden group"
+            className="relative h-[280px] sm:h-[360px] md:h-[420px] lg:h-[450px] w-full rounded-md overflow-hidden group"
           >
             <Image
               src={imageUrl}
@@ -244,28 +244,28 @@ export default function LatestHero({ post, posts }: LatestHeroProps) {
                 }`}
             />
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
 
             <div
-              className={`absolute bottom-0 p-6 text-white max-w-[90%] transition-all duration-500 ease-in-out ${fade ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+              className={`absolute bottom-0 p-4 sm:p-6 text-white max-w-full sm:max-w-[92%] transition-all duration-500 ease-in-out ${fade ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
                 }`}
             >
               {(() => {
                 const tag = getTag(heroPost)
                 return tag.text ? (
                   <span
-                    className={`inline-block ${tag.color} text-xs font-semibold px-3 py-1 rounded-full mb-3 text-white`}
+                    className={`inline-block ${tag.color} text-xs font-semibold px-3 py-1 rounded-full mb-2 sm:mb-3 text-white`}
                   >
                     {tag.text}
                   </span>
                 ) : null
               })()}
 
-              <h1 className="text-white text-2xl md:text-3xl font-bold leading-snug mb-3">
+              <h1 className="text-white text-xl sm:text-2xl md:text-3xl font-bold leading-snug mb-2 sm:mb-3 line-clamp-2 sm:line-clamp-3">
                 {heroPost.title}
               </h1>
 
-              <div className="flex items-center gap-4 text-sm text-gray-300">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-300">
                 <span className="flex items-center gap-2">
                   <AuthorAvatar
                     name={getAuthorName(heroPost)}

@@ -171,7 +171,7 @@ export default function LoginForm() {
           {["facebook", "instagram", "x", "linkedin"].map((s) => (
             <div
               key={s}
-              className="w-10 h-10 flex items-center justify-center rounded bg-gray-100 cursor-pointer hover:bg-gray-200"
+              className="w-11 h-11 flex items-center justify-center rounded bg-gray-100 cursor-pointer hover:bg-gray-200"
             >
               <i className={`ri-${s}-fill`} />
             </div>

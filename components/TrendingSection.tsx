@@ -161,7 +161,7 @@ export default function TrendingSection({ posts }: Props) {
     return (
       <Link
         href={`/post/${post.slug}`}
-        className={`relative h-[380px] rounded-md overflow-hidden group ${className}`}
+        className={`relative h-[280px] sm:h-[340px] md:h-[380px] w-full rounded-md overflow-hidden group ${className}`}
       >
         <Image
           src={imageUrl(post)}
@@ -172,7 +172,7 @@ export default function TrendingSection({ posts }: Props) {
           className="object-cover group-hover:scale-105 transition duration-300"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-        <div className="absolute bottom-6 left-6 right-6">
+        <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 right-4 sm:right-6">
           {tag.text && (
             <span
               className={`${tag.color} text-white text-[11px] font-bold px-3 py-1 rounded uppercase`}
@@ -180,7 +180,7 @@ export default function TrendingSection({ posts }: Props) {
               {tag.text}
             </span>
           )}
-          <h2 className="text-[22px] md:text-[26px] font-semibold mt-3 leading-tight line-clamp-2">
+          <h2 className="text-lg sm:text-xl md:text-[24px] font-semibold mt-2 sm:mt-3 leading-tight line-clamp-2">
             {post.title}
           </h2>
           <Meta post={post} />
@@ -219,11 +219,11 @@ export default function TrendingSection({ posts }: Props) {
             </span>
           )}
 
-          <h3 className="text-[20px] leading-snug group-hover:text-gray-300 transition line-clamp-2">
-  {post.title}
-</h3>
+          <h3 className="text-[15px] sm:text-[16px] leading-snug group-hover:text-gray-300 transition line-clamp-2 font-semibold">
+            {post.title}
+          </h3>
 
-          <div className="flex items-center gap-3 mt-1 text-[12px] text-white/70">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1 text-[12px] text-white/70">
             {authorName && <span>By {authorName}</span>}
             <span className="flex items-center gap-1">
               <ViewsIcon /> {post.views?.toLocaleString()} Views
@@ -237,11 +237,11 @@ export default function TrendingSection({ posts }: Props) {
   /* ================= RENDER ================= */
 
   return (
-    <section className="bg-[#0f1318] pt-[70px] pb-[80px] text-white">
-      <div className="max-w-[1320px] mx-auto px-[12px] space-y-8">
+    <section className="bg-[#0f1318] py-10 sm:py-16 lg:py-20 text-white">
+      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
         {/* HEADER */}
         <div className="flex items-center justify-between">
-          <h2 className="text-[36px] font-semibold">Trending News</h2>
+          <h2 className="text-2xl sm:text-3xl lg:text-[36px] font-semibold">Trending News</h2>
           <Link href="/articles" className="text-sm text-white/70 hover:text-white flex items-center gap-1">
             View All <span>→</span>
           </Link>
@@ -254,9 +254,9 @@ export default function TrendingSection({ posts }: Props) {
         </div>
 
         {/* BOTTOM: 3 SMALL CARDS */}
-        <div className="relative py-8">
+        <div className="relative py-6 sm:py-8">
           <span className="absolute top-0 left-0 w-full h-px bg-white/10" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
             {smallPosts.map((post, i) => post && <SmallCard key={i} post={post} />)}
           </div>
         </div>

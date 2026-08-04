@@ -143,9 +143,9 @@ export default function BasicsSection({ posts }: Props) {
 
   return (
     <section className="bg-[#f8f9fa] py-12 sm:py-16">
-      <div className="max-w-[1320px] mx-auto px-4">
+      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* HEADER */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 sm:mb-10">
           <div>
             <h2 className="text-2xl sm:text-3xl font-semibold text-[#121213]">
               Basics & Fundamentals
@@ -164,52 +164,54 @@ export default function BasicsSection({ posts }: Props) {
         </div>
 
         {/* GRID - 3 columns on desktop, 2 on tablet, 1 on mobile */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {basicsPosts.map((post) => {
             const tag = getTag(post);
 
             return (
               <article
                 key={post.id}
-                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden border border-gray-100"
+                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden border border-gray-100 flex flex-col justify-between h-full"
               >
                 {/* IMAGE */}
                 <Link
                   href={`/post/${post.slug}`}
-                  className="relative block w-full h-[200px] overflow-hidden"
+                  className="relative block w-full aspect-[16/10] overflow-hidden"
                 >
                   <Image
                     src={imageUrl(post)}
                     alt={post.title}
                     fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     quality={70}
                     className="object-cover hover:scale-105 transition-transform duration-300"
                   />
                 </Link>
 
                 {/* CONTENT */}
-                <div className="p-5">
-                  {/* Category Tag */}
-                  {tag.text && (
-                    <span
-                      className={`${tag.color} inline-block mb-3 text-[10px] font-bold uppercase text-white px-3 py-1 rounded-full`}
-                    >
-                      {tag.text}
-                    </span>
-                  )}
+                <div className="p-5 flex flex-col justify-between flex-1">
+                  <div>
+                    {/* Category Tag */}
+                    {tag.text && (
+                      <span
+                        className={`${tag.color} inline-block mb-3 text-[10px] font-bold uppercase text-white px-3 py-1 rounded-full`}
+                      >
+                        {tag.text}
+                      </span>
+                    )}
 
-                  <h3 className="text-lg font-semibold text-[#121213] leading-snug mb-2 line-clamp-2">
-                    <Link href={`/post/${post.slug}`} className="hover:text-[#0073ff] transition">
-                      {post.title}
-                    </Link>
-                  </h3>
+                    <h3 className="text-lg font-semibold text-[#121213] leading-snug mb-2 line-clamp-2">
+                      <Link href={`/post/${post.slug}`} className="hover:text-[#0073ff] transition">
+                        {post.title}
+                      </Link>
+                    </h3>
 
-                  {post.excerpt && (
-                    <p className="text-sm text-[#616c74] leading-relaxed line-clamp-3">
-                      {post.excerpt}
-                    </p>
-                  )}
+                    {post.excerpt && (
+                      <p className="text-sm text-[#616c74] leading-relaxed line-clamp-3">
+                        {post.excerpt}
+                      </p>
+                    )}
+                  </div>
 
                   {/* Read More Link */}
                   <Link
