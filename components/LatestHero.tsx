@@ -326,14 +326,17 @@ export default function LatestHero({ post, posts }: LatestHeroProps) {
                       const tag = getTag(item)
                       return tag.text ? (
                         <span
-                          className={`inline-block font-bold text-xs font-semibold px-2 py-1 rounded ${tag.color} text-white mb-2`}
+                          className={`inline-block text-[20px] font-bold text-xs font-semibold px-2 py-1 rounded ${tag.color} text-white mb-2`}
                         >
                           {tag.text}
                         </span>
                       ) : null
                     })()}
 
-                    <h3 className="text-[16px] font-bold leading-snug text-[#121213] group-hover:text-blue-600 transition">
+                    <h3
+                      style={{ fontSize: "20px" }}
+                      className="text-[20px] font-bold leading-snug text-[#121213] group-hover:text-blue-600 transition"
+                    >
                       {item.title}
                     </h3>
 
