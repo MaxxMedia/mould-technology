@@ -88,10 +88,6 @@ export const metadata: Metadata = {
     site: "@toolingtrends",
   },
   
-  alternates: {
-    canonical: "https://www.toolingtrends.com",
-  },
-  
   category: "technology",
   
   classification: "Manufacturing Technology News",

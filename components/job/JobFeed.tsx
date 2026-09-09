@@ -12,7 +12,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination"
 
-type Job = {
+export type Job = {
   id: number
   title: string
   slug: string
@@ -51,12 +51,14 @@ function normalize(value?: string) {
 export default function JobFeed({
   isPublic = false,
   filters,
+  initialJobs = [],
 }: {
   isPublic?: boolean
   filters?: JobFilters
+  initialJobs?: Job[]
 }) {
-  const [allJobs, setAllJobs] = useState<Job[]>([])
-  const [loading, setLoading] = useState(true)
+  const [allJobs, setAllJobs] = useState<Job[]>(initialJobs)
+  const [loading, setLoading] = useState(initialJobs.length === 0)
   const [currentPage, setCurrentPage] = useState(1)
   const router = useRouter()
 
@@ -74,7 +76,7 @@ export default function JobFeed({
   // filtering works reliably regardless of what the API supports server-side.
   useEffect(() => {
     async function loadAllJobs() {
-      setLoading(true)
+      if (initialJobs.length === 0) setLoading(true)
 
       let page = 1
       let totalPages = 1

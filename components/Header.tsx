@@ -208,6 +208,11 @@ export default function Header() {
                 <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[#B30F24] transition-all group-hover:w-full" />
               </button>
 
+              <Link href="/blog" className="group relative">
+                Blog
+                <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[#B30F24] transition-all group-hover:w-full" />
+              </Link>
+
               <Link href="/magazines" className="group relative">
                 Magazine
                 <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[#B30F24] transition-all group-hover:w-full" />
@@ -612,6 +617,7 @@ export default function Header() {
 
             <nav className="py-4 text-white font-semibold">
 
+              <Link href="/blog" className="block px-6 py-4 border-b border-white/10 hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>Blog</Link>
               <Link href="/magazines" className="block px-6 py-4 border-b border-white/10 hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>Magazine</Link>
               <Link href="/suppliers" className="block px-6 py-4 border-b border-white/10 hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>Directory</Link>
               <Link href="/mmtchats" className="block px-6 py-4 border-b border-white/10 hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>Industry Talks</Link>

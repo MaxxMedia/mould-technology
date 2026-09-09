@@ -13,11 +13,17 @@ type Magazine = {
   createdAt?: string
 }
 
-export default function MagazineArchive() {
-  const [magazines, setMagazines] = useState<Magazine[]>([])
-  const [loading, setLoading] = useState(true)
+export default function MagazineArchive({
+  initialMagazines = [],
+}: {
+  initialMagazines?: Magazine[]
+}) {
+  const [magazines, setMagazines] = useState<Magazine[]>(initialMagazines)
+  const [loading, setLoading] = useState(initialMagazines.length === 0)
 
   useEffect(() => {
+    if (initialMagazines.length > 0) return
+
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/magazines`)
       .then((res) => res.json())
       .then((data) => {
@@ -42,7 +48,7 @@ export default function MagazineArchive() {
       .finally(() => {
         setLoading(false)
       })
-  }, [])
+  }, [initialMagazines])
 
   if (loading) return <p className="p-10">Loading...</p>
 

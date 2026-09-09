@@ -148,14 +148,18 @@ function SubscribeForm() {
   )
 }
 
-export default function EventsContent() {
+export default function EventsContent({
+  initialEvents = [],
+}: {
+  initialEvents?: Event[]
+}) {
   const searchParams = useSearchParams()
   const dateParam = searchParams.get("date")
 
-  const [events, setEvents] = useState<Event[]>([])
-  const [allEvents, setAllEvents] = useState<Event[]>([])
+  const [events, setEvents] = useState<Event[]>(initialEvents)
+  const [allEvents, setAllEvents] = useState<Event[]>(initialEvents)
   const [industries, setIndustries] = useState<Industry[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(initialEvents.length === 0)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedIndustry, setSelectedIndustry] = useState("")
 
@@ -164,7 +168,9 @@ export default function EventsContent() {
   const eventsPerPage = 10
 
   useEffect(() => {
-    fetchEvents()
+    if (initialEvents.length === 0) {
+      fetchEvents()
+    }
     fetchIndustries()
   }, [])
 
@@ -206,8 +212,9 @@ export default function EventsContent() {
       }
 
       const data = await res.json()
-      setAllEvents(data)
-      setEvents(data)
+      const list = Array.isArray(data) ? data : data?.data || []
+      setAllEvents(list)
+      setEvents(list)
     } catch (error) {
       console.error("Error fetching events:", error)
       setEvents([])
@@ -317,9 +324,11 @@ export default function EventsContent() {
       <div className="bg-gradient-to-br from-[#0f5b78] via-black to-[#b30f24] text-white">
         <div className="max-w-7xl mx-auto px-6 py-14 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
           <div>
-            <h1 className="text-4xl font-bold mb-3">Events</h1>
+            <h1 className="text-4xl font-bold mb-3">
+              Manufacturing Events &amp; Trade Shows
+            </h1>
             <p className="text-blue-100 max-w-xl">
-              Discover the best exhibitions, conferences and trade shows in the tooling and manufacturing industry.
+              Discover exhibitions, conferences, and trade shows covering CNC machining, dies and moulds, cutting tools, and factory automation.
             </p>
           </div>
 

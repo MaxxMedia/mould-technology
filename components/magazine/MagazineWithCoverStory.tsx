@@ -22,20 +22,32 @@ type Magazine = {
   coverStory?: CoverStory
 }
 
-export default function MagazineWithCoverStory() {
-  const [magazine, setMagazine] = useState<Magazine | null>(null)
-  const [loading, setLoading] = useState(true)
+export default function MagazineWithCoverStory({
+  initialMagazine = null,
+}: {
+  initialMagazine?: Magazine | null
+}) {
+  const [magazine, setMagazine] = useState<Magazine | null>(initialMagazine)
+  const [loading, setLoading] = useState(!initialMagazine)
 
   useEffect(() => {
+    if (initialMagazine) return
+
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/magazines`)
       .then(res => res.json())
       .then(data => {
-        if (data.length > 0) {
-          setMagazine(data[0])
+        const list = Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data)
+            ? data
+            : []
+        if (list.length > 0) {
+          setMagazine(list[0])
         }
         setLoading(false)
       })
-  }, [])
+      .catch(() => setLoading(false))
+  }, [initialMagazine])
 
   if (loading) return <p className="p-10">Loading...</p>
   if (!magazine) return null

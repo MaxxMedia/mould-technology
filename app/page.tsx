@@ -225,8 +225,24 @@ import TrendingSection from "@/components/TrendingSection"
 import CompanyArticles from "@/components/company/CompanyArticles"
 import HomeCompanyArticles from "@/components/HomeCompanyArticles"
 import Banner from "@/components/Banners/Banner";
+import { listingMetadata } from "@/lib/seo"
 
 export const dynamic = "force-dynamic"
+
+export const metadata = listingMetadata({
+  title: "Industrial & Manufacturing Technology News",
+  description:
+    "Latest industrial manufacturing technology news and insights covering CNC machining, dies and moulds, cutting tools, factory automation, CAD/CAM, and Industry 4.0.",
+  path: "/",
+  keywords: [
+    "manufacturing technology news",
+    "tooling trends",
+    "CNC machining",
+    "dies and moulds",
+    "factory automation",
+    "Industry 4.0",
+  ],
+})
 
 export default async function Home() {
   /* ================= FETCH POSTS ================= */
