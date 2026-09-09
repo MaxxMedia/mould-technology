@@ -13,6 +13,9 @@ import {
   Users,
   UserPlus,
   ShieldCheck,
+  Factory,
+  Plus,
+  List,
 } from "lucide-react"
 
 const SUPER_ROLES = ["super_admin", "admin"]
@@ -43,6 +46,9 @@ export default function AdminLayout({
 
     pathname.startsWith("/admin/Users")
 
+  )
+  const [industriesOpen, setIndustriesOpen] = useState(
+    pathname.startsWith("/admin/industries")
   )
 
   useEffect(() => {
@@ -304,12 +310,57 @@ export default function AdminLayout({
             />
           )}
 
+          {can("industries.view") && (
+            <div>
+              <button
+                onClick={() => setIndustriesOpen(!industriesOpen)}
+                className={`flex items-center justify-between w-full px-4 py-2.5 rounded-md text-sm font-medium transition-all
+                  ${pathname.startsWith("/admin/industries")
+                    ? "bg-white/20 text-white"
+                    : "text-white/80 hover:bg-white/10 hover:text-white"
+                  }
+                `}
+              >
+                <div className="flex items-center gap-3">
+                  <Factory size={18} />
+                  <span>Industry</span>
+                </div>
+                <span className="text-xs">
+                  {industriesOpen ? "▾" : "▸"}
+                </span>
+              </button>
+
+              {industriesOpen && (
+                <div className="ml-6 mt-1 space-y-1">
+                  {can("industries.create") && (
+                    <SidebarLink
+                      href="/admin/industries/create"
+                      label="Create Industry"
+                      icon={<Plus size={16} />}
+                      active={pathname === "/admin/industries/create"}
+                    />
+                  )}
+                  <SidebarLink
+                    href="/admin/industries"
+                    label="All Industry"
+                    icon={<List size={16} />}
+                    active={
+                      pathname === "/admin/industries" ||
+                      (pathname.startsWith("/admin/industries/") &&
+                        pathname !== "/admin/industries/create")
+                    }
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
           {can("industry_talks.view") && (
             <SidebarLink
               href="/admin/industry-talks"
               label="Industry Talks"
               icon={<Folder size={18} />}
-              active={pathname === "/admin/mmt-chats"}
+              active={pathname === "/admin/industry-talks" || pathname.startsWith("/admin/industry-talks")}
             />
           )}
 

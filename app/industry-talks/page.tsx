@@ -1,5 +1,7 @@
 import IndustryTalkListing from "@/components/IndustryTalkListing"
 
+export const dynamic = "force-dynamic"
+
 export default async function IndustryTalksPage() {
   let talks: any[] = []
 

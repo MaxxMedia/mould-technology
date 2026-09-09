@@ -226,28 +226,29 @@ import CompanyArticles from "@/components/company/CompanyArticles"
 import HomeCompanyArticles from "@/components/HomeCompanyArticles"
 import Banner from "@/components/Banners/Banner";
 
+export const dynamic = "force-dynamic"
 
 export default async function Home() {
   /* ================= FETCH POSTS ================= */
 
-  const postsRes = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/posts?limit=50`,
-    { cache: "no-store" }
-  );
+  let posts: Post[] = []
 
-  const text = await postsRes.text();
+  try {
+    const postsRes = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/posts?limit=50`,
+      { cache: "no-store" }
+    )
 
-  console.log("Posts API:", text);
-
-  if (!text) {
-    throw new Error("Posts API returned empty response");
+    if (postsRes.ok) {
+      const postsData = await postsRes.json()
+      const parsed = postsData?.data || postsData
+      posts = Array.isArray(parsed) ? parsed : []
+    }
+  } catch (error) {
+    console.error("Error fetching homepage posts:", error)
   }
 
-  const postsData = JSON.parse(text);
-
-  const posts: Post[] = postsData.data || postsData
-
-  if (!Array.isArray(posts) || posts.length === 0) {
+  if (posts.length === 0) {
     return <div className="text-center p-10 text-[16px]">No posts available</div>
   }
 
