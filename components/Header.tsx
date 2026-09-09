@@ -6,6 +6,7 @@ import { Menu, X, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import type { Post } from "@/types/Post"
 import { ARTICLE_TOPICS as TOPICS, RESOURCE_TOPICS as RESOURCES } from "@/lib/topic"
+import { getApiUrl } from "@/lib/apiUrl"
 
 /* ================= TYPES ================= */
 type MegaType = "topics" | "resources" | null
@@ -74,7 +75,7 @@ export default function Header() {
     try {
       // ✅ FIXED: limit=4 -> limit=6
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/posts?category=${encodeURIComponent(slug)}&limit=6`
+        `${getApiUrl()}/api/posts?category=${encodeURIComponent(slug)}&limit=6`
       )
       const data = await res.json()
       const posts: Post[] = Array.isArray(data?.data) ? data.data : []
@@ -88,7 +89,7 @@ export default function Header() {
   }
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/events`)
+    fetch(`${getApiUrl()}/api/events`)
       .then(res => res.json())
       .then(data => {
         setEvents(Array.isArray(data) ? data : [])
@@ -97,7 +98,7 @@ export default function Header() {
   }, [])
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/suppliers?limit=6`)
+    fetch(`${getApiUrl()}/api/suppliers?limit=6`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {

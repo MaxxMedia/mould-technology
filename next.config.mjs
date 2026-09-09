@@ -24,7 +24,21 @@
 // export default nextConfig
 
 /** @type {import('next').NextConfig} */
+
+function resolveApiUrl() {
+  const raw = (process.env.NEXT_PUBLIC_API_URL || "").trim()
+  if (raw && raw !== "undefined") {
+    return raw.replace(/\/$/, "")
+  }
+  return process.env.NODE_ENV === "production"
+    ? "https://api.toolingtrends.com"
+    : "http://localhost:5000"
+}
+
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_API_URL: resolveApiUrl(),
+  },
   images: {
     qualities: [70, 75], // ✅ allow quality 70
 

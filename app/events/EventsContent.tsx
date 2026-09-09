@@ -16,6 +16,7 @@ import {
   Globe2,
 } from "lucide-react"
 import EventCalendar from "@/components/events/Eventcalendar"
+import { getApiUrl } from "@/lib/apiUrl"
 
 type Event = {
   id: number
@@ -174,7 +175,7 @@ export default function EventsContent() {
 
   const fetchIndustries = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+      const baseUrl = getApiUrl()
       const res = await fetch(`${baseUrl}/api/industries`)
       if (!res.ok) {
         setIndustries([])
@@ -191,7 +192,7 @@ export default function EventsContent() {
   const fetchEvents = async (search?: string, industryId?: string) => {
     setLoading(true)
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+      const baseUrl = getApiUrl()
       const url = new URL("/api/events", baseUrl)
       if (search) url.searchParams.set("q", search)
       if (industryId) url.searchParams.set("industryId", industryId)

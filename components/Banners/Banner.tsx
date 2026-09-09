@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { getApiUrl } from "@/lib/apiUrl";
 
 export type BannerPlacement =
     | "HOME_TOP"
@@ -76,7 +77,7 @@ export default function Banner({ placement, limit, sticky = true }: BannerProps)
         const fetchBanners = async () => {
             try {
                 const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/banners?placement=${placement}`,
+                    `${getApiUrl()}/api/banners?placement=${placement}`,
                     { cache: "no-store" }
                 );
 

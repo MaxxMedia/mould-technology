@@ -1,4 +1,6 @@
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+import { getApiUrl } from "@/lib/apiUrl";
+
+const API = getApiUrl();
 
 function authHeaders() {
   const token = localStorage.getItem("token");

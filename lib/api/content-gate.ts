@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { ContactFormData, ApiResponse } from './contact';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+import { getApiUrl } from "@/lib/apiUrl";
+
+const API_BASE_URL = getApiUrl();
 
 export interface ContentGateFormData {
   firstName: string;

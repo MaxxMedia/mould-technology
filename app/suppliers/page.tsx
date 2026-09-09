@@ -8,6 +8,7 @@ import SupplierFilters from "./SupplierFilters"
 
 import StandOut from "@/components/suppliers/StandOut";
 import Banner from "@/components/Banners/Banner";
+import { getApiUrl } from "@/lib/apiUrl"
 
 type Supplier = {
   id: number
@@ -64,7 +65,7 @@ function SuppliersPageContent() {
       params.set("sort", sort)
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/suppliers?${params.toString()}`
+        `${getApiUrl()}/api/suppliers?${params.toString()}`
       )
       const data = await res.json()
 

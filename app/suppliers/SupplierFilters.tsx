@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { ChevronDown, Search, MapPin, Tag, X, Loader2 } from "lucide-react"
+import { getApiUrl } from "@/lib/apiUrl"
 
 type Industry = {
   id: number
@@ -75,7 +76,7 @@ export default function SupplierFilters({ onFilterChange, initialIndustryName }:
 
   // Fetch root industries
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/industries`)
+    fetch(`${getApiUrl()}/api/industries`)
       .then(res => res.json())
       .then(data => {
         const list = Array.isArray(data) ? data : data.data ?? []
@@ -91,7 +92,7 @@ export default function SupplierFilters({ onFilterChange, initialIndustryName }:
     setLoadingChildren(prev => new Set(prev).add(id))
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/industries/${id}/children`
+        `${getApiUrl()}/api/industries/${id}/children`
       )
       const children = await res.json()
       setChildrenCache(prev => ({ ...prev, [id]: Array.isArray(children) ? children : children.data ?? [] }))
