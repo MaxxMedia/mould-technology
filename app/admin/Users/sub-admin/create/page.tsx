@@ -45,6 +45,7 @@ export default function AddNewSubAdminPage() {
     // — unlike the edit page, which needs the tri-state OverrideMap.
     const [permissionModules, setPermissionModules] = useState<PermissionsByModule>({});
     const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
+    const [roleDefaultKeys, setRoleDefaultKeys] = useState<Set<string>>(new Set());
     const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
     const [loadingMeta, setLoadingMeta] = useState(true);
@@ -73,6 +74,28 @@ export default function AddNewSubAdminPage() {
         loadMeta();
     }, []);
 
+    useEffect(() => {
+        if (!roleId) {
+            setRoleDefaultKeys(new Set());
+            return;
+        }
+        let cancelled = false;
+        fetch(`${API_URL}/api/admin/roles/${roleId}/permissions`, { headers: authHeaders() })
+            .then((res) => res.json())
+            .then((data) => {
+                if (cancelled) return;
+                if (data?.permissions) {
+                    setRoleDefaultKeys(new Set(data.permissions.map((p: Permission) => p.key)));
+                }
+            })
+            .catch(() => {
+                if (!cancelled) setRoleDefaultKeys(new Set());
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [roleId]);
+
     function toggleExpand(mod: string) {
         setExpanded((prev) => {
             const next = new Set(prev);
@@ -81,7 +104,12 @@ export default function AddNewSubAdminPage() {
         });
     }
 
+    function isEffectivelyGranted(key: string) {
+        return roleDefaultKeys.has(key) || selectedKeys.has(key);
+    }
+
     function togglePermission(key: string) {
+        if (roleDefaultKeys.has(key)) return;
         setSelectedKeys((prev) => {
             const next = new Set(prev);
             next.has(key) ? next.delete(key) : next.add(key);
@@ -91,10 +119,12 @@ export default function AddNewSubAdminPage() {
 
     function toggleModuleAll(mod: string) {
         const modPerms = permissionModules[mod] || [];
-        const allSelected = modPerms.every((p) => selectedKeys.has(p.key));
+        const extras = modPerms.filter((p) => !roleDefaultKeys.has(p.key));
+        if (extras.length === 0) return;
+        const allSelected = extras.every((p) => selectedKeys.has(p.key));
         setSelectedKeys((prev) => {
             const next = new Set(prev);
-            modPerms.forEach((p) => (allSelected ? next.delete(p.key) : next.add(p.key)));
+            extras.forEach((p) => (allSelected ? next.delete(p.key) : next.add(p.key)));
             return next;
         });
     }
@@ -118,7 +148,7 @@ export default function AddNewSubAdminPage() {
                     password: form.password,
                     fullName: form.fullName || undefined,
                     roleId: roleId ? Number(roleId) : null,
-                    permissions: Array.from(selectedKeys),
+                    permissions: Array.from(selectedKeys).filter((key) => !roleDefaultKeys.has(key)),
                 }),
             });
             const data = await res.json();
@@ -223,8 +253,8 @@ export default function AddNewSubAdminPage() {
                         {moduleNames.map((mod) => {
                             const isOpen = expanded.has(mod);
                             const modPerms = permissionModules[mod];
-                            const allSelected = modPerms.every((p) => selectedKeys.has(p.key));
-                            const someSelected = modPerms.some((p) => selectedKeys.has(p.key));
+                            const allSelected = modPerms.every((p) => isEffectivelyGranted(p.key));
+                            const someSelected = modPerms.some((p) => isEffectivelyGranted(p.key));
                             return (
                                 <div key={mod} className="border-b border-gray-50">
                                     <div className="flex items-center gap-2 py-2.5">
@@ -265,11 +295,15 @@ export default function AddNewSubAdminPage() {
                                                 >
                                                     <input
                                                         type="checkbox"
-                                                        checked={selectedKeys.has(perm.key)}
+                                                        checked={isEffectivelyGranted(perm.key)}
+                                                        disabled={roleDefaultKeys.has(perm.key)}
                                                         onChange={() => togglePermission(perm.key)}
                                                         className="accent-blue-600"
                                                     />
                                                     {perm.label}
+                                                    {roleDefaultKeys.has(perm.key) && (
+                                                        <span className="text-[10px] text-blue-500">role</span>
+                                                    )}
                                                 </label>
                                             ))}
                                         </div>

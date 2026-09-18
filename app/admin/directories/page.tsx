@@ -14,7 +14,8 @@ import {
   XCircle,
   Clock,
   Users,
-  LogIn
+  LogIn,
+  Pencil
 } from "lucide-react"
 import AdminPagination, { ADMIN_PAGE_SIZE } from "@/components/admin/AdminPagination"
 
@@ -26,6 +27,7 @@ type Directory = {
   id: number
   name: string
   slug: string
+  logoUrl?: string | null
   status: "PENDING" | "APPROVED" | "REJECTED"
   isLiveEditable: boolean
   views?: number
@@ -469,9 +471,24 @@ export default function AdminDirectoriesPage() {
                   return (
                     <tr key={dir.id} className="hover:bg-gray-50">
                       <td className="py-3 font-medium">
-                        {dir.name}
-                        <div className="text-xs text-gray-400">
-                          /suppliers/{dir.slug}
+                        <div className="flex items-center gap-3">
+                          {dir.logoUrl ? (
+                            <img
+                              src={dir.logoUrl}
+                              alt=""
+                              className="w-10 h-10 rounded object-contain border bg-white"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded border bg-gray-50 flex items-center justify-center text-[10px] text-gray-400">
+                              Logo
+                            </div>
+                          )}
+                          <div>
+                            {dir.name}
+                            <div className="text-xs text-gray-400">
+                              /suppliers/{dir.slug}
+                            </div>
+                          </div>
                         </div>
                       </td>
 
@@ -562,13 +579,22 @@ export default function AdminDirectoriesPage() {
                         )}
                       </td>
 
-                      <td className="text-right">
-                        <Link
-                          href={`/admin/directories/${dir.id}`}
-                          className="text-blue-600 hover:underline text-sm"
-                        >
-                          Review
-                        </Link>
+                      <td className="text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-3">
+                          <Link
+                            href={`/admin/directories/${dir.id}/edit`}
+                            className="inline-flex items-center gap-1 text-indigo-600 hover:underline text-sm"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                            Edit
+                          </Link>
+                          <Link
+                            href={`/admin/directories/${dir.id}`}
+                            className="text-blue-600 hover:underline text-sm"
+                          >
+                            Review
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   )

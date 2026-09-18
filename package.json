@@ -6,7 +6,9 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint .",
-    "start": "next start"
+    "start": "next start",
+    "seed:latest-industries": "node ../newsprk-backend/prisma/seedTagmaIndustries.js",
+    "seed:tagma-industries": "node ../newsprk-backend/prisma/seedTagmaIndustries.js"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",

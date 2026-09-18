@@ -21,9 +21,31 @@ import {
 const SUPER_ROLES = ["super_admin", "admin"]
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
+function normalizePermissionList(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return []
+  const keys: string[] = []
+  for (const item of raw) {
+    if (typeof item === "string" && item.trim()) {
+      keys.push(item.trim())
+    } else if (item && typeof item === "object" && "key" in item) {
+      const key = String((item as { key?: unknown }).key || "").trim()
+      if (key) keys.push(key)
+    }
+  }
+  return keys
+}
+
 function hasPermission(role: string | undefined, permissions: string[], key: string) {
-  if (role && SUPER_ROLES.includes(role)) return true
+  const normalizedRole = role?.toLowerCase()
+  if (normalizedRole && SUPER_ROLES.includes(normalizedRole)) return true
   return permissions.includes(key)
+}
+
+function hasModuleAccess(role: string | undefined, permissions: string[], module: string) {
+  const normalizedRole = role?.toLowerCase()
+  if (normalizedRole && SUPER_ROLES.includes(normalizedRole)) return true
+  const prefix = `${module}.`
+  return permissions.some((p) => p === module || p.startsWith(prefix))
 }
 
 export default function AdminLayout({
@@ -86,8 +108,9 @@ export default function AdminLayout({
         }
 
         const me = await res.json()
+        const normalizedRole = String(me?.role || "").toLowerCase()
 
-        if (!me?.role || !["admin", "super_admin", "sub_admin"].includes(me.role)) {
+        if (!["admin", "super_admin", "sub_admin"].includes(normalizedRole)) {
           router.replace("/unauthorized")
           return
         }
@@ -98,12 +121,14 @@ export default function AdminLayout({
           return
         }
 
+        const freshKeys = normalizePermissionList(me.permissions)
+
         // Keep localStorage in sync so other reads elsewhere in the
         // app (if any) aren't looking at outdated values either.
-        localStorage.setItem("permissions", JSON.stringify(me.permissions || []))
+        localStorage.setItem("permissions", JSON.stringify(freshKeys))
 
-        setRole(me.role)
-        setPermissions(me.permissions || [])
+        setRole(normalizedRole)
+        setPermissions(freshKeys)
         setAllowed(true)
       } catch {
         localStorage.clear()
@@ -126,6 +151,7 @@ export default function AdminLayout({
   if (!allowed) return null
 
   const can = (key: string) => hasPermission(role, permissions, key)
+  const canModule = (module: string) => hasModuleAccess(role, permissions, module)
   const isSuperAdmin = role ? SUPER_ROLES.includes(role) : false
 
   return (
@@ -142,7 +168,7 @@ export default function AdminLayout({
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {can("dashboard.view") && (
+          {(canModule("dashboard") || permissions.length > 0) && (
             <SidebarLink
               href="/admin/dashboard"
               label="Dashboard"
@@ -151,7 +177,7 @@ export default function AdminLayout({
             />
           )}
 
-          {can("articles.view") && (
+          {canModule("articles") && (
             <div>
               <button
                 onClick={() => setArticlesOpen(!articlesOpen)}
@@ -238,7 +264,7 @@ export default function AdminLayout({
             </div>
           )}
 
-          {can("packages.view") && (
+          {canModule("packages") && (
             <SidebarLink
               href="/admin/packages"
               label="Packages"
@@ -247,7 +273,7 @@ export default function AdminLayout({
             />
           )}
 
-          {can("banners.view") && (
+          {canModule("banners") && (
             <SidebarLink
               href="/admin/banners"
               label="Banners"
@@ -256,7 +282,7 @@ export default function AdminLayout({
             />
           )}
 
-          {can("events.view") && (
+          {canModule("events") && (
             <SidebarLink
               href="/admin/events"
               label="Events"
@@ -265,7 +291,7 @@ export default function AdminLayout({
             />
           )}
 
-          {can("leads.view") && (
+          {canModule("leads") && (
             <SidebarLink
               href="/admin/leads"
               label="Leads"
@@ -274,7 +300,7 @@ export default function AdminLayout({
             />
           )}
 
-          {can("contact.view") && (
+          {canModule("contact") && (
             <SidebarLink
               href="/admin/contact"
               label="Contact"
@@ -283,7 +309,7 @@ export default function AdminLayout({
             />
           )}
 
-          {can("jobs.view") && (
+          {canModule("jobs") && (
             <SidebarLink
               href="/admin/jobs"
               label="Jobs"
@@ -292,7 +318,7 @@ export default function AdminLayout({
             />
           )}
 
-          {can("supplier.view") && (
+          {canModule("supplier") && (
             <SidebarLink
               href="/admin/directories"
               label="Supplier Listing"
@@ -301,7 +327,7 @@ export default function AdminLayout({
             />
           )}
 
-          {can("magazine.view") && (
+          {canModule("magazine") && (
             <SidebarLink
               href="/admin/magazines"
               label="Magazine"
@@ -310,7 +336,7 @@ export default function AdminLayout({
             />
           )}
 
-          {can("industries.view") && (
+          {canModule("industries") && (
             <div>
               <button
                 onClick={() => setIndustriesOpen(!industriesOpen)}
@@ -355,7 +381,7 @@ export default function AdminLayout({
             </div>
           )}
 
-          {can("industry_talks.view") && (
+          {canModule("industry_talks") && (
             <SidebarLink
               href="/admin/industry-talks"
               label="Industry Talks"
@@ -364,7 +390,7 @@ export default function AdminLayout({
             />
           )}
 
-          {can("newsletter.view") && (
+          {canModule("newsletter") && (
             <SidebarLink
               href="/admin/newsletter"
               label="Newsletter"
@@ -372,7 +398,7 @@ export default function AdminLayout({
               active={pathname.startsWith("/admin/newsletter")}
             />
           )}
-          {can("webinar.view") && (
+          {canModule("webinar") && (
             <SidebarLink
               href="/admin/webinar"
               label="Webinar"

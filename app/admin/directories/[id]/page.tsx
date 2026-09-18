@@ -88,6 +88,19 @@ export default function ReviewDirectoryPage() {
       </h1>
 
       <div className="bg-white rounded shadow p-6 space-y-4">
+        {directory.logoUrl && (
+          <div>
+            <strong>Logo:</strong>
+            <div className="mt-2 w-24 h-24 border rounded bg-gray-50 flex items-center justify-center overflow-hidden">
+              <img
+                src={directory.logoUrl}
+                alt={`${directory.name} logo`}
+                className="max-w-full max-h-full object-contain"
+              />
+            </div>
+          </div>
+        )}
+
         <div>
           <strong>Company:</strong> {directory.name}
         </div>
@@ -123,6 +136,13 @@ export default function ReviewDirectoryPage() {
       </div>
 
       <div className="flex gap-4 mt-6">
+        <button
+          onClick={() => router.push(`/admin/directories/${directory.id}/edit`)}
+          className="bg-indigo-600 text-white px-6 py-2 rounded"
+        >
+          Edit
+        </button>
+
         <button
           onClick={approve}
           className="bg-green-600 text-white px-6 py-2 rounded"
