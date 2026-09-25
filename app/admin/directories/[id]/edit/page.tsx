@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft, Building2, Upload, X } from "lucide-react"
+import { adminDirectoriesListHref } from "@/lib/adminDirectoriesUrl"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -59,8 +60,27 @@ function joinTradeNames(value: unknown) {
 }
 
 export default function AdminEditDirectoryPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#f6f8fc]">
+          <div className="w-14 h-14 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <AdminEditDirectoryForm />
+    </Suspense>
+  )
+}
+
+function AdminEditDirectoryForm() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const listHref = adminDirectoriesListHref({
+    page: searchParams.get("page"),
+    filter: searchParams.get("filter"),
+  })
 
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [companyName, setCompanyName] = useState("")
@@ -180,10 +200,7 @@ export default function AdminEditDirectoryPage() {
         throw new Error(data.error || "Failed to update directory")
       }
 
-      if (data.directory?.slug) {
-        updateField("slug", data.directory.slug)
-      }
-      setSuccess("Supplier directory updated")
+      router.push(listHref)
     } catch (err: any) {
       setError(err.message || "Failed to update directory")
     } finally {
@@ -205,7 +222,7 @@ export default function AdminEditDirectoryPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <Link
-              href="/admin/directories"
+              href={listHref}
               className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 mb-2"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -414,7 +431,7 @@ export default function AdminEditDirectoryPage() {
             </button>
             <button
               type="button"
-              onClick={() => router.push("/admin/directories")}
+              onClick={() => router.push(listHref)}
               className="border px-5 py-2 rounded-lg hover:bg-gray-50"
             >
               Cancel

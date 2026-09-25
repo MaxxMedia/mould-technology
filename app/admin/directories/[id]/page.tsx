@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { Suspense, useEffect, useState } from "react"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
+import { adminDirectoriesListHref, adminDirectoryEditHref } from "@/lib/adminDirectoriesUrl"
 
 type Directory = {
   id: number
@@ -18,8 +19,25 @@ type Directory = {
 }
 
 export default function ReviewDirectoryPage() {
+  return (
+    <Suspense fallback={<div className="p-10">Loading...</div>}>
+      <ReviewDirectoryContent />
+    </Suspense>
+  )
+}
+
+function ReviewDirectoryContent() {
   const { id } = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const listHref = adminDirectoriesListHref({
+    page: searchParams.get("page"),
+    filter: searchParams.get("filter"),
+  })
+  const editHref = adminDirectoryEditHref(String(id), {
+    page: searchParams.get("page"),
+    filter: searchParams.get("filter"),
+  })
 
   const [directory, setDirectory] = useState<Directory | null>(null)
   const [loading, setLoading] = useState(true)
@@ -60,7 +78,7 @@ export default function ReviewDirectoryPage() {
     )
 
     alert("Directory approved")
-    router.push("/admin/directories")
+    router.push(listHref)
   }
 
   async function reject() {
@@ -75,7 +93,7 @@ export default function ReviewDirectoryPage() {
     )
 
     alert("Directory rejected")
-    router.push("/admin/directories")
+    router.push(listHref)
   }
 
   if (loading) return <div className="p-10">Loading...</div>
@@ -137,7 +155,7 @@ export default function ReviewDirectoryPage() {
 
       <div className="flex gap-4 mt-6">
         <button
-          onClick={() => router.push(`/admin/directories/${directory.id}/edit`)}
+          onClick={() => router.push(editHref)}
           className="bg-indigo-600 text-white px-6 py-2 rounded"
         >
           Edit

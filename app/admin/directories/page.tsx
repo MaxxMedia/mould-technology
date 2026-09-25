@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { Suspense, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { 
   Building2, 
   Eye, 
@@ -18,6 +19,11 @@ import {
   Pencil
 } from "lucide-react"
 import AdminPagination, { ADMIN_PAGE_SIZE } from "@/components/admin/AdminPagination"
+import {
+  adminDirectoriesListHref,
+  adminDirectoryEditHref,
+  adminDirectoryReviewHref,
+} from "@/lib/adminDirectoriesUrl"
 
 const PAGE_SIZE = ADMIN_PAGE_SIZE
 
@@ -49,12 +55,45 @@ type Directory = {
 /* ================= PAGE ================= */
 
 export default function AdminDirectoriesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#f6f8fc]">
+          <div className="w-14 h-14 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <AdminDirectoriesList />
+    </Suspense>
+  )
+}
+
+function AdminDirectoriesList() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const pageFromUrl = Number(searchParams.get("page"))
+  const currentPage = Number.isInteger(pageFromUrl) && pageFromUrl > 0 ? pageFromUrl : 1
+  const filterStatus = searchParams.get("filter") || "all"
+
   const [directories, setDirectories] = useState<Directory[]>([])
   const [loading, setLoading] = useState(true)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [filterStatus, setFilterStatus] = useState<string>("all")
   const [sendingId, setSendingId] = useState<number | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
+  function updateQuery(next: { page?: number; filter?: string }) {
+    const page = next.page ?? currentPage
+    const filter = next.filter ?? filterStatus
+    const href = adminDirectoriesListHref({ page, filter })
+    const current = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "")
+    if (href !== current) {
+      router.replace(href, { scroll: false })
+    }
+  }
+
+  const setCurrentPage = (page: number) => updateQuery({ page })
+  const setFilterStatus = (filter: string) => updateQuery({ filter, page: 1 })
 
   const token =
     typeof window !== "undefined"
@@ -230,10 +269,11 @@ export default function AdminDirectoriesPage() {
   }, [filteredDirectories, currentPage])
 
   useEffect(() => {
+    if (loading) return
     if (currentPage > totalPages) {
-      setCurrentPage(totalPages)
+      updateQuery({ page: totalPages })
     }
-  }, [currentPage, totalPages])
+  }, [loading, currentPage, totalPages])
 
   /* ================= CHECK IF USER CAN RECEIVE EMAIL ================= */
 
@@ -582,14 +622,20 @@ export default function AdminDirectoriesPage() {
                       <td className="text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-3">
                           <Link
-                            href={`/admin/directories/${dir.id}/edit`}
+                            href={adminDirectoryEditHref(dir.id, {
+                              page: currentPage,
+                              filter: filterStatus,
+                            })}
                             className="inline-flex items-center gap-1 text-indigo-600 hover:underline text-sm"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                             Edit
                           </Link>
                           <Link
-                            href={`/admin/directories/${dir.id}`}
+                            href={adminDirectoryReviewHref(dir.id, {
+                              page: currentPage,
+                              filter: filterStatus,
+                            })}
                             className="text-blue-600 hover:underline text-sm"
                           >
                             Review
