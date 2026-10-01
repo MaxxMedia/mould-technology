@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
-import { adminDirectoriesListHref, adminDirectoryEditHref } from "@/lib/adminDirectoriesUrl"
+import { adminDirectoriesListHref, adminDirectoryEditHref, directoryListSearchFromParams } from "@/lib/adminDirectoriesUrl"
 
 type Directory = {
   id: number
@@ -30,14 +30,9 @@ function ReviewDirectoryContent() {
   const { id } = useParams()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const listHref = adminDirectoriesListHref({
-    page: searchParams.get("page"),
-    filter: searchParams.get("filter"),
-  })
-  const editHref = adminDirectoryEditHref(String(id), {
-    page: searchParams.get("page"),
-    filter: searchParams.get("filter"),
-  })
+  const listSearch = directoryListSearchFromParams(searchParams)
+  const listHref = adminDirectoriesListHref(listSearch)
+  const editHref = adminDirectoryEditHref(String(id), listSearch)
 
   const [directory, setDirectory] = useState<Directory | null>(null)
   const [loading, setLoading] = useState(true)

@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft, Building2, Upload, X } from "lucide-react"
-import { adminDirectoriesListHref } from "@/lib/adminDirectoriesUrl"
+import { adminDirectoriesListHref, directoryListSearchFromParams } from "@/lib/adminDirectoriesUrl"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -77,10 +77,7 @@ function AdminEditDirectoryForm() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const listHref = adminDirectoriesListHref({
-    page: searchParams.get("page"),
-    filter: searchParams.get("filter"),
-  })
+  const listHref = adminDirectoriesListHref(directoryListSearchFromParams(searchParams))
 
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [companyName, setCompanyName] = useState("")

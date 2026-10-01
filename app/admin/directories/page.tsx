@@ -16,14 +16,23 @@ import {
   Clock,
   Users,
   LogIn,
-  Pencil
+  Pencil,
+  Search
 } from "lucide-react"
 import AdminPagination, { ADMIN_PAGE_SIZE } from "@/components/admin/AdminPagination"
 import {
   adminDirectoriesListHref,
   adminDirectoryEditHref,
   adminDirectoryReviewHref,
+  directoryListSearchFromParams,
 } from "@/lib/adminDirectoriesUrl"
+
+const LETTERS = ["#", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")]
+
+function firstLetter(name: string) {
+  const match = String(name || "").trim().toUpperCase().match(/[A-Z]/)
+  return match ? match[0] : "#"
+}
 
 const PAGE_SIZE = ADMIN_PAGE_SIZE
 
@@ -76,16 +85,34 @@ function AdminDirectoriesList() {
   const pageFromUrl = Number(searchParams.get("page"))
   const currentPage = Number.isInteger(pageFromUrl) && pageFromUrl > 0 ? pageFromUrl : 1
   const filterStatus = searchParams.get("filter") || "all"
+  const searchQuery = searchParams.get("q") || ""
+  const sortBy = searchParams.get("sort") || "latest"
+  const statusFilter = searchParams.get("status") || "all"
+  const letterFilter = (searchParams.get("letter") || "").toUpperCase()
+  const listSearch = directoryListSearchFromParams(searchParams)
 
   const [directories, setDirectories] = useState<Directory[]>([])
   const [loading, setLoading] = useState(true)
   const [sendingId, setSendingId] = useState<number | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [searchDraft, setSearchDraft] = useState(searchQuery)
 
-  function updateQuery(next: { page?: number; filter?: string }) {
-    const page = next.page ?? currentPage
-    const filter = next.filter ?? filterStatus
-    const href = adminDirectoriesListHref({ page, filter })
+  function updateQuery(next: {
+    page?: number
+    filter?: string
+    q?: string
+    sort?: string
+    status?: string
+    letter?: string
+  }) {
+    const href = adminDirectoriesListHref({
+      page: next.page ?? currentPage,
+      filter: next.filter ?? filterStatus,
+      q: next.q ?? searchQuery,
+      sort: next.sort ?? sortBy,
+      status: next.status ?? statusFilter,
+      letter: next.letter === undefined ? letterFilter : next.letter,
+    })
     const current = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "")
     if (href !== current) {
       router.replace(href, { scroll: false })
@@ -94,6 +121,10 @@ function AdminDirectoriesList() {
 
   const setCurrentPage = (page: number) => updateQuery({ page })
   const setFilterStatus = (filter: string) => updateQuery({ filter, page: 1 })
+  const clearAllFilters = () => {
+    setSearchDraft("")
+    router.replace("/admin/directories", { scroll: false })
+  }
 
   const token =
     typeof window !== "undefined"
@@ -183,6 +214,19 @@ function AdminDirectoriesList() {
     fetchData()
   }, [token])
 
+  useEffect(() => {
+    setSearchDraft(searchQuery)
+  }, [searchQuery])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchDraft.trim() !== searchQuery) {
+        updateQuery({ q: searchDraft, page: 1 })
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchDraft])
+
   /* ================= SEND EMAIL ================= */
 
   const sendEmail = async (userId: number, userEmail: string) => {
@@ -230,22 +274,63 @@ function AdminDirectoriesList() {
 
   const filteredDirectories = useMemo(() => {
     let result = [...directories]
+    const q = searchQuery.trim().toLowerCase()
 
-    // Filter by Login Status
+    if (q) {
+      result = result.filter((d) => {
+        const haystack = [
+          d.name,
+          d.slug,
+          d.company?.name,
+          d.submittedBy?.email,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+        return haystack.includes(q)
+      })
+    }
+
+    if (statusFilter !== "all") {
+      result = result.filter((d) => d.status === statusFilter)
+    }
+
+    if (letterFilter) {
+      result = result.filter((d) => firstLetter(d.name) === letterFilter)
+    }
+
     if (filterStatus === "logged-in") {
-      // ✅ Users who have logged in (lastLoginAt exists)
-      result = result.filter(d => d.submittedBy?.lastLoginAt)
+      result = result.filter((d) => d.submittedBy?.lastLoginAt)
     } else if (filterStatus === "pending-login") {
-      // ✅ Users who have received email but NOT logged in
-      result = result.filter(d => 
-        d.submittedBy && 
-        !d.submittedBy.lastLoginAt && 
+      result = result.filter((d) =>
+        d.submittedBy &&
+        !d.submittedBy.lastLoginAt &&
         d.submittedBy.emailSentForBulkImport
       )
     }
 
+    result.sort((a, b) => {
+      if (sortBy === "name-asc") {
+        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+      }
+      if (sortBy === "name-desc") {
+        return b.name.localeCompare(a.name, undefined, { sensitivity: "base" })
+      }
+      const aTime = new Date(a.createdAt).getTime() || 0
+      const bTime = new Date(b.createdAt).getTime() || 0
+      if (sortBy === "oldest") return aTime - bTime
+      return bTime - aTime
+    })
+
     return result
-  }, [directories, filterStatus])
+  }, [directories, filterStatus, searchQuery, sortBy, statusFilter, letterFilter])
+
+  const hasExtraFilters =
+    searchQuery.trim() !== "" ||
+    sortBy !== "latest" ||
+    statusFilter !== "all" ||
+    letterFilter !== "" ||
+    filterStatus !== "all"
 
   /* ================= STATS ================= */
 
@@ -388,15 +473,70 @@ function AdminDirectoriesList() {
           </div>
         )}
 
-        {/* FILTERS - Simplified */}
-        <div className="bg-white rounded-xl shadow p-4">
-          <div className="flex items-center gap-6 flex-wrap">
+        {/* FILTERS */}
+        <div className="bg-white rounded-xl shadow p-4 space-y-4">
+          <div className="flex flex-col lg:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchDraft}
+                onChange={(e) => setSearchDraft(e.target.value)}
+                placeholder="Search company, directory name, slug or email..."
+                className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => updateQuery({ sort: e.target.value, page: 1 })}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white lg:w-52"
+            >
+              <option value="latest">Latest created</option>
+              <option value="oldest">Oldest created</option>
+              <option value="name-asc">Name A–Z</option>
+              <option value="name-desc">Name Z–A</option>
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => updateQuery({ status: e.target.value, page: 1 })}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white lg:w-44"
+            >
+              <option value="all">All statuses</option>
+              <option value="APPROVED">Approved</option>
+              <option value="PENDING">Pending</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="text-xs text-gray-500 mr-1">A–Z</span>
+            {LETTERS.map((letter) => (
+              <button
+                key={letter}
+                type="button"
+                onClick={() =>
+                  updateQuery({
+                    letter: letterFilter === letter ? "" : letter,
+                    page: 1,
+                  })
+                }
+                className={`min-w-7 h-7 px-1 rounded text-xs font-medium ${
+                  letterFilter === letter
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {letter}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Filter by:</span>
+              <span className="text-sm font-medium text-gray-700">Login:</span>
             </div>
 
-            {/* All */}
             <button
               onClick={() => setFilterStatus("all")}
               className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
@@ -409,7 +549,6 @@ function AdminDirectoriesList() {
               All ({directories.length})
             </button>
 
-            {/* Pending Login */}
             <button
               onClick={() => setFilterStatus("pending-login")}
               className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
@@ -422,7 +561,6 @@ function AdminDirectoriesList() {
               Pending Login ({pendingLoginCount})
             </button>
 
-            {/* Logged In */}
             <button
               onClick={() => setFilterStatus("logged-in")}
               className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
@@ -435,13 +573,12 @@ function AdminDirectoriesList() {
               Logged In ({loggedInCount})
             </button>
 
-            {/* Clear Filters */}
-            {filterStatus !== "all" && (
+            {hasExtraFilters && (
               <button
-                onClick={() => setFilterStatus("all")}
+                onClick={clearAllFilters}
                 className="text-sm text-red-600 hover:text-red-800 underline"
               >
-                Clear Filter
+                Clear all filters
               </button>
             )}
           </div>
@@ -476,12 +613,12 @@ function AdminDirectoriesList() {
           {filteredDirectories.length === 0 && (
             <div className="text-center py-8">
               <p className="text-gray-500">No suppliers found</p>
-              {filterStatus !== "all" && (
+              {hasExtraFilters && (
                 <button
-                  onClick={() => setFilterStatus("all")}
+                  onClick={clearAllFilters}
                   className="mt-2 text-sm text-blue-600 hover:underline"
                 >
-                  Clear filter to see all suppliers
+                  Clear filters to see all suppliers
                 </button>
               )}
             </div>
@@ -622,20 +759,14 @@ function AdminDirectoriesList() {
                       <td className="text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-3">
                           <Link
-                            href={adminDirectoryEditHref(dir.id, {
-                              page: currentPage,
-                              filter: filterStatus,
-                            })}
+                            href={adminDirectoryEditHref(dir.id, listSearch)}
                             className="inline-flex items-center gap-1 text-indigo-600 hover:underline text-sm"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                             Edit
                           </Link>
                           <Link
-                            href={adminDirectoryReviewHref(dir.id, {
-                              page: currentPage,
-                              filter: filterStatus,
-                            })}
+                            href={adminDirectoryReviewHref(dir.id, listSearch)}
                             className="text-blue-600 hover:underline text-sm"
                           >
                             Review
