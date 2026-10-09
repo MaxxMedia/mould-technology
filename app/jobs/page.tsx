@@ -360,7 +360,7 @@ function JobDetailContent() {
 
   const trendingSkills: string[] =
     job.skills && job.skills.length > 0 ? job.skills : FALLBACK_SKILLS
-  const applicants = job.applicants ?? job.views ?? 0
+  const applicants = job._count?.JobApplication ?? job.applicationsCount ?? job.applicants ?? 0
 
   // Job match (candidate view only)
   const requiredSkills: string[] =
