@@ -159,9 +159,9 @@ export default function AdminLayout({
       {/* ================= SIDEBAR ================= */}
       <aside className="w-64 bg-[#0F5B78] text-white flex flex-col shadow-xl">
         <div className="px-6 py-5 border-b border-white/20">
-          <h1 className="text-lg font-semibold tracking-wide">
+          <h3 className="text-xl ">
             Admin Panel
-          </h1>
+          </h3>
           <p className="text-xs text-white/70 mt-1">
             Tooling Trends
           </p>
@@ -253,7 +253,7 @@ export default function AdminLayout({
                     icon={<ShieldCheck size={16} />}
                     active={pathname === "/admin/Users/custom-role-templates"}
                   />
-    {/* <SidebarLink
+                  {/* <SidebarLink
                     href="/admin/Users/sub-admin-tracking"
                     label="Sub Admin Tracking"
                     icon={<FileText size={16} />}
