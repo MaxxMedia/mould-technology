@@ -17,7 +17,8 @@ import {
   Users,
   LogIn,
   Pencil,
-  Search
+  Search,
+  Trash2,
 } from "lucide-react"
 import AdminPagination, { ADMIN_PAGE_SIZE } from "@/components/admin/AdminPagination"
 import {
@@ -94,6 +95,7 @@ function AdminDirectoriesList() {
   const [directories, setDirectories] = useState<Directory[]>([])
   const [loading, setLoading] = useState(true)
   const [sendingId, setSendingId] = useState<number | null>(null)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [searchDraft, setSearchDraft] = useState(searchQuery)
 
@@ -267,6 +269,56 @@ function AdminDirectoriesList() {
       })
     } finally {
       setSendingId(null)
+    }
+  }
+
+  /* ================= DELETE DIRECTORY ================= */
+
+  const handleDelete = async (id: number, name: string) => {
+    if (!token) return
+
+    if (
+      !window.confirm(
+        `Are you sure you want to delete "${name}"? This will permanently remove the directory.`
+      )
+    ) {
+      return
+    }
+
+    setDeletingId(id)
+    setMessage(null)
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/directories/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete directory")
+      }
+
+      setMessage({
+        type: "success",
+        text: `✅ Directory "${name}" deleted successfully`,
+      })
+
+      setDirectories((prev) => prev.filter((d) => d.id !== id))
+    } catch (error: any) {
+      console.error("❌ Delete directory error:", error)
+      setMessage({
+        type: "error",
+        text: `❌ ${error.message || "Failed to delete directory"}`,
+      })
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -771,6 +823,16 @@ function AdminDirectoriesList() {
                           >
                             Review
                           </Link>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(dir.id, dir.name)}
+                            disabled={deletingId === dir.id}
+                            className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 hover:underline text-sm disabled:opacity-50"
+                            title="Delete directory"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            {deletingId === dir.id ? "Deleting..." : "Delete"}
+                          </button>
                         </div>
                       </td>
                     </tr>
