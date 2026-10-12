@@ -501,7 +501,7 @@ export default function AddDirectoryPage() {
 
   const countries = geo?.Country.getAllCountries() ?? [];
 
-  const singleDirectoryAlreadyUsed = (listingEligibility?.activeListings ?? 0) >= 1;
+  const directoryLimitReached = listingEligibility?.canAdd === false;
 
   if (!geo || !eligibilityLoaded) {
     return (
@@ -520,14 +520,14 @@ export default function AddDirectoryPage() {
   const isEnterprise = profileLimits?.plan === "enterprise";
   const isProfessionalOrEnterprise = isProfessional || isEnterprise;
 
-  // Business rule: a recruiter account can create only one supplier directory.
-  if (singleDirectoryAlreadyUsed) {
+  // Enforce the directory allowance returned for the active subscription.
+  if (directoryLimitReached) {
     return (
       <div className="max-w-3xl mx-auto p-10">
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-6">
           <h1 className="text-2xl font-bold text-gray-900">Add Supplier Directory</h1>
           <p className="mt-3 text-sm text-gray-700">
-            Only one supplier directory can be created for this account. Please edit your existing directory instead of creating a new one.
+            Your plan has no directory slots remaining. Please upgrade your plan to create another directory.
           </p>
           <Link
             href="/recruiter/directories"

@@ -131,7 +131,7 @@ export default function RecruiterDirectoriesPage() {
     )
   }
 
-  const canCreateDirectory = directories.length === 0
+  const canCreateDirectory = !error
 
   return (
     <div className="max-w-5xl mx-auto p-10">
@@ -156,7 +156,6 @@ export default function RecruiterDirectoriesPage() {
 
       <p className="text-sm text-gray-500 mb-4">
         {directories.length} supplier {directories.length === 1 ? "directory" : "directories"}
-        {directories.length > 0 && " · One directory allowed per account"}
         {listingEligibility && !listingEligibility.isUnlimited && (
           <>
             {" · "}
