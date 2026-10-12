@@ -288,7 +288,6 @@ export default function RecruiterDashboard() {
 
   const planLabel = dashboard.subscription?.displayPlanLabel ?? dashboard.subscription?.planLabel ?? "Free"
   const isFreePlan = !dashboard.subscription || dashboard.subscription.plan === "free"
-  const canCreateDirectory = (dashboard.directories?.length ?? 0) === 0
 
   /* ================= UI ================= */
 
@@ -570,14 +569,14 @@ export default function RecruiterDashboard() {
           {/* ================= DIRECTORIES ================= */}
           <Panel
             title="My Directories"
-            action={canCreateDirectory ? (
+            action={
               <Link
                 href="/recruiter/directory/new"
                 className="text-sm bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
               >
-                + Add Directory
+                + Create Directory
               </Link>
-            ) : undefined}
+            }
             // subtitle={
             //   dashboard.productListings
             //     ? dashboard.productListings.isUnlimited
