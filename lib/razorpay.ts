@@ -49,14 +49,18 @@ export function loadRazorpayScript(): Promise<boolean> {
 
 export type PackageType = "SUBSCRIPTION" | "BANNER" | "SPONSORED" | "RECRUITMENT";
 
-// Helper to update user in localStorage
+// A browser cache failure must not turn a verified payment into an error.
 function updateUserPackageStatus() {
-  const userStr = localStorage.getItem("user");
-  if (userStr) {
-    const user = JSON.parse(userStr);
-    user.packageSelected = true;
-    localStorage.setItem("user", JSON.stringify(user));
-    window.dispatchEvent(new Event("userChanged"));
+  try {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      user.packageSelected = true;
+      localStorage.setItem("user", JSON.stringify(user));
+      window.dispatchEvent(new Event("userChanged"));
+    }
+  } catch {
+    // The success callback refreshes the authoritative user from the API.
   }
 }
 
@@ -68,7 +72,7 @@ export async function startPackagePayment({
 }: {
   packageType: PackageType;
   packageId: string;
-  onSuccess?: () => void;
+  onSuccess?: () => void | Promise<void>;
   onError?: (message: string) => void;
 }) {
   const token = localStorage.getItem("token");
@@ -102,6 +106,7 @@ export async function startPackagePayment({
       return;
     }
 
+    let paymentSubmitted = false;
     const rzp = new window.Razorpay({
       key: orderData.keyId,
       amount: orderData.amount,
@@ -112,34 +117,47 @@ export async function startPackagePayment({
       prefill: orderData.prefill,
       theme: { color: "#004d73" },
       handler: async (response) => {
-        const verifyRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/payments/verify`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(response),
-          }
-        );
+        paymentSubmitted = true;
+        try {
+          const verifyRes = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/payments/verify`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify(response),
+            }
+          );
 
-        const verifyData = await verifyRes.json();
-        if (!verifyRes.ok) {
-          onError?.(verifyData.error || "Payment verification failed");
+          const verifyData = await verifyRes.json();
+          if (!verifyRes.ok || verifyData.success !== true) {
+            onError?.(verifyData.error || "Payment verification failed");
+            return;
+          }
+        } catch {
+          onError?.(
+            "Payment completed, but confirmation could not be retrieved. Please contact support before making another payment."
+          );
           return;
         }
 
-        // ✅ Update localStorage with packageSelected = true
         updateUserPackageStatus();
-
-        onSuccess?.();
-
-        // ✅ Redirect to onboarding after successful payment
-        window.location.href = "/recruiter/onboarding";
+        try {
+          if (onSuccess) {
+            await onSuccess();
+          } else {
+            window.location.href = "/recruiter/onboarding";
+          }
+        } catch {
+          window.location.href = "/recruiter/onboarding";
+        }
       },
       modal: {
-        ondismiss: () => onError?.("Payment cancelled"),
+        ondismiss: () => {
+          if (!paymentSubmitted) onError?.("Payment cancelled");
+        },
       },
     });
 

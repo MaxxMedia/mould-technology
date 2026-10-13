@@ -103,7 +103,7 @@ export default function Footer() {
                   <li><Link href="/videos" className="hover:text-black transition-colors">Videos</Link></li>
                   <li><Link href="/news" className="hover:text-black transition-colors">News Latter</Link></li>
                   <li><Link href="/products" className="hover:text-black transition-colors">Products</Link></li>
-                  <li><Link href="/Webinars" className="hover:text-black transition-colors">Webinars</Link></li>
+                  <li><Link href="/Webinar" className="hover:text-black transition-colors">Webinars</Link></li>
                 </ul>
               </div>
 
@@ -122,7 +122,7 @@ export default function Footer() {
               <div>
                 <h5 className="text-black text-base font-bold mb-4 uppercase tracking-wide">Calendar</h5>
                 <ul className="space-y-2.5 text-sm">
-                  <li><Link href="/webinars" className="hover:text-black transition-colors">Webinars</Link></li>
+                  <li><Link href="/Webinar" className="hover:text-black transition-colors">Webinars</Link></li>
                   <li><Link href="/events" className="hover:text-black transition-colors">Events</Link></li>
                 </ul>
               </div>
