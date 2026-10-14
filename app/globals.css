@@ -708,3 +708,17 @@ body {
 .swiper-pagination-bullet:hover {
   opacity: 1 !important;
 }
+
+/* ================= BANNER ROTATION FADE ================= */
+@keyframes bannerFade {
+  0% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-banner-fade {
+  animation: bannerFade 0.6s ease-in-out;
+}

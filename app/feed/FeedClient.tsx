@@ -83,8 +83,8 @@ export default function PublicFeedPage({
     role === "candidate"
       ? heroContent.candidate
       : role === "recruiter"
-      ? heroContent.recruiter
-      : heroContent.guest;
+        ? heroContent.recruiter
+        : heroContent.guest;
 
   return (
     <div className="bg-[#f4f6f8] min-h-screen relative">
@@ -104,72 +104,66 @@ export default function PublicFeedPage({
           />
         </div>
 
-      <div className="absolute inset-0 bg-gradient-to-r from-[#08384B]/92 via-[#0F5B78]/75 to-[#0F5B78]/45"></div>
-<div className="relative max-w-[1200px] mx-auto px-6 py-14 md:py-16">
-          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
-              <div className="max-w-3xl">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#08384B]/92 via-[#0F5B78]/75 to-[#0F5B78]/45"></div>
 
-              <div className="inline-flex items-center gap-2 rounded-full bg-[#BE1622] px-3 py-1.5 shadow-md">                  <span className="h-2 w-2 rounded-full bg-white animate-pulse"></span>
-
-                  <span className="text-xs md:text-sm font-semibold tracking-wide uppercase text-white">                    {hero.badge}
-                  </span>
-                </div>
-
-                <h1 className="mt-7 text-5xl md:text-6xl font-extrabold leading-tight text-white">
-
-                  {hero.title1}
-
-                  <span className="block text-red-400">
-                    {hero.title2}
-                  </span>
-
-                </h1>
-
-                <p className="mt-4 text-base md:text-lg leading-7 text-gray-200 max-w-xl">                  {hero.description}
-                </p>
-
+        <div className="relative max-w-[1400px] mx-auto px-6 lg:px-12 py-12 md:py-14">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] items-center gap-10 lg:gap-16">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#BE1622] px-3 py-1.5 shadow-md">
+                <span className="h-2 w-2 rounded-full bg-white animate-pulse"></span>
+                <span className="text-xs md:text-sm font-semibold tracking-wide uppercase text-white">
+                  {hero.badge}
+                </span>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4">
+              <h1 className="mt-5 text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight text-white">
+                {hero.title1}{" "}
+                <span className="block text-red-400">
+                  {hero.title2}
+                </span>
+              </h1>
 
+              <p className="mt-4 text-base md:text-lg leading-7 text-gray-200 max-w-xl">
+                {hero.description}
+              </p>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap sm:flex-row gap-4 mt-6">
                 {(!role || role === "candidate") && (
-
                   <Link
                     href={
                       role === "candidate"
                         ? "/jobs"
                         : "/signup?role=candidate"
                     }
-                     className="inline-flex w-[180px] h-[50px] items-center justify-center rounded-xl bg-white text-[#0F5B78] text-lg font-semibold shadow-lg hover:bg-gray-100 hover:shadow-xl transition-all duration-300"                 >
+                    className="inline-flex w-[180px] h-[48px] items-center justify-center rounded-xl bg-white text-[#0F5B78] text-base font-semibold shadow-lg hover:bg-gray-100 hover:shadow-xl transition-all duration-300"
+                  >
                     Apply for Jobs
                   </Link>
-
                 )}
 
                 {(!role || role === "recruiter") && (
-
                   <Link
                     href={
                       role === "recruiter"
                         ? "/recruiter/jobs/new"
                         : "/signup?role=recruiter"
                     }
-                      className="inline-flex w-[180px] h-[50px] items-center justify-center rounded-xl bg-white text-[#0F5B78] text-lg font-semibold shadow-lg hover:bg-gray-100 hover:shadow-xl transition-all duration-300"                  >
+                    className="inline-flex w-[180px] h-[48px] items-center justify-center rounded-xl bg-white text-[#0F5B78] text-base font-semibold shadow-lg hover:bg-gray-100 hover:shadow-xl transition-all duration-300"
+                  >
                     Post a Job
                   </Link>
-
                 )}
-
               </div>
-
             </div>
+          </div>
 
         </div>
 
       </section>
 
-            {/* ================= FILTER BAR ================= */}
-      <section className="max-w-[1200px] mx-auto px-4 -mt-8 relative z-10">
+      {/* ================= FILTER BAR ================= */}
+      <section className="max-w-[1400px] mx-auto px-6 lg:px-12 -mt-8 relative z-10">
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 px-6 py-5">
           <div className="flex flex-col md:flex-row md:items-end gap-5">
 
@@ -272,7 +266,7 @@ export default function PublicFeedPage({
       {/* ================= JOB LIST ================= */}
       <section
         id="job-results"
-        className="max-w-[1200px] mx-auto px-4 py-14"
+        className="max-w-[1400px] mx-auto px-6 lg:px-12 py-14"
       >
         <div className="mb-10">
           <h2 className="text-4xl font-bold text-gray-900">
@@ -286,17 +280,22 @@ export default function PublicFeedPage({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-10 lg:gap-16 items-start">
 
           {/* Job Feed */}
-          <div>
+          <div className="min-w-0">
             <JobFeed isPublic filters={filters} initialJobs={initialJobs} />
+
+            {/* Mobile / Tablet Ad */}
+            <div className="lg:hidden mt-10 flex justify-center">
+              <Banner placement="JOB_RIGHT" sticky={false} initialIndex={1} />
+            </div>
           </div>
 
-          {/* Sidebar */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-24">
-              <Banner placement="JOB_RIGHT" />
+          {/* Sidebar — Desktop (Second Section) */}
+          <aside className="hidden lg:block w-[300px] shrink-0 lg:ml-auto" aria-label="Sponsored">
+            <div className="sticky top-24 flex justify-end">
+              <Banner placement="JOB_RIGHT" sticky={false} initialIndex={1} />
             </div>
           </aside>
 

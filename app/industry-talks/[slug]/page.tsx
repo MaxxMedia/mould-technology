@@ -11,6 +11,7 @@ import ContentGateModal from "@/components/content-gate-modal"
 import PostViewCounter from "@/components/PostViewCounter"
 import Loader from "@/components/Loader"
 import SupplierAds from "@/components/SupplierAds"
+import Banner from "@/components/Banners/Banner"
 
 /* ================= TYPES ================= */
 type Author = {
@@ -670,6 +671,7 @@ export default function PostDetailsPage() {
                     </button>
                   </div>
 
+                  <Banner placement="INDUSTRY_TALKS_RIGHT" />
                   <SupplierAds />
                 </div>
               </div>

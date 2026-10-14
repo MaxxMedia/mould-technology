@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { getApiUrl } from "@/lib/apiUrl"
 
 type Banner = {
   id: number
@@ -15,22 +16,74 @@ type Banner = {
 
 export default function SupplierAds() {
   const [banners, setBanners] = useState<Banner[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
+
     const fetchSidebarAds = async () => {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/banners?placement=SIDEBAR`
-      )
-      const data = await res.json()
-      setBanners(Array.isArray(data) ? data.slice(0, 3) : [])
+      try {
+        const res = await fetch(
+          `${getApiUrl()}/api/banners?placement=SIDEBAR`,
+          { cache: "no-store" }
+        )
+        const data = await res.json()
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data)
+            ? data.data
+            : []
+        if (!cancelled) setBanners(list)
+      } catch (err) {
+        console.error("SupplierAds fetch error:", err)
+        if (!cancelled) setBanners([])
+      }
     }
 
     fetchSidebarAds()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
+  // Preload images so transitions are instant
+  useEffect(() => {
+    if (!banners.length) return
+    banners.forEach((b) => {
+      if (b.imageUrl && typeof window !== "undefined") {
+        const img = new window.Image()
+        img.src = b.imageUrl
+      }
+    })
+  }, [banners])
+
+  // Auto-rotate every 10s if multiple banners exist
+  useEffect(() => {
+    if (banners.length <= 1 || isPaused) return
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % banners.length)
+    }, 10000)
+
+    return () => clearInterval(interval)
+  }, [banners.length, isPaused])
+
+  if (!banners.length) return null
+
+  // Show up to 3 ads (or 1 if only 1), rotating the active window every 10s
+  const visibleCount = Math.min(banners.length, 3)
+  const visibleAds = Array.from({ length: visibleCount }, (_, i) =>
+    banners[(currentIndex + i) % banners.length]
+  )
+
   return (
-    <div className="space-y-6 sticky top-6">
-      {banners.map((ad) => (
+    <div
+      className="space-y-6 sticky top-6"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      {visibleAds.map((ad) => (
         <Ad key={ad.id} ad={ad} />
       ))}
     </div>
@@ -40,30 +93,28 @@ export default function SupplierAds() {
 /* ---------- AD COMPONENT ---------- */
 
 function Ad({ ad }: { ad: Banner }) {
+  const bannerHref = ad.targetUrl
+    ? `${getApiUrl()}/api/banners/${ad.id}/click`
+    : "#"
+
   return (
     <Link
-      href={ad.targetUrl || "#"}
-      target="_blank"
-      className="block w-full overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 bg-white border border-gray-200"
+      key={ad.id}
+      href={bannerHref}
+      target={ad.targetUrl ? "_blank" : undefined}
+      rel={ad.targetUrl ? "noopener noreferrer" : undefined}
+      onClick={(e) => {
+        if (!ad.targetUrl) e.preventDefault()
+      }}
+      className="block w-full overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 bg-white border border-gray-200 animate-banner-fade"
     >
-      {/*
-        Fills the FULL WIDTH of its container - no fixed 300px box, so no
-        side white space regardless of how wide the sidebar column is.
-        Height is derived from the 300:250 aspect ratio, so proportions
-        stay consistent at any width.
-
-        object-fill (not object-cover) shows the ENTIRE image with nothing
-        cropped - it stretches to exactly fill the box instead. If a
-        particular banner looks stretched, the real fix is asking whoever
-        uploads it to export closer to a 300x250 (6:5) ratio.
-      */}
       <div className="relative w-full" style={{ aspectRatio: "200 / 150" }}>
         <Image
           src={ad.imageUrl}
-          alt={ad.title}
+          alt={ad.title || "Advertisement"}
           fill
           sizes="300px"
-          className="object-fill"
+          className="object-contain"
         />
       </div>
     </Link>

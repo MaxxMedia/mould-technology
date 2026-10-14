@@ -2,6 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Calendar, Clock, MapPin, Globe, Mail, Phone } from "lucide-react"
 import SupplierAds from "@/components/SupplierAds"
+import Banner from "@/components/Banners/Banner"
 import EventViewTracker from "@/components/events/EventViewTracker"
 import EventEnquireForm from "@/components/events/Eventenquireform"
 import EventTabs from "@/components/events/Eventtabs"
@@ -244,6 +245,7 @@ export default async function EventDetailsPage({
             </div>
           )}
 
+          <Banner placement="EVENT_RIGHT" />
           <SupplierAds />
         </aside>
       </div>

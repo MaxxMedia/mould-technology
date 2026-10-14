@@ -80,7 +80,7 @@ export default function BannerReorderPage() {
       >
         {BANNER_PLACEMENTS.map((p) => (
           <option key={p.value} value={p.value}>
-            {p.label}
+            {p.label} ({p.dimensions})
           </option>
         ))}
       </select>

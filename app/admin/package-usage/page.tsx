@@ -136,7 +136,7 @@ export default function AdminRecruiterUsagePage() {
 
             // Use the correct endpoint
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/companies/admin/list`,
+                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/companies`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
