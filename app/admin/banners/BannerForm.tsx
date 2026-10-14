@@ -1,8 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+<<<<<<< Updated upstream
 import ContentPackageSelect from "@/components/packages/ContentPackageSelect";
 import { BANNER_PLACEMENTS } from "@/lib/bannerPlacements";
+=======
+import { BANNER_PLACEMENTS, getBannerPlacementInfo } from "@/lib/bannerPlacements";
+>>>>>>> Stashed changes
 
 type BannerPlacement = (typeof BANNER_PLACEMENTS)[number]["value"];
 
@@ -77,6 +81,8 @@ export default function BannerForm({
     finally { setLoading(false); }
   };
 
+  const selectedPlacementInfo = getBannerPlacementInfo(placement);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-xl">
       <ContentPackageSelect type="BANNER" value={packagePurchaseId} onChange={setPackagePurchaseId} />
@@ -115,10 +121,21 @@ export default function BannerForm({
         >
           {BANNER_PLACEMENTS.map((p) => (
             <option key={p.value} value={p.value}>
-              {p.label}
+              {p.label} ({p.dimensions})
             </option>
           ))}
         </select>
+
+        {selectedPlacementInfo && (
+          <div className="mt-2 p-2.5 bg-blue-50 border border-blue-200 rounded text-xs text-blue-900 flex flex-wrap items-center justify-between gap-1">
+            <span>
+              <strong>Dimensions:</strong> {selectedPlacementInfo.dimensions} (Ratio: {selectedPlacementInfo.aspect})
+            </span>
+            <span className="font-semibold bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+              Rec (2x): {selectedPlacementInfo.recommended}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Status */}

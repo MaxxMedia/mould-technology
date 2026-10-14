@@ -2,7 +2,7 @@
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { BANNER_PLACEMENTS } from "@/lib/bannerPlacements"
+import { BANNER_PLACEMENTS, getBannerPlacementInfo } from "@/lib/bannerPlacements"
 import { Eye, Image as ImageIcon } from "lucide-react"
 
 type Banner = {
@@ -131,12 +131,12 @@ export default function BannerListPage() {
         <select
           value={placement}
           onChange={e => setPlacement(e.target.value)}
-          className="border px-3 py-2 rounded bg-white"
+          className="border px-3 py-2 rounded bg-white text-sm"
         >
           <option value="ALL">All Placements</option>
           {BANNER_PLACEMENTS.map(p => (
             <option key={p.value} value={p.value}>
-              {p.label}
+              {p.label} ({p.dimensions})
             </option>
           ))}
         </select>
@@ -151,6 +151,7 @@ export default function BannerListPage() {
               <th className="p-3 text-left">Image</th>
               <th className="p-3 text-left">Title</th>
               <th className="p-3 text-left">Placement</th>
+              <th className="p-3 text-left">Dimensions</th>
               <th className="p-3 text-left">Status</th>
               <th className="p-3 text-left">Clicks</th>
               <th className="p-3 text-right">Actions</th>
@@ -158,65 +159,82 @@ export default function BannerListPage() {
           </thead>
 
           <tbody>
-            {filteredBanners.map(b => (
-              <tr key={b.id} className="border-t hover:bg-gray-50">
-                <td className="p-3 font-medium">{b.position}</td>
+            {filteredBanners.map(b => {
+              const info = getBannerPlacementInfo(b.placement)
+              return (
+                <tr key={b.id} className="border-t hover:bg-gray-50">
+                  <td className="p-3 font-medium">{b.position}</td>
 
-                <td className="p-3">
-  <div className="relative w-24 h-14">
-    <Image
-      src={b.imageUrl}
-      alt={b.title || "Banner"}
-      fill
-      className="object-cover rounded border"
-      sizes="96px"
-    />
-  </div>
-</td>
+                  <td className="p-3">
+                    <div className="relative w-24 h-14">
+                      <Image
+                        src={b.imageUrl}
+                        alt={b.title || "Banner"}
+                        fill
+                        className="object-cover rounded border"
+                        sizes="96px"
+                      />
+                    </div>
+                  </td>
 
-                <td className="p-3 font-medium">{b.title}</td>
+                  <td className="p-3 font-medium">{b.title}</td>
 
-                <td className="p-3 text-gray-600">{b.placement}</td>
+                  <td className="p-3 text-gray-700">
+                    <span className="font-medium">{info?.label || b.placement}</span>
+                    <div className="text-[11px] text-gray-400">{b.placement}</div>
+                  </td>
 
-                <td className="p-3">
-                  <span
-                    className={`px-2 py-1 rounded text-xs font-medium ${
-                      b.status === "ACTIVE"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-200 text-gray-600"
-                    }`}
-                  >
-                    {b.status}
-                  </span>
-                </td>
+                  <td className="p-3">
+                    <div className="font-semibold text-gray-900 text-xs whitespace-nowrap">
+                      {info?.dimensions ?? "Custom"}
+                    </div>
+                    {info?.recommended && (
+                      <div className="text-[11px] text-gray-500 whitespace-nowrap mt-0.5">
+                        <span className="text-gray-400">Rec:</span> {info.recommended}
+                      </div>
+                    )}
+                  </td>
 
-                {/* 👁️ CLICKS */}
-                <td className="p-3 font-semibold text-gray-700">
-                  {b.clicks ?? 0}
-                </td>
+                  <td className="p-3">
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium ${
+                        b.status === "ACTIVE"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-gray-200 text-gray-600"
+                      }`}
+                    >
+                      {b.status}
+                    </span>
+                  </td>
 
-                <td className="p-3 text-right space-x-4">
-                  <Link
-                    href={`/admin/banners/edit/${b.id}`}
-                    className="text-indigo-600 hover:underline"
-                  >
-                    Edit
-                  </Link>
+                  {/* 👁️ CLICKS */}
+                  <td className="p-3 font-semibold text-gray-700">
+                    {b.clicks ?? 0}
+                  </td>
 
-                  <button
-                    onClick={() => deleteBanner(b.id)}
-                    disabled={deletingId === b.id}
-                    className="text-red-600 hover:underline disabled:opacity-50"
-                  >
-                    {deletingId === b.id ? "Deleting…" : "Delete"}
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  <td className="p-3 text-right space-x-4">
+                    <Link
+                      href={`/admin/banners/edit/${b.id}`}
+                      className="text-indigo-600 hover:underline"
+                    >
+                      Edit
+                    </Link>
+
+                    <button
+                      onClick={() => deleteBanner(b.id)}
+                      disabled={deletingId === b.id}
+                      className="text-red-600 hover:underline disabled:opacity-50"
+                    >
+                      {deletingId === b.id ? "Deleting…" : "Delete"}
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
 
             {filteredBanners.length === 0 && (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-gray-500">
+                <td colSpan={8} className="p-8 text-center text-gray-500">
                   No banners found for this placement
                 </td>
               </tr>

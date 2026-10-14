@@ -9,10 +9,13 @@ import {
   Mail,
   Phone,
 } from "lucide-react"
+import Banner from "@/components/Banners/Banner"
 
 export default function Footer() {
   return (
-    <footer className="relative overflow-hidden bg-[#e7eaec] text-black">
+    <>
+      <Banner placement="FOOTER" />
+      <footer className="relative overflow-hidden bg-[#e7eaec] text-black">
       {/* ================= FOOTER TOP ================= */}
       <div className="relative z-10 pt-12 sm:pt-16 lg:pt-20 pb-8 sm:pb-12 lg:pb-16">
         <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -293,5 +296,6 @@ export default function Footer() {
         </div>
       </div>
     </footer>
+    </>
   )
 }

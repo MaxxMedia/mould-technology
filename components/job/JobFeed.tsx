@@ -252,9 +252,35 @@ export default function JobFeed({
     return `${diffDays}d`
   }
 
+  function formatLocation(rawLoc?: string, country?: string) {
+    if (!rawLoc) return country || ""
+    let loc = rawLoc.trim()
+
+    // Deduplicate exact repeating strings like "Bengaluru, Karnataka, IndiaBengaluru, Karnataka, India"
+    if (loc.length > 6) {
+      const half = Math.floor(loc.length / 2)
+      if (loc.slice(0, half).trim() === loc.slice(half).trim()) {
+        loc = loc.slice(0, half).trim()
+      }
+    }
+
+    // If it's a long street address (e.g. 4+ comma-separated segments or >45 chars), simplify to city / state
+    const parts = loc.split(",").map(p => p.trim()).filter(Boolean)
+    if (parts.length >= 4 || loc.length > 45) {
+      const simplified = parts.slice(-2).join(", ")
+      return country && !simplified.toLowerCase().includes(country.toLowerCase())
+        ? `${simplified} • ${country}`
+        : simplified
+    }
+
+    return country && !loc.toLowerCase().includes(country.toLowerCase())
+      ? `${loc} • ${country}`
+      : loc
+  }
+
   function formatSalary(min?: number, max?: number) {
     if (!min && !max) return null
-    const fmt = (n: number) => `$${n.toLocaleString()}`
+    const fmt = (n: number) => `$${n.toLocaleString("en-US")}`
     if (min && max) return `${fmt(min)} - ${fmt(max)}`
     if (min) return `${fmt(min)}+`
     if (max) return `Up to ${fmt(max)}`
@@ -297,7 +323,7 @@ export default function JobFeed({
             >
               <div className="flex items-start justify-between gap-4">
                 {/* LEFT: company / title / type + salary */}
-                <div className="min-w-0">
+                <div className="flex-1 min-w-0 pr-3">
                   <p className="text-sm text-gray-500 truncate">
                     <span
                       onClick={(e) => {
@@ -323,17 +349,19 @@ export default function JobFeed({
 
                   <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide mt-2 flex flex-wrap gap-x-3">
                     <span>{job.employmentType || "Full Time"}</span>
-                    {salary && <span>{salary}</span>}
+                    {salary && <span suppressHydrationWarning>{salary}</span>}
                   </p>
                 </div>
 
                 {/* RIGHT: location/country + time ago */}
-                <div className="flex-shrink-0 text-right">
-                  <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">
-                    {job.location}
-                    {job.country ? ` • ${job.country}` : ""}
+                <div className="shrink-0 text-right max-w-[190px] sm:max-w-[240px]">
+                  <p
+                    title={job.location}
+                    className="text-[11px] font-medium text-gray-500 uppercase tracking-wide truncate"
+                  >
+                    {formatLocation(job.location, job.country)}
                   </p>
-                  <p className="text-xs font-semibold text-gray-700 mt-1">
+                  <p suppressHydrationWarning className="text-xs font-semibold text-gray-700 mt-1">
                     {getShortTimeAgo(job.createdAt)}
                   </p>
                 </div>
@@ -349,12 +377,12 @@ export default function JobFeed({
           <Pagination>
             <PaginationContent>
               <PaginationItem>
-                <PaginationPrevious 
+                <PaginationPrevious
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                 />
               </PaginationItem>
-              
+
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                 <PaginationItem key={page}>
                   <PaginationLink
@@ -366,9 +394,9 @@ export default function JobFeed({
                   </PaginationLink>
                 </PaginationItem>
               ))}
-              
+
               <PaginationItem>
-                <PaginationNext 
+                <PaginationNext
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                 />

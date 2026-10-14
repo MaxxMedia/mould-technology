@@ -39,54 +39,60 @@ function countGalleryItems(gallery: any[]): number {
   ).length;
 }
 
+const optionalUrl = Yup.string().test(
+  "is-valid-url-or-empty",
+  "Must be a valid URL",
+  (val) => !val || val.trim() === "" || /^https?:\/\/.+/i.test(val)
+);
+
 const GalleryItemSchema = Yup.object({
-  image: Yup.string().url().required("Image URL is required"),
-  name: Yup.string(),
-  description: Yup.string(),
+  image: optionalUrl,
+  name: Yup.string().nullable(),
+  description: Yup.string().nullable(),
 });
 
 const DirectorySchema = Yup.object({
-  name: Yup.string().min(3).required("Company name is required"),
+  name: Yup.string().min(3, "Company name must be at least 3 characters").required("Company name is required"),
   slug: Yup.string()
     .matches(/^[a-z0-9-]+$/, "Only lowercase letters, numbers and hyphens")
     .required("Slug is required"),
   phoneNumber: Yup.string().required("Phone number is required"),
-  email: Yup.string().email().required("Email is required"),
-  description: Yup.string().min(20).required("Description is required"),
-  website: Yup.string().url().nullable(),
-  logoUrl: Yup.string().url().nullable(),
-  coverImages: Yup.array().of(Yup.string().url()),
-  tradeNames: Yup.array().of(Yup.string()).min(1),
-  videoGallery: Yup.array().of(Yup.string().url()),
+  email: Yup.string().email("Invalid email format").required("Email is required"),
+  description: Yup.string().min(20, "Description must be at least 20 characters").required("Description is required"),
+  website: optionalUrl.nullable(),
+  logoUrl: optionalUrl.nullable(),
+  coverImages: Yup.array().of(optionalUrl),
+  tradeNames: Yup.array().of(Yup.string()),
+  videoGallery: Yup.array().of(optionalUrl),
   productSupplies: Yup.array(),
   productGallery: Yup.array().of(GalleryItemSchema),
   companyGallery: Yup.array().of(GalleryItemSchema),
   factoryGallery: Yup.array().of(GalleryItemSchema),
-  productCatalogues: Yup.array().of(Yup.string().url()),
-  companyBrochure: Yup.array().of(Yup.string().url()),
-  certifications: Yup.array().of(Yup.string().url()),
+  productCatalogues: Yup.array().of(optionalUrl),
+  companyBrochure: Yup.array().of(optionalUrl),
+  certifications: Yup.array().of(optionalUrl),
   brandsRepresented: Yup.array().of(Yup.string()),
   industriesServed: Yup.array().of(Yup.string()),
   exportMarkets: Yup.array().of(Yup.string()),
   manufacturingCapabilities: Yup.string(),
-  manufacturingCapabilityImages: Yup.array().of(Yup.string().url()),
-  manufacturingCapabilityVideos: Yup.array().of(Yup.string().url()),
+  manufacturingCapabilityImages: Yup.array().of(optionalUrl),
+  manufacturingCapabilityVideos: Yup.array().of(optionalUrl),
   machineryList: Yup.string(),
-  machineryImages: Yup.array().of(Yup.string().url()),
+  machineryImages: Yup.array().of(optionalUrl),
   qualityStandards: Yup.string(),
   enableInquiryForm: Yup.boolean(),
-  googleMapUrl: Yup.string().url().nullable(),
+  googleMapUrl: optionalUrl.nullable(),
   socialLinks: Yup.object({
-    facebook: Yup.string().url().nullable(),
-    linkedin: Yup.string().url().nullable(),
-    twitter: Yup.string().url().nullable(),
-    youtube: Yup.string().url().nullable(),
+    facebook: optionalUrl.nullable(),
+    linkedin: optionalUrl.nullable(),
+    twitter: optionalUrl.nullable(),
+    youtube: optionalUrl.nullable(),
     whatsapp: Yup.string().nullable(),
   }),
   country: Yup.string().required("Country required"),
   state: Yup.string().required("State required"),
   city: Yup.string().required("City required"),
-  address: Yup.string().min(10).required("Address required"),
+  address: Yup.string().min(10, "Address must be at least 10 characters").required("Address required"),
   industryId: Yup.number().required("Industry required"),
   acceptedGuidelines: Yup.boolean().oneOf(
     [true],
