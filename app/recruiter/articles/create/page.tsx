@@ -134,14 +134,16 @@ export default function CreateRecruiterArticlePage() {
       console.log("Article Response:", text);
 
       if (!res.ok) {
+        let message = "Failed to create article";
+
         try {
           const json = JSON.parse(text);
-          throw new Error(json.error || "Failed to create article");
+          message = json.error || message;
         } catch {
-          throw new Error(
-            `Expected JSON but received HTML.\n\n${text.substring(0, 200)}`
-          );
+          message = `Article submission failed (${res.status}). Please try again.`;
         }
+
+        throw new Error(message);
       }
 
       router.push("/recruiter/articles");
