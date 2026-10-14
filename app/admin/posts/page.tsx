@@ -102,7 +102,8 @@ export default function PostsList() {
       if (statusFilter) params.set("status", statusFilter)
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/posts?${params.toString()}`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/posts/admin/all?${params.toString()}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       )
       const json = await res.json()
 

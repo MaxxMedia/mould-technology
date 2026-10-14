@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import { startCompanyTrial, type CompanyTrial } from "@/lib/companyTrial";
+import TrialNotice from "./TrialNotice";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check, Loader2, X } from "lucide-react";
@@ -157,6 +159,8 @@ type SponsoredPackage = ApiPackage & {
   features?: string[];
 };
 
+const TrialContext = createContext<{ trial: CompanyTrial | null; onStarted: (trial: CompanyTrial) => Promise<void> }>({ trial: null, onStarted: async () => {} });
+
 function PayButton({
   label,
   packageType,
@@ -178,12 +182,15 @@ function PayButton({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const { trial, onStarted } = useContext(TrialContext);
+  const selectedTrial = trial?.status === "ACTIVE" && trial.packageType === packageType && trial.packageId === packageId;
+  const canTrial = packageId !== "free" && (!trial || trial.eligible || trial.status === "ACTIVE");
   const isCurrentPlan =
-    packageType === "SUBSCRIPTION" && currentPlan === packageId;
+    packageType === "SUBSCRIPTION" && currentPlan === packageId && !selectedTrial && !(packageId === "free" && trial?.status === "ACTIVE");
 
   const isActiveMonthlyPackage =
     packageType === "RECRUITMENT" &&
-    activeUntil &&
+    !selectedTrial && activeUntil &&
     new Date(activeUntil) > new Date();
 
   const baseClass =
@@ -225,8 +232,25 @@ function PayButton({
     setLoading(false);
   };
 
+  const handleTrial = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      const activated = await startCompanyTrial(packageType, packageId);
+      if (activated) await onStarted(activated);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to start trial");
+    } finally { setLoading(false); }
+  };
+
   return (
-    <div className="inline-flex flex-col items-center gap-1">
+    <div className="inline-flex flex-col items-center gap-2">
+      {canTrial && (
+        <button type="button" onClick={handleTrial} disabled={loading || disabled || selectedTrial}
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
+          {selectedTrial ? "Trial active" : loading ? "Processing..." : trial?.status === "ACTIVE" ? "Switch trial to this package" : "Start 30-day free trial"}
+        </button>
+      )}
       <button
         type="button"
         onClick={handleClick}
@@ -243,7 +267,7 @@ function PayButton({
         ) : isCurrentPlan ? (
           "Current Plan"
         ) : (
-          label
+          packageId === "free" && trial?.status === "ACTIVE" ? "End trial" : selectedTrial ? "Renew now" : label
         )}
       </button>
       {error && error !== "Payment cancelled" && (
@@ -259,6 +283,7 @@ export default function PackagesPageClient() {
   const from = searchParams.get("from");
 
   const bannerDurations = ["monthly", "quarterly", "annual"] as const;
+  const [trial, setTrial] = useState<CompanyTrial | null>(null);
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [recruitmentExpiresAt, setRecruitmentExpiresAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -331,9 +356,10 @@ export default function PackagesPageClient() {
           const { SUBSCRIPTION_PLANS, SUBSCRIPTION_FEATURES } = await import('@/lib/packages');
           setSubscriptionPlans(SUBSCRIPTION_PLANS as unknown as any[]);
           setSubscriptionFeatures(SUBSCRIPTION_FEATURES);
-          // setBannerPackages(BANNER_PACKAGES as unknown as any[]);
-          // setSponsoredPackages(SPONSORED_CONTENT_PACKAGES as unknown as any[]);
-          // setRecruitmentPackages(RECRUITMENT_PACKAGES as unknown as any[]);
+          const { BANNER_PACKAGES, SPONSORED_CONTENT_PACKAGES, RECRUITMENT_PACKAGES } = await import("@/lib/razorpay");
+          setBannerPackages(BANNER_PACKAGES.map(row => ({ ...row, name: row.position })));
+          setSponsoredPackages(SPONSORED_CONTENT_PACKAGES as unknown as SponsoredPackage[]);
+          setRecruitmentPackages(RECRUITMENT_PACKAGES as unknown as any[]);
           setFromFallback(true);
         } catch (fallbackError) {
           console.error("Failed to load fallback packages:", fallbackError);
@@ -364,6 +390,7 @@ export default function PackagesPageClient() {
           const data = await res.json();
           setCurrentPlan(data.subscription?.plan ?? null);
           setRecruitmentExpiresAt(data.subscription?.recruitmentExpiresAt ?? null);
+          setTrial(data.trial ?? data.subscription?.trial ?? null);
         }
       } catch {
         // ignore
@@ -372,12 +399,15 @@ export default function PackagesPageClient() {
       }
     }
 
-    loadCurrentPlan();
+    void loadCurrentPlan();
+    const timer = window.setInterval(loadCurrentPlan, 60000);
+    window.addEventListener("focus", loadCurrentPlan);
+    return () => { window.clearInterval(timer); window.removeEventListener("focus", loadCurrentPlan); };
   }, []);
 
   // Show the Free Plan "Continue" card only when the visitor arrived here
   // from the login page (not signup) and hasn't already picked a package.
-  const showFreePlanCard = from === "login" && !isPackageSelected;
+  const showFreePlanCard = from === "login" && !isPackageSelected && trial?.status !== "ACTIVE" && (!currentPlan || currentPlan === "free");
 
   // Filter out free plan from subscription plans when showing free plan card
   const displaySubscriptionPlans = showFreePlanCard
@@ -397,13 +427,24 @@ export default function PackagesPageClient() {
     );
   }
 
+  const onTrialStarted = async (activated: CompanyTrial) => {
+    setTrial(activated);
+    await refreshLocalUser();
+    let onboarded = false;
+    try { onboarded = Boolean(JSON.parse(localStorage.getItem("user") || "{}").isOnboarded); } catch { /* refreshed on next visit */ }
+    router.push(onboarded ? "/recruiter/dashboard" : "/recruiter/onboarding");
+  };
+
   return (
+    <TrialContext.Provider value={{ trial, onStarted: onTrialStarted }}>
     <main className="w-full bg-white">
       <PackagesHero
         title="Packages & Pricing"
         breadcrumbLabel="Packages"
         description="Grow your visibility on ToolingTrends.com with subscription plans, banner advertising, sponsored content, and recruitment packages. Secure checkout powered by Razorpay."
       />
+
+      <div className="mx-auto max-w-[1320px] px-4 pt-6"><TrialNotice trial={trial || { eligible: true, status: "ELIGIBLE", days: 30 }} /></div>
 
       {/* Show fallback notice if using fallback data */}
       {fromFallback && (
@@ -490,7 +531,7 @@ export default function PackagesPageClient() {
         </div>
       </section>
 
-      {/* <section className="bg-[#f8f9fb] py-16 sm:py-20">
+      <section className="bg-[#f8f9fb] py-16 sm:py-20">
         <div className="mx-auto max-w-[1320px] px-4 sm:px-6">
           <SectionHeading
             title="Banner Advertising Packages"
@@ -636,7 +677,8 @@ export default function PackagesPageClient() {
             </div>
           </div>
         </div>
-      </section> */}
+      </section>
     </main>
+    </TrialContext.Provider>
   );
 }

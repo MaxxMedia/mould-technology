@@ -28,6 +28,8 @@ import RecruiterAnalyticsCharts, {
 import type { JobPostingEligibility } from "@/lib/jobPosting"
 import type { ContentLimitEligibility } from "@/lib/packageLimits"
 import TeamManagementTab from "@/components/recruiter/TeamManagementTab"
+import TrialNotice from "@/components/packages/TrialNotice"
+import type { CompanyTrial } from "@/lib/companyTrial"
 
 /* ================= TYPES ================= */
 
@@ -75,6 +77,7 @@ type DashboardData = {
   articles?: Article[]
   recentActivity?: RecentActivity[]
   subscription?: {
+    trial?: CompanyTrial
     plan: string
     planLabel: string
     displayPlan?: string
@@ -263,10 +266,12 @@ export default function RecruiterDashboard() {
 
     loadAll()
 
+    const timer = window.setInterval(loadAll, 60000)
     const handleFocus = () => loadAll()
     window.addEventListener("focus", handleFocus)
 
     return () => {
+      window.clearInterval(timer)
       window.removeEventListener("focus", handleFocus)
     }
 
@@ -345,6 +350,8 @@ export default function RecruiterDashboard() {
               </Link>
             )}
           </div>
+
+          <TrialNotice trial={dashboard.subscription?.trial} />
 
           {/* KPI CARDS */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">

@@ -4,6 +4,7 @@
 import Image from "next/image";
 import { useEffect, useState, FormEvent, ChangeEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
+import ContentPackageSelect from "@/components/packages/ContentPackageSelect";
 import UploadBox from "@/components/UploadBox";
 import PostBuilder from "@/app/admin/components/PostBuilder";
 import { ContentBlock } from "@/app/admin/components/types";
@@ -46,6 +47,7 @@ export default function EditPost() {
     whatsappNumber: "",
   });
 
+  const [packagePurchaseId, setPackagePurchaseId] = useState<number | null>(null);
   const [authors, setAuthors] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [message, setMessage] = useState("");
@@ -58,7 +60,7 @@ export default function EditPost() {
     async function load() {
       try {
         const [postRes, authorRes, categoryRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/${id}`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/admin/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }),
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/authors`),
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`),
         ]);
@@ -72,6 +74,7 @@ export default function EditPost() {
           imageUrl = `${process.env.NEXT_PUBLIC_API_URL}${imageUrl}`;
         }
 
+        setPackagePurchaseId(post.packagePurchaseId ?? null);
         setForm({
           title: post.title || "",
           slug: post.slug || "",
@@ -200,6 +203,7 @@ export default function EditPost() {
           },
           body: JSON.stringify({
             ...form,
+          packagePurchaseId,
             excerpt,
             contentBlocks: form.contentBlocks,
             authorId: Number(form.authorId),
@@ -251,6 +255,7 @@ export default function EditPost() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
+        <ContentPackageSelect type="SPONSORED" value={packagePurchaseId} onChange={setPackagePurchaseId} />
           {/* TITLE */}
           <div>
             <label className="block font-medium text-gray-700 mb-2">

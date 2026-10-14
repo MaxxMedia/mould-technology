@@ -7,6 +7,7 @@
     "dev": "next dev",
     "lint": "eslint .",
     "test:payments": "node --test tests/razorpay.test.cjs",
+    "test:trials": "node --test tests/companyTrial.test.cjs",
     "start": "next start",
     "seed:latest-industries": "node ../newsprk-backend/prisma/seedTagmaIndustries.js",
     "seed:tagma-industries": "node ../newsprk-backend/prisma/seedTagmaIndustries.js"

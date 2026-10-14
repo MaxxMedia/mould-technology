@@ -4,7 +4,7 @@ import BannerForm from "../BannerForm";
 
 export default function NewBannerPage() {
   const createBanner = async (data: any) => {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/banners`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/banners`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -13,6 +13,10 @@ export default function NewBannerPage() {
       body: JSON.stringify(data),
     });
 
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || "Failed to create banner");
+    }
     alert("Banner created successfully");
   };
 

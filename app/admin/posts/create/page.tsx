@@ -3,6 +3,7 @@
 
 import { useEffect, useState, FormEvent, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
+import ContentPackageSelect from "@/components/packages/ContentPackageSelect";
 import UploadBox from "@/components/UploadBox";
 import PostBuilder from "@/app/admin/components/PostBuilder";
 import { ContentBlock } from "@/app/admin/components/types";
@@ -44,6 +45,7 @@ export default function CreatePost() {
     whatsappNumber: "",
   });
 
+  const [packagePurchaseId, setPackagePurchaseId] = useState<number | null>(null);
   const [authors, setAuthors] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [message, setMessage] = useState("");
@@ -154,6 +156,7 @@ export default function CreatePost() {
         },
         body: JSON.stringify({
           ...form,
+          packagePurchaseId,
           excerpt,
           contentBlocks: form.contentBlocks,
           authorId: Number(form.authorId),
@@ -214,6 +217,7 @@ export default function CreatePost() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+        <ContentPackageSelect type="SPONSORED" value={packagePurchaseId} onChange={setPackagePurchaseId} />
           {/* TITLE */}
           <div>
             <label className="block font-medium text-gray-700 mb-2">

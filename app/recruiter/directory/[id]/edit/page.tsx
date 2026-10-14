@@ -176,6 +176,7 @@ export default function EditDirectoryPage() {
         };
 
         setDirectory({
+          hiddenSavedContent: Boolean(data.hiddenSavedContent),
           id: data.id,
           name: data.name || "",
           slug: data.slug || "",
@@ -510,6 +511,13 @@ export default function EditDirectoryPage() {
   return (
     <div className="max-w-4xl mx-auto p-10 space-y-6">
       <h1 className="text-2xl font-bold">Edit Supplier Directory</h1>
+
+      {directory.hiddenSavedContent && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+          Some saved content is hidden by your current plan. It remains in your account when you save changes here. Renew a package to restore its included features.
+          <a href="/packages" className="ml-2 font-semibold underline">View packages</a>
+        </div>
+      )}
 
       {saveSuccess && (
         <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">

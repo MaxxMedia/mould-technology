@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import ContentPackageSelect from "@/components/packages/ContentPackageSelect";
 import { BANNER_PLACEMENTS } from "@/lib/bannerPlacements";
 
 type BannerPlacement = (typeof BANNER_PLACEMENTS)[number]["value"];
@@ -14,6 +15,8 @@ export default function BannerForm({
   initialData,
   onSubmit,
 }: BannerFormProps) {
+  const [packagePurchaseId, setPackagePurchaseId] = useState<number | null>(null);
+  const [error, setError] = useState("");
   const [title, setTitle] = useState("");
   const [targetUrl, setTargetUrl] = useState("");
 
@@ -28,6 +31,7 @@ export default function BannerForm({
   useEffect(() => {
     if (!initialData) return;
 
+    setPackagePurchaseId(initialData.packagePurchaseId ?? null);
     setTitle(initialData.title ?? "");
     setTargetUrl(initialData.targetUrl ?? "");
     setPlacement(
@@ -61,19 +65,22 @@ export default function BannerForm({
     e.preventDefault();
     setLoading(true);
 
-    await onSubmit({
+    setError("");
+    try { await onSubmit({
+      packagePurchaseId,
       title,
       imageUrl,
       targetUrl,
       placement,
       status,
-    });
-
-    setLoading(false);
+    }); } catch (err) { setError(err instanceof Error ? err.message : "Unable to save banner"); }
+    finally { setLoading(false); }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-xl">
+      <ContentPackageSelect type="BANNER" value={packagePurchaseId} onChange={setPackagePurchaseId} />
+      {error && <p className="text-sm text-red-600">{error}</p>}
       {/* Title */}
       <div>
         <label className="block font-medium mb-1">Banner Title</label>
