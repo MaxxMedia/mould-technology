@@ -1,12 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-<<<<<<< Updated upstream
 import ContentPackageSelect from "@/components/packages/ContentPackageSelect";
-import { BANNER_PLACEMENTS } from "@/lib/bannerPlacements";
-=======
 import { BANNER_PLACEMENTS, getBannerPlacementInfo } from "@/lib/bannerPlacements";
->>>>>>> Stashed changes
+
 
 type BannerPlacement = (typeof BANNER_PLACEMENTS)[number]["value"];
 
