@@ -5,10 +5,27 @@
 import { useState } from "react"
 import BulkImportUserList from "@/components/admin/BulkImportUserList"
 
+type BulkUploadRow = {
+  row?: number
+  companyName?: string
+  email: string
+  error?: string
+  reason?: string
+}
+
+type BulkUploadResult = {
+  total: number
+  successCount: number
+  failedCount: number
+  skippedCount?: number
+  failed: BulkUploadRow[]
+  skipped?: BulkUploadRow[]
+}
+
 export default function BulkDirectoryUpload() {
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
+  const [result, setResult] = useState<BulkUploadResult | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const token =
@@ -102,6 +119,11 @@ export default function BulkDirectoryUpload() {
           📥 Download Excel Template
         </button>
 
+        <p className="text-sm text-gray-600">
+          Rows with an existing supplier company name or user email are skipped.
+          Company names are compared without regard to case or surrounding spaces.
+        </p>
+
         <input
           type="file"
           accept=".xlsx"
@@ -135,11 +157,28 @@ export default function BulkDirectoryUpload() {
               <strong>❌ Failed:</strong> {result.failedCount}
             </p>
 
+            <p className="text-amber-700">
+              <strong>Skipped:</strong> {result.skippedCount ?? 0}
+            </p>
+
+            {!!result.skipped?.length && (
+              <div className="mt-3">
+                <p className="font-semibold mb-2">Skipped Rows:</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  {result.skipped.map((item, index) => (
+                    <li key={index}>
+                      Row {item.row}: {item.companyName} ({item.email}) - {item.reason}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {result.failed?.length > 0 && (
               <div className="mt-3">
                 <p className="font-semibold mb-2">Failed Rows:</p>
                 <ul className="list-disc pl-5 space-y-1">
-                  {result.failed.map((item: any, index: number) => (
+                  {result.failed.map((item, index) => (
                     <li key={index}>
                       {item.email} — {item.error}
                     </li>
