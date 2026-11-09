@@ -392,10 +392,10 @@ export default function Header() {
           <div className="absolute left-0 top-0 h-6 bg-[#B30F24] flex items-center px-6 pr-12">
 
             <span className="text-white text-xs sm:text-sm font-semibold whitespace-nowrap">
-              Driving Manufacturing Excellence
+              Driving Manufacturing Excellence through Innovation
             </span>
 
-            <div className="absolute right-[-20px] top-0 h-6 w-10 bg-[#B30F24] skew-x-[-20deg]" />
+            <div className="absolute right-[-36px] top-0 h-6 w-14 bg-[#B30F24] skew-x-[-20deg]" />
           </div>
 
         </div>
