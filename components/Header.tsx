@@ -163,7 +163,7 @@ export default function Header() {
           {/* LOGO IMAGE */}
           <Link href="/" className="flex items-center">
             <Image
-              src="/images/tooling new34 (1).png"
+              src="/images/toolingnew.png"
               alt="Tooling Technology Logo"
               width={300}
               height={127}

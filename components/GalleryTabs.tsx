@@ -34,8 +34,8 @@ type GalleryTabsProps = {
   qualityStandards?: string | null // kept for prop compatibility; intentionally never rendered
 }
 
-const NO_PLAN_MESSAGE =
-  "This supplier hasn't purchased a plan to upload gallery content."
+const GALLERY_UNAVAILABLE_MESSAGE =
+  "Gallery content is not available at this time."
 
 function EmptyState({ message }: { message: string }) {
   return (
@@ -830,7 +830,7 @@ export default function GalleryTabs({
       {activeTab === "product" && (
         <>
           {!isPaid ? (
-            <EmptyState message={NO_PLAN_MESSAGE} />
+            <EmptyState message={GALLERY_UNAVAILABLE_MESSAGE} />
           ) : (
             <>
               {/* Inner sub-tabs */}
@@ -940,7 +940,7 @@ export default function GalleryTabs({
       {/* Company Gallery */}
       {activeTab === "company" &&
         (!isPaid ? (
-          <EmptyState message={NO_PLAN_MESSAGE} />
+          <EmptyState message={GALLERY_UNAVAILABLE_MESSAGE} />
         ) : companyGallery && hasGalleryItems(companyGallery) ? (
           <div className="space-y-6">
             <SplitGallerySection
@@ -966,7 +966,7 @@ export default function GalleryTabs({
       {/* Facilities */}
       {activeTab === "factory" &&
         (!isPaid ? (
-          <EmptyState message={NO_PLAN_MESSAGE} />
+          <EmptyState message={GALLERY_UNAVAILABLE_MESSAGE} />
         ) : factoryGallery && hasGalleryItems(factoryGallery) ? (
           <SplitGallerySection
             heading={industryIntro?.heading ?? "Our Facilities"}

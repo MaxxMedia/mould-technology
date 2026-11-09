@@ -27,7 +27,7 @@ export default function Footer() {
             <div className="text-center sm:text-left">
               <Link href="/" className="inline-block mb-4">
                 <Image
-                  src="/images/tooling new34 (1).png"
+                  src="/images/toolingnew.png"
                   alt="Tooling Technology Logo"
                   width={300}
                   height={127}
@@ -163,7 +163,7 @@ export default function Footer() {
             <div className="lg:col-span-3">
               <Link href="/" className="inline-block mb-6">
                 <Image
-                  src="/images/tooling new34 (1).png"
+                  src="/images/toolingnew.png"
                   alt="Tooling Technology Logo"
                   width={300}
                   height={127}
