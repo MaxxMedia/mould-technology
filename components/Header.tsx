@@ -173,7 +173,7 @@ export default function Header() {
           </Link>
 
           {/* Slanted / diagonal transition line extending outwards into blue bar */}
-          <div className="absolute right-[-14px] top-0 h-full w-8 bg-white skew-x-[-20deg] z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 h-full w-10 origin-bottom-right bg-white skew-x-[-20deg] z-10 pointer-events-none" />
         </div>
 
         {/* Blue Navigation & Action Section */}
